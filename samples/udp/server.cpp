@@ -9,6 +9,7 @@
 #include <sys/types.h>
 
 #include "udp.hpp"
+#include "utils.hpp"
 
 int main(int argc, char const *argv[]) {
   // 新規ソケットの作成
@@ -26,16 +27,12 @@ int main(int argc, char const *argv[]) {
   server_addr.sin_port = htons(PORT_NUM);
 
   if (bind(socket_fd, (struct sockaddr *)&server_addr,
-           sizeof(struct sockaddr_in)) == -1) {
-    fprintf(stderr, "bind() failed!\n");
-    exit(1);
-  }
+           sizeof(struct sockaddr_in)) == -1)
+    fatal("bind() failed!\n");
   char addr_str[INET_ADDRSTRLEN];
   if (inet_ntop(server_addr.sin_family, &server_addr.sin_addr, addr_str,
-                INET_ADDRSTRLEN) == 0) {
-    fprintf(stderr, "failed to get server address\n");
-    exit(1);
-  }
+                INET_ADDRSTRLEN) == 0)
+    fatal("failed to get server address\n");
   printf("Server waiting a request at %s:%u\n", addr_str,
          ntohs(server_addr.sin_port));
 
@@ -48,16 +45,13 @@ int main(int argc, char const *argv[]) {
     ssize_t numBytes = recvfrom(socket_fd, buffer, BUF_SIZE, 0,
                                 (struct sockaddr *)&client_addr, &len);
 
-    if (numBytes == -1) {
-      fprintf(stderr, "recvfrom() failed!\n");
-      exit(1);
-    }
+    if (numBytes == -1)
+      fatal("recvfrom() failed!\n");
 
     char client_addr_str[INET_ADDRSTRLEN];
     if (inet_ntop(AF_INET, &client_addr.sin_addr, client_addr_str,
                   INET_ADDRSTRLEN) == NULL) {
-      fprintf(stderr, "inet_ntop() failed!\n");
-      exit(1);
+      fatal("inet_ntop() failed!\n");
     } else {
       printf("Server received %ld bytes from (%s, %u)\n", numBytes,
              client_addr_str, ntohs(client_addr.sin_port));
@@ -68,10 +62,8 @@ int main(int argc, char const *argv[]) {
     }
 
     if (sendto(socket_fd, buffer, numBytes, 0, (struct sockaddr *)&client_addr,
-               sizeof(struct sockaddr_in)) != numBytes) {
-      fprintf(stderr, "failed to send messge to client\n");
-      exit(1);
-    }
+               sizeof(struct sockaddr_in)) != numBytes)
+      fatal("failed to send messge to client\n");
   }
 
   return 0;

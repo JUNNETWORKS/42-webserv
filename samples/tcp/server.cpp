@@ -14,6 +14,7 @@
 
 #include "read_line.hpp"
 #include "tcp.hpp"
+#include "utils.hpp"
 
 #define BACKLOG 50
 
@@ -33,17 +34,13 @@ int main(int argc, char const *argv[]) {
   char host[NI_MAXHOST];
   char service[NI_MAXSERV];
 
-  if (argc > 1 && strcmp(argv[1], "--help") == 0) {
-    fprintf(stderr, "%s [init-seq-num]\n", argv[0]);
-    exit(1);
-  }
+  if (argc > 1 && strcmp(argv[1], "--help") == 0)
+    usageErr("%s [init-seq-num]\n", argv[0]);
 
   seqNum = (argc > 1) ? atoi(argv[1]) : 0;
   if (signal(SIGPIPE, SIG_IGN) ==
-      SIG_ERR) {  // writeした時に発生する恐れのあるSIGPIPEを無視
-    fprintf(stderr, "signal");
-    exit(1);
-  }
+      SIG_ERR)  // writeした時に発生する恐れのあるSIGPIPEを無視
+    fatal("signal");
 
   /* Call getaddrinfo() to obtain a list of addresses that we can try binding to
    */
@@ -58,10 +55,8 @@ int main(int argc, char const *argv[]) {
       AI_PASSIVE |
       AI_NUMERICSERV; /* Wildcard IP address; service name is numeric */
 
-  if (getaddrinfo(NULL, PORT_NUM, &hints, &result) != 0) {
-    fprintf(stderr, "getaddrinfo");
-    exit(1);
-  }
+  if (getaddrinfo(NULL, PORT_NUM, &hints, &result) != 0)
+    fatal("getaddrinfo");
 
   /* Walk through returned list until we find an address structure
   that can be used to successfully create and bind a socket */
@@ -77,10 +72,8 @@ int main(int argc, char const *argv[]) {
     //   で識別され、TCPの仕様的にはOK.
     // SO_REUSEADDRオプションを付けることでlistenしていないポートが対象のポートを既に使っていても、使えるようになる。
     if (setsockopt(lfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) ==
-        -1) {
-      fprintf(stderr, "setsockopt");
-      exit(1);
-    }
+        -1)
+      fatal("setsockopt");
 
     if (bind(lfd, rp->ai_addr, rp->ai_addrlen) == 0)
       break; /* success */
@@ -89,15 +82,11 @@ int main(int argc, char const *argv[]) {
     close(lfd);
   }
 
-  if (rp == NULL) {
-    fprintf(stderr, "Could not bind socket to any address");
-    exit(1);
-  }
+  if (rp == NULL)
+    errExit("Could not bind socket to any address");
 
-  if (listen(lfd, BACKLOG) == -1) {
-    fprintf(stderr, "listen");
-    exit(1);
-  }
+  if (listen(lfd, BACKLOG) == -1)
+    fatal("listen");
 
   freeaddrinfo(result);
 
@@ -106,10 +95,8 @@ int main(int argc, char const *argv[]) {
 
     addrlen = sizeof(struct sockaddr_storage);
     cfd = accept(lfd, (struct sockaddr *)&claddr, &addrlen);
-    if (cfd == -1) {
-      fprintf(stderr, "accept");
-      exit(1);
-    }
+    if (cfd == -1)
+      errExit("accept");
 
     if (getnameinfo((struct sockaddr *)&claddr, addrlen, host, NI_MAXHOST,
                     service, NI_MAXSERV, 0) == 0) {
@@ -133,13 +120,11 @@ int main(int argc, char const *argv[]) {
     }
 
     snprintf(seqNumStr, INT_LEN, "%d\n", seqNum);
-    if (write(cfd, &seqNumStr, strlen(seqNumStr)) != strlen(seqNumStr)) {
-      fprintf(stderr, "Error on write");
-    }
+    if (write(cfd, &seqNumStr, strlen(seqNumStr)) != strlen(seqNumStr))
+      errExit("Error on write");
 
-    seqNum += reqLen;       /* Update sequence number */
-    if (close(cfd) == -1) { /* Close connection */
-      fprintf(stderr, "close");
-    }
+    seqNum += reqLen;     /* Update sequence number */
+    if (close(cfd) == -1) /* Close connection */
+      fatal("close");
   }
 }

@@ -11,6 +11,7 @@
 
 #include "read_line.hpp"
 #include "tcp.hpp"
+#include "utils.hpp"
 
 int main(int argc, char const *argv[]) {
   const char *reqLenStr;   /* Requested length of sequence */
@@ -20,10 +21,8 @@ int main(int argc, char const *argv[]) {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
 
-  if (argc < 2 || strcmp(argv[1], "--help") == 0) {
-    fprintf(stderr, "%s server-host [sequence-len]\n", argv[0]);
-    exit(1);
-  }
+  if (argc < 2 || strcmp(argv[1], "--help") == 0)
+    usageErr("%s server-host [sequence-len]\n", argv[0]);
 
   /* Call getaddrinfo() to obtain a list of addresses that we can try connecting
     to */
@@ -35,10 +34,8 @@ int main(int argc, char const *argv[]) {
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_NUMERICSERV;
 
-  if (getaddrinfo(argv[1], PORT_NUM, &hints, &result) != 0) {
-    fprintf(stderr, "getaddrinfo\n");
-    exit(1);
-  }
+  if (getaddrinfo(argv[1], PORT_NUM, &hints, &result) != 0)
+    errExit("getaddrinfo\n");
 
   /* Walk throuhgh returned list until we find an address structure that can be
     used to successfully connect a socket */
@@ -54,33 +51,24 @@ int main(int argc, char const *argv[]) {
     close(cfd);
   }
 
-  if (rp == NULL) {
-    fprintf(stderr, "Could not connect socket to any address\n");
-    exit(1);
-  }
+  if (rp == NULL)
+    fatal("Could not connect socket to any address\n");
 
   freeaddrinfo(result);
 
   /* Send requested sequence length, with terminating newline */
   reqLenStr = (argc > 2) ? argv[2] : "1";
-  if (write(cfd, reqLenStr, strlen(reqLenStr)) != strlen(reqLenStr)) {
-    fprintf(stderr, "Partial/failed write (reqLenStr)");
-    exit(1);
-  }
-  if (write(cfd, "\n", 1) != 1) {
-    fprintf(stderr, "Partial/failed write (newline)");
-    exit(1);
-  }
+  if (write(cfd, reqLenStr, strlen(reqLenStr)) != strlen(reqLenStr))
+    fatal("Partial/failed write (reqLenStr)");
+  if (write(cfd, "\n", 1) != 1)
+    fatal("Partial/failed write (newline)");
 
   /* Read and display sequence number returned by server */
   numRead = readLine(cfd, seqNumStr, INT_LEN);
-  if (numRead == -1) {
-    fprintf(stderr, "readLine\n");
-    exit(1);
-  }
-  if (numRead == -1) {
-    printf("Unexpected EOF from server\n");
-  }
+  if (numRead == -1)
+    fatal("readLine\n");
+  if (numRead == -1)
+    fatal("Unexpected EOF from server\n");
 
   printf("Sequence number: %s", seqNumStr); /* Includes '\n' */
 
