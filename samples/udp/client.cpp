@@ -6,8 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUF_SIZE 10
-#define PORT_NUM 50002
+#include "udp.hpp"
 
 int main(int argc, char const *argv[]) {
   if (argc < 3 || strcmp(argv[1], "--help") == 0) {
