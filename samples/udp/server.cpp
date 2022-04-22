@@ -8,8 +8,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#define BUF_SIZE 10
-#define PORT_NUM 50002
+#include "udp.hpp"
 
 int main(int argc, char const *argv[]) {
   // 新規ソケットの作成
