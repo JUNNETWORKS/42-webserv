@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#define PORT_NUM 50002
+
 int main(int argc, char const *argv[]) {
   // 新規ソケットの作成
   int socket_fd;
@@ -15,10 +17,13 @@ int main(int argc, char const *argv[]) {
   }
 
   // well-knownアドレスにバインド
-  struct socketaddr_in addr;
-  memset(&addr, 0, sizeof(struct socketaddr_in));
-  if (bind(socket_fd, (struct sockaddr *)&addr, sizeof(struct socketaddr_in)) ==
-      -1) {
+  struct sockaddr_in server_addr;
+  memset(&server_addr, 0, sizeof(struct sockaddr_in));
+  server_addr.sin_port = PORT_NUM;
+  server_addr.sin_addr.s_addr = INADDR_ANY;
+
+  if (bind(socket_fd, (struct sockaddr *)&server_addr,
+           sizeof(struct sockaddr_in)) == -1) {
     fprintf(stderr, "bind() failed!\n");
     exit(1);
   }
