@@ -1,7 +1,7 @@
 OBJS_DIR := objs
 
 UTILS_DIR := utils
-UTILS_SRCS := utils/read_line.cpp utils/utils.cpp
+UTILS_SRCS := utils/read_line.cpp utils/utils.cpp utils/inet_sockets.cpp
 UTILS_OBJS := $(UTILS_SRCS:%.cpp=$(OBJS_DIR)/%.o)
 INCLUDES := -I$(UTILS_DIR)
 

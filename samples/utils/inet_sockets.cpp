@@ -1,7 +1,7 @@
 /* To get definitions of NI_MAXHOST and NI_MAXSERV from <netdb.h> */
 #define _DEFAULT_SOURCE
 
-#include "socket.hpp"
+#include "inet_sockets.hpp"
 
 #include <arpa/inet.h>
 #include <errno.h>
