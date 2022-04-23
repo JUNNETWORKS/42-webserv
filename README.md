@@ -5,11 +5,8 @@ Webserv is one of the projects in 42 cursus.
 
 テスト
 
-@startuml
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
-
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
-
-@enduml
+```mermaid
+flowchart LR
+    id1(View) -- User action --> id2(Controller) -- Update -->  id1
+    id2(Controller) -- Update --> id3(Model) -- Notify --> id2
+```
