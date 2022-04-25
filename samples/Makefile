@@ -20,3 +20,7 @@ tcp: $(UTILS_OBJS)
 udp_iterative_echo: $(UTILS_OBJS)
 	$(CC) $(INCLUDES) $(UTILS_OBJS) udp_iterative_echo/server.cpp -o server
 	$(CC) $(INCLUDES) $(UTILS_OBJS) udp_iterative_echo/client.cpp -o client
+
+tcp_concurrent_echo: $(UTILS_OBJS)
+	$(CC) $(INCLUDES) $(UTILS_OBJS) tcp_concurrent_echo/server.cpp -o server
+	$(CC) $(INCLUDES) $(UTILS_OBJS) tcp_concurrent_echo/client.cpp -o client
