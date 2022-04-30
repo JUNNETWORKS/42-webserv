@@ -30,3 +30,6 @@ select: $(UTILS_OBJS) select/main.cpp
 
 poll: $(UTILS_OBJS) poll/main.cpp
 	$(CC) $(INCLUDES) $(UTILS_OBJS) poll/main.cpp -o a.out
+
+epoll: $(UTILS_OBJS) epoll/main.cpp
+	$(CC) $(INCLUDES) $(UTILS_OBJS) epoll/main.cpp -o a.out
