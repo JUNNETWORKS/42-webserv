@@ -43,7 +43,7 @@ static void printConnectionInfo(struct sockaddr_storage *addr,
   char addrStr[ADDRSTRLEN];
   char host[NI_MAXHOST];
   char service[NI_MAXSERV];
-  if (getnameinfo((struct sockaddr *)&addr, addrlen, host, NI_MAXHOST, service,
+  if (getnameinfo((struct sockaddr *)addr, addrlen, host, NI_MAXHOST, service,
                   NI_MAXSERV, 0) == 0) {
     snprintf(addrStr, ADDRSTRLEN, "(%s, %s)", host, service);
   } else {
