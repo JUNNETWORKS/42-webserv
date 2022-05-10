@@ -36,5 +36,5 @@ epoll: $(UTILS_OBJS) epoll/main.cpp
 	$(CXX) $(INCLUDES) $(UTILS_OBJS) epoll/main.cpp -o a.out
 
 socket_and_cgi: $(UTILS_OBJS) socket_and_cgi/cgi.cpp socket_and_cgi/server.cpp
-	$(CXX) $(INCLUDES) $(UTILS_OBJS) socket_and_cgi/cgi.cpp -o cgi
+	$(CXX) $(INCLUDES) $(UTILS_OBJS) socket_and_cgi/cgi.cpp -o cgi-bin/cpp.cgi
 	$(CXX) $(INCLUDES) $(UTILS_OBJS) socket_and_cgi/server.cpp -o server
