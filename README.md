@@ -5,7 +5,7 @@ Webserv is one of the projects in 42 cursus.
 <!-- START doctoc -->
 <!-- END doctoc -->
 
-## docs
+## Docs
 
 - [configuration.md](docs/configuration.md)
 
