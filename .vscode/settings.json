@@ -1,5 +1,7 @@
 {
   "files.associations": {
-    "cstdlib": "cpp"
+    "cstdlib": "cpp",
+    "limits": "cpp",
+    "typeinfo": "cpp"
   }
 }
