@@ -30,6 +30,8 @@ webservで用いる設定ファイルの仕様について述べる｡
 
 正規表現は正規表現エンジンは作る予定無いので対応してない｡
 
+変数についても対応しない｡
+
 ## server
 
 - Required: True
@@ -136,8 +138,7 @@ Syntax: `root <path>;`
 
 Syntax: `index <path>;`
 
-リクエスト対象がディレクトリだった場合にレスポンスとして返すデフォルトファイル｡
-
+リクエスト対象がディレクトリだった場合にレスポンスとして返す
 `is_cgi on;` の場合は無視される｡
 
 #### is_cgi
@@ -176,9 +177,11 @@ Syntax: `autoindex <on_or_off>;`
 - Required: False
 - Multiple: False
 
-Syntax: `return <http_status_code> <path>;`
+Syntax: `return <path>;`
 
-e.g. `return 301 http://localhost/index.html;`
+HTTPステータスコード301と共に`<path>`へリダイレクトする｡
+
+e.g. `return http://localhost/index.html;`
 
 ## サンプル
 
@@ -230,6 +233,14 @@ server {
   location / {
     root /var/www/html;
     index index.html;
+  }
+}
+
+server {
+  listen 9090;
+
+  location / {
+    return http://localhost:8080/
   }
 }
 ```
