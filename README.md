@@ -1,12 +1,31 @@
 # 42-webserv
 Webserv is one of the projects in 42 cursus.
 
-## シーケンス図
+## キーワード
 
-テスト
+- Nginx
+- イベント駆動 (State machine)
+- 非同期IO (O_NONBLOCK)
+- ノンブロッキングIO ()
+- IO多重化 (epoll)
+
+## サーバーの流れ
+
+[Inside NGINX: How We Designed for Performance & Scale](https://www.nginx.com/blog/inside-nginx-how-we-designed-for-performance-scale/) を元にしている｡
+
+[nginx - The Architecture of Open Source Application](https://www.aosabook.org/en/nginx.html)
+
+1. master process が動く｡ 設定ファイルを読み込む｡ シグナルハンドラを設定する｡ master が worker プロセスを作成する｡ listen_fd を作成する｡ (workerプロセス間での共通リソースの共有のために必要に応じて共有メモリの設定もする必要ありかも)
+    <br>※ master は worker プロセスの作成や､ポートのバインド､コンフィグファイルの読み込み､シグナルを受信した際にworkerプロセスに送信などの特権的な操作を行う｡ それ以外のネットワークやリクエストの処理などはすべてworkerプロセスが行う｡
+1. master からは設定ファイルを読み込んだ情報と､listen_fd の集合が渡される｡ 各 worker は master が読み込んだ設定ファイルに基づき設定する｡
+1. worker プロセスは listen_fd と connection_fd の集合をもとに epoll() などのIO多重化によってイベント(読み書き可能や新しい接続など)が発生するのを監視する｡
+  - epoll() で
+
+![](https://www.nginx.com/wp-content/uploads/2015/06/infographic-Inside-NGINX_nonblocking.png)
+
+### HTTP STATE MACHINE
 
 ```mermaid
-flowchart LR
-    id1(View) -- User action --> id2(Controller) -- Update -->  id1
-    id2(Controller) -- Update --> id3(Model) -- Notify --> id2
+stateDiagram
+    s1 --> s2: A transition
 ```
