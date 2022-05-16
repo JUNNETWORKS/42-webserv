@@ -1,6 +1,7 @@
 #include "master.hpp"
 
 #include "configuration/configuration.hpp"
+#include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 #include "worker/worker.hpp"
 
@@ -28,10 +29,12 @@ pid_t createWorkerProcess(int listen_fd) {
 }  // namespace
 
 int main(int argc, char const *argv[]) {
-  (void)argc;
-  (void)argv;
-  // TODO: 設定ファイルの読み込み. (設定ファイルの仕様がまとまってから書く)
-  // struct Configuration config;
+  if (argc != 2) {
+    utils::errExit("%s <config_path>\n", argv[0]);
+  }
+
+  // Setup configuration
+  configuration::Configuration config = configuration::parseConfig(argv[1]);
 
   // TODO: シグナルハンドラの設定
 
