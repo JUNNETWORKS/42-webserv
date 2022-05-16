@@ -90,7 +90,7 @@ Syntax: `allow_method <method> [<method>];`
 
 Syntax: `client_max_body_size <size>;`
 
-受信できるリクエストボディの最大サイズを指定する｡
+受信できるリクエストボディの最大サイズを指定する｡ 最大 `1G`
 
 `<size>` は `<digits> <unit>` で構成されている｡
 
