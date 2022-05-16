@@ -2,8 +2,16 @@
 
 Webserv is one of the projects in 42 cursus.
 
-<!-- START doctoc -->
-<!-- END doctoc -->
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [docs](#docs)
+- [キーワード](#%E3%82%AD%E3%83%BC%E3%83%AF%E3%83%BC%E3%83%89)
+- [サーバーの流れ](#%E3%82%B5%E3%83%BC%E3%83%90%E3%83%BC%E3%81%AE%E6%B5%81%E3%82%8C)
+  - [HTTP STATE MACHINE](#http-state-machine)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Docs
 
