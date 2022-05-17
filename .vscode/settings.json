@@ -2,6 +2,8 @@
   "files.associations": {
     "cstdlib": "cpp",
     "limits": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "atomic": "cpp",
+    "cstdint": "cpp"
   }
 }
