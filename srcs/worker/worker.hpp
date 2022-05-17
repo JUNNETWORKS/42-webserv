@@ -13,8 +13,6 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "http/http.hpp"
-
 namespace worker {
 
 struct SocketInfo {

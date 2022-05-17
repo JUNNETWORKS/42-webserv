@@ -7,7 +7,6 @@
 
 #include "config/location_conf.hpp"
 #include "config/virtual_server_conf.hpp"
-#include "http/http.hpp"
 
 namespace config {
 
