@@ -35,7 +35,8 @@ class HttpRequest {
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
 
-  void AddDataToBuffer(Byte *buf, size_t size);
+  void AppendDataToBuffer(Byte *buf, size_t size);
+  void ParseOneLine();
 };
 
 };  // namespace http

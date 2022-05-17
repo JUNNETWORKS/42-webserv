@@ -25,9 +25,12 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
 
 HttpRequest::~HttpRequest() {}
 
-void HttpRequest::AddDataToBuffer(HttpRequest::Byte *buf, size_t size) {
+void HttpRequest::AppendDataToBuffer(HttpRequest::Byte *buf, size_t size) {
   buffer_.insert(buffer_.end(), buf, buf + size);
   printf("current buf len: %lu", buffer_.size());
 }
+
+// TODO
+void HttpRequest::ParseOneLine() {}
 
 };  // namespace http

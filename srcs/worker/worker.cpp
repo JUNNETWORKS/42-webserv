@@ -1,6 +1,6 @@
 #include "worker.hpp"
 
-#include "configuration/configuration.hpp"
+#include "config/config.hpp"
 #include "utils/inet_sockets.hpp"
 
 namespace worker {
@@ -8,7 +8,7 @@ namespace {
 
 const int BUF_SIZE = 1024;
 
-int addSocketFdIntoEpfd(int epfd, int sockfd, SocketInfo::ESockType socktype,
+int AddSocketFdIntoEpfd(int epfd, int sockfd, SocketInfo::ESockType socktype,
                         uint32_t epevents) {
   struct epoll_event *epev = new struct epoll_event;
   epev->data.ptr = new SocketInfo();
@@ -22,12 +22,12 @@ int addSocketFdIntoEpfd(int epfd, int sockfd, SocketInfo::ESockType socktype,
 
 }  // namespace
 
-int startWorker(int listen_fd) {
+int StartWorker(int listen_fd) {
   // epoll インスタンス作成
   int epfd = epoll_create1(EPOLL_CLOEXEC);
 
   // epfd に listen_fd を追加
-  addSocketFdIntoEpfd(epfd, listen_fd, SocketInfo::ListenSock, EPOLLIN);
+  AddSocketFdIntoEpfd(epfd, listen_fd, SocketInfo::ListenSock, EPOLLIN);
 
   // イベントループ
   struct epoll_event epevarr[1];
@@ -48,7 +48,7 @@ int startWorker(int listen_fd) {
       int conn_fd =
           accept(listen_fd, (struct sockaddr *)&client_addr, &addrlen);
       fcntl(conn_fd, F_SETFD, O_NONBLOCK);
-      if (addSocketFdIntoEpfd(epfd, conn_fd, SocketInfo::ConnSock,
+      if (AddSocketFdIntoEpfd(epfd, conn_fd, SocketInfo::ConnSock,
                               EPOLLIN | EPOLLOUT) == -1) {
         exit(EXIT_FAILURE);
       }
@@ -67,14 +67,14 @@ int startWorker(int listen_fd) {
 
       // if data in read buffer, read
       if (epevarr[0].events & EPOLLIN) {
-        char buf[BUF_SIZE];
+        unsigned char buf[BUF_SIZE];
         int n = read(conn_fd, buf, sizeof(buf) - 1);
         if (n < 0) {  // EOF(Connection end) or Error
           printf("Connection end\n");
           close(conn_fd);
           epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
         } else {
-          buf[n] = '\0';
+          socket_info->request.AppendDataToBuffer(buf, n);
           printf("Received data: %s\n", buf);
         }
       }
