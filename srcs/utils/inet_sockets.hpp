@@ -1,5 +1,5 @@
-#ifndef SOCKET_UTILS_HPP_
-#define SOCKET_UTILS_HPP_
+#ifndef UTILS_INET_SOCKETS_HPP_
+#define UTILS_INET_SOCKETS_HPP_
 
 #include <netdb.h>
 #include <sys/socket.h>

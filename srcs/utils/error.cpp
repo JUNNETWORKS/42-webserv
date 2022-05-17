@@ -6,7 +6,7 @@
 
 namespace utils {
 
-void errExit(const char *fmt, ...) {
+void ErrExit(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
 

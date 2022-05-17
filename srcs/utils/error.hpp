@@ -1,9 +1,9 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#ifndef UTILS_ERROR_HPP
+#define UTILS_ERROR_HPP
 
 namespace utils {
 
-void errExit(const char *fmt, ...);
+void ErrExit(const char *fmt, ...);
 
 };
 
