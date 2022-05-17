@@ -3,6 +3,7 @@
 #include "configuration/configuration.hpp"
 #include "utils/inet_sockets.hpp"
 
+namespace worker {
 namespace {
 
 const int BUF_SIZE = 1024;
@@ -19,7 +20,7 @@ int addSocketFdIntoEpfd(int epfd, int sockfd, SocketInfo::ESockType socktype,
   return epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, epev);
 }
 
-};  // namespace
+}  // namespace
 
 int startWorker(int listen_fd) {
   // epoll インスタンス作成
@@ -79,16 +80,14 @@ int startWorker(int listen_fd) {
       }
       // if space in write buffer, read
       if (epevarr[0].events & EPOLLOUT) {
-        /*
-        const char *str = "Some buffer or sendfile().\n";
-        int n = write(conn_fd, str, strlen(str) - 1);
-        if (n < static_cast<int>(strlen(str))) {
-          // TODO: ソケットバッファの都合などですべて書き込めない場合がある
-          printf("can't write all contents in buffer: %d/%lu\n", n,
-                 strlen(str));
-        } else {
-        }
-        */
+        // const char *str = "Some buffer or sendfile().\n";
+        // int n = write(conn_fd, str, strlen(str) - 1);
+        // if (n < static_cast<int>(strlen(str))) {
+        //   // TODO: ソケットバッファの都合などですべて書き込めない場合がある
+        //   printf("can't write all contents in buffer: %d/%lu\n", n,
+        //          strlen(str));
+        // } else {
+        // }
       }
       // error or timeout? close conn_fd and remove from epfd
       if (epevarr[0].events & (EPOLLERR | EPOLLHUP)) {
@@ -99,3 +98,5 @@ int startWorker(int listen_fd) {
     }
   }
 }
+
+};  // namespace worker

@@ -1,6 +1,6 @@
 #include "master.hpp"
 
-#include "configuration/configuration.hpp"
+#include "config/config.hpp"
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 #include "worker/worker.hpp"
@@ -9,7 +9,7 @@
 
 namespace {
 
-pid_t createWorkerProcess(int listen_fd) {
+pid_t CreateWorkerProcess(int listen_fd) {
   pid_t pid = fork();
   switch (pid) {
     case -1:  // Error
@@ -30,11 +30,12 @@ pid_t createWorkerProcess(int listen_fd) {
 
 int main(int argc, char const *argv[]) {
   if (argc != 2) {
-    utils::errExit("%s <config_path>\n", argv[0]);
+    utils::ErrExit("%s <config_path>\n", argv[0]);
   }
 
   // Setup configuration
-  configuration::Configuration config = configuration::parseConfig(argv[1]);
+  // config::Config config = config::parseConfig(argv[1]);
+  config::Config *config = config::GetSampleConfig();
 
   // TODO: シグナルハンドラの設定
 
@@ -44,7 +45,7 @@ int main(int argc, char const *argv[]) {
 
   // workerプロセスの生成
   for (int i = 0; i < WORKER_NUM; ++i) {
-    pid_t pid = createWorkerProcess(listen_fd);
+    pid_t pid = CreateWorkerProcess(listen_fd);
     if (pid == -1) {
       // もしworkerの生成に失敗したら全てのworkerを終了する
     }

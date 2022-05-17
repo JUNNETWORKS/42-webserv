@@ -1,5 +1,5 @@
-#ifndef WORKER_HPP_
-#define WORKER_HPP_
+#ifndef WORKER_WORKER_HPP_
+#define WORKER_WORKER_HPP_
 
 #include <fcntl.h>
 #include <string.h>
