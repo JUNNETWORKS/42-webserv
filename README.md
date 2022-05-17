@@ -6,16 +6,22 @@ Webserv is one of the projects in 42 cursus.
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Docs](#docs)
-- [キーワード](#%E3%82%AD%E3%83%BC%E3%83%AF%E3%83%BC%E3%83%89)
-- [サーバーの流れ](#%E3%82%B5%E3%83%BC%E3%83%90%E3%83%BC%E3%81%AE%E6%B5%81%E3%82%8C)
-  - [HTTP STATE MACHINE](#http-state-machine)
+- [42-webserv](#42-webserv)
+  - [Docs](#docs)
+  - [コーディングルール](#コーディングルール)
+  - [キーワード](#キーワード)
+  - [サーバーの流れ](#サーバーの流れ)
+    - [HTTP STATE MACHINE](#http-state-machine)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Docs
 
 - [configuration.md](docs/configuration.md)
+
+## コーディングルール
+
+[Google C++ Style Guide](https://ttsuki.github.io/styleguide/cppguide.ja.html) に従う｡
 
 ## キーワード
 
