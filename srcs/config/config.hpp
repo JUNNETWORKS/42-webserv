@@ -1,6 +1,8 @@
 #ifndef CONFIG_CONFIG_HPP
 #define CONFIG_CONFIG_HPP
 
+#include <stdint.h>
+
 #include <map>
 #include <set>
 #include <vector>
@@ -12,14 +14,8 @@ namespace config {
 
 class Config {
  private:
-  // <port, server_name>
-  struct VirtualServerSpecifier {
-    const PortType listen_port_;
-    const std::string server_name_;
-  };
-
-  int32_t worker_num_;
-  std::map<VirtualServerSpecifier, VirtualServerConf> servers_;
+  int worker_num_;
+  std::vector<VirtualServerConf> servers_;
 
  public:
   Config();
@@ -34,12 +30,10 @@ class Config {
 
   void SetWorkerNum(int32_t worker_num);
 
-  const VirtualServerConf &GetVirtualServerConf(const PortType listen_port,
+  const VirtualServerConf *GetVirtualServerConf(const PortType listen_port,
                                                 const std::string &server_name);
 
-  void SetVirtualServerConf(const PortType listen_port,
-                            const std::string &server_name,
-                            const VirtualServerConf &virtual_server_conf);
+  void AppendVirtualServerConf(const VirtualServerConf &virtual_server_conf);
 };
 
 // TODO: Parserができたら消す｡

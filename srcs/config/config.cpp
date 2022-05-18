@@ -1,5 +1,6 @@
 #include "config/config.hpp"
 
+#include <stdint.h>
 #include <sys/sysinfo.h>
 
 #include <cassert>
@@ -32,12 +33,29 @@ void Config::SetWorkerNum(int32_t worker_num) {
   worker_num_ = worker_num;
 }
 
-const VirtualServerConf &Config::GetVirtualServerConf(
-    const PortType listen_port, const std::string &server_name) {}
+const VirtualServerConf *Config::GetVirtualServerConf(
+    const PortType listen_port, const std::string &server_name) {
+  VirtualServerConf *virtual_server_conf = NULL;
 
-void Config::SetVirtualServerConf(
-    const PortType listen_port, const std::string &server_name,
-    const VirtualServerConf &virtual_server_conf) {}
+  for (std::vector<VirtualServerConf>::iterator it = servers_.begin();
+       it != servers_.end(); ++it) {
+    if (it->GetListenPort() == listen_port) {
+      if (virtual_server_conf == NULL) {
+        virtual_server_conf = &(*it);
+      } else if (!(virtual_server_conf->IsServerNameIncluded(server_name)) &&
+                 it->IsServerNameIncluded(server_name)) {
+        virtual_server_conf = &(*it);
+      }
+    }
+  }
+
+  return virtual_server_conf;
+}
+
+void Config::AppendVirtualServerConf(
+    const VirtualServerConf &virtual_server_conf) {
+  servers_.push_back(virtual_server_conf);
+}
 
 // server {
 //   listen 80;
