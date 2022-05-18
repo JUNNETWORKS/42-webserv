@@ -13,6 +13,5 @@
 - poll: `poll()` の使用例
 - epoll: `epoll()` の使用例
 - epoll_with_socket: `epoll()` とソケット通信を組み合わせた例
-- master_worker_epoll: Nginxのように master, worker プロセスを分けたサーバープログラム
 - socket_and_cgi: CSAPP11.6 Tiny Web Server. リクエストURIを解析し､静的ファイル､CGI両方に対応している反復型のサーバープログラム
 

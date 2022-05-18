@@ -1,7 +1,11 @@
-#ifndef VIRTUAL_SERVER_CONF_HPP_
-#define VIRTUAL_SERVER_CONF_HPP_
+#ifndef CONFIG_VIRTUAL_SERVER_CONF_HPP_
+#define CONFIG_VIRTUAL_SERVER_CONF_HPP_
 
+#include <stdint.h>
+
+#include <set>
 #include <string>
+#include <vector>
 
 #include "config/location_conf.hpp"
 
@@ -13,16 +17,30 @@ typedef uint16_t PortType;
 // 仮想サーバーの設定. Nginx の server ブロックに相当.
 class VirtualServerConf {
  private:
-  struct LocationTuple {
-    bool is_backward_match_;
-    std::string path_;
-    LocationConf location_;
-  };
-
   PortType listen_port_;
-  std::string server_name_;
+  std::set<std::string> server_names_;
+  std::vector<LocationConf> locations_;
 
-  std::vector<LocationTuple> locations;
+ public:
+  VirtualServerConf();
+
+  VirtualServerConf(const VirtualServerConf &rhs);
+
+  VirtualServerConf &operator=(const VirtualServerConf &rhs);
+
+  ~VirtualServerConf();
+
+  PortType GetListenPort();
+
+  void SetListenPort(PortType listen_port);
+
+  bool IsServerNameIncluded(std::string server_name);
+
+  void AppendServerName(std::string server_name);
+
+  LocationConf *GetLocation(std::string path);
+
+  void AppendLocation(LocationConf location);
 };
 
 };  // namespace config
