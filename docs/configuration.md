@@ -6,21 +6,20 @@ webservで用いる設定ファイルの仕様について述べる｡
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Configuration の仕様](#configuration-の仕様)
-  - [基本](#基本)
-  - [server](#server)
-    - [listen](#listen)
-    - [server_name](#server_name)
-    - [location](#location)
-      - [allow_method](#allow_method)
-      - [client_max_body_size](#client_max_body_size)
-      - [root](#root)
-      - [index](#index)
-      - [is_cgi](#is_cgi)
-      - [error_page](#error_page)
-      - [autoindex](#autoindex)
-      - [return](#return)
-  - [サンプル](#サンプル)
+- [基本](#%E5%9F%BA%E6%9C%AC)
+- [server](#server)
+  - [listen](#listen)
+  - [server_name](#server_name)
+  - [location](#location)
+    - [allow_method](#allow_method)
+    - [client_max_body_size](#client_max_body_size)
+    - [root](#root)
+    - [index](#index)
+    - [is_cgi](#is_cgi)
+    - [error_page](#error_page)
+    - [autoindex](#autoindex)
+    - [return](#return)
+- [サンプル](#%E3%82%B5%E3%83%B3%E3%83%97%E3%83%AB)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -81,9 +80,11 @@ Syntax: `server_name: <host_name> [<host_name>...]`
 - Required: False
 - Multiple: True
 
-Syntax: `location <pattern> {}`
+Syntax: `location <pattern> {}` or `location_back <pattern> {}`
 
 `location` ディレクティブは前方一致でマッチングを行う｡ `<pattern>` には正規表現は使えず､純粋に前方一致のみ行われることに注意｡
+
+`location_back` ディレクティブは後方一致でマッチングを行う｡ 拡張子でルーティングしたい場合などに使う想定｡ ブロック内で利用できるディレクティブなどは`location`と同じ｡
 
 locationの振り分けの優先順位
 1. 前方一致のlocationを判定し､最も長い文字列の`<pattern>`にマッチしたものを選ぶ｡
@@ -219,7 +220,7 @@ server {
     index index.html;
   }
 
-  location .php {
+  location_back .php {
     is_cgi on;
     root /home/nginx/cgi_bins;
   }
