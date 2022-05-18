@@ -18,6 +18,12 @@ Webserv is one of the projects in 42 cursus.
 
 - [configuration.md](docs/configuration.md)
 
+## 使い方
+
+`make re && ./webserv hoge` で起動｡
+
+`telnet 127.0.0.1 8080` でプログラムに接続｡
+
 ## コーディングルール
 
 [Google C++ Style Guide](https://ttsuki.github.io/styleguide/cppguide.ja.html) に従う｡
