@@ -26,8 +26,11 @@ class HttpResponse {
 
  public:
   HttpResponse();
+
   HttpResponse(const HttpResponse &rhs);
+
   HttpResponse &operator=(const HttpResponse &rhs);
+
   ~HttpResponse();
 };
 
