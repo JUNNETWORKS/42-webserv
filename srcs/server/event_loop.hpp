@@ -1,7 +1,8 @@
-#ifndef WORKER_WORKER_HPP_
-#define WORKER_WORKER_HPP_
+#ifndef SERVER_EVENT_LOOP_HPP_
+#define SERVER_EVENT_LOOP_HPP_
 
 #include <fcntl.h>
+#include <stdint.h>
 #include <string.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
@@ -13,7 +14,10 @@
 #include <cstdlib>
 #include <iostream>
 
-namespace worker {
+#include "http/http_request.hpp"
+#include "http/http_response.hpp"
+
+namespace server {
 
 struct SocketInfo {
   enum ESockType { ListenSock, ConnSock };
@@ -23,12 +27,12 @@ struct SocketInfo {
   ESockType socktype;
   EPhase phase;  // リクエストが読み込み終わってないときは Request,
                  // 読み込み終わったら Response
-  // HttpRequest request;
-  // HtppResponse response;
+  http::HttpRequest request;
+  http::HttpResponse response;
 };
 
-int startWorker(int listen_fd);
+int StartEventLoop(int listen_fd);
 
-};  // namespace worker
+};  // namespace server
 
 #endif

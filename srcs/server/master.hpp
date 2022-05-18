@@ -11,6 +11,6 @@
 #include <cstdlib>
 #include <iostream>
 
-namespace master {};
+namespace server {};
 
 #endif

@@ -113,8 +113,11 @@ void Config::AppendVirtualServerConf(
 //     return http://localhost:8080/
 //   }
 // }
-Config *GetSampleConfig() {
-  Config *config = new Config();
-}
+// TODO
+// Config *GetSampleConfig() {
+//   Config *config = new Config();
+//
+//   config->AppendVirtualServerConf()
+// }
 
 }  // namespace config

@@ -1,9 +1,10 @@
-#include "worker.hpp"
+
+#include "server/event_loop.hpp"
 
 #include "config/config.hpp"
 #include "utils/inet_sockets.hpp"
 
-namespace worker {
+namespace server {
 namespace {
 
 const int BUF_SIZE = 1024;
@@ -22,7 +23,7 @@ int AddSocketFdIntoEpfd(int epfd, int sockfd, SocketInfo::ESockType socktype,
 
 }  // namespace
 
-int StartWorker(int listen_fd) {
+int StartEventLoop(int listen_fd) {
   // epoll インスタンス作成
   int epfd = epoll_create1(EPOLL_CLOEXEC);
 
@@ -99,4 +100,4 @@ int StartWorker(int listen_fd) {
   }
 }
 
-};  // namespace worker
+};  // namespace server
