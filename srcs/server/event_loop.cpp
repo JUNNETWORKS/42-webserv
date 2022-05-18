@@ -57,8 +57,8 @@ int StartEventLoop(int listen_fd) {
       int conn_fd =
           accept(listen_fd, (struct sockaddr *)&client_addr, &addrlen);
       fcntl(conn_fd, F_SETFD, O_NONBLOCK);
-      if (AddSocketFdIntoEpfd(epfd, conn_fd, SocketInfo::ConnSock, EPOLLIN) ==
-          -1) {
+      if (AddSocketFdIntoEpfd(epfd, conn_fd, SocketInfo::ConnSock,
+                              EPOLLIN | EPOLLOUT) == -1) {
         utils::ErrExit("AddSocketFdIntoEpFd");
       }
       LogConnectionInfoToStdout(client_addr);
@@ -72,13 +72,13 @@ int StartEventLoop(int listen_fd) {
       if (epevarr[0].events & EPOLLIN) {
         unsigned char buf[BUF_SIZE];
         int n = read(conn_fd, buf, sizeof(buf) - 1);
-        if (n < 0) {  // EOF(Connection end) or Error
+        if (n <= 0) {  // EOF(Connection end) or Error
           printf("Connection end\n");
           close(conn_fd);
           epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
         } else {
           socket_info->request.AppendDataToBuffer(buf, n);
-          printf("Received data: %s\n", buf);
+          printf("----- Received data -----\n%s", buf);
         }
       }
 
