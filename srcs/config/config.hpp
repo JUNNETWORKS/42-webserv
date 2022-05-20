@@ -14,7 +14,6 @@ namespace config {
 
 class Config {
  private:
-  int worker_num_;
   std::vector<VirtualServerConf> servers_;
 
  public:
@@ -26,10 +25,6 @@ class Config {
 
   ~Config();
 
-  int32_t GetWorkerNum();
-
-  void SetWorkerNum(int32_t worker_num);
-
   const VirtualServerConf *GetVirtualServerConf(const PortType listen_port,
                                                 const std::string &server_name);
 
@@ -37,7 +32,7 @@ class Config {
 };
 
 // TODO: Parserができたら消す｡
-Config *GetSampleConfig();
+Config GetSampleConfig();
 
 };  // namespace config
 

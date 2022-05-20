@@ -5,11 +5,11 @@
 
 #include <cassert>
 
+#include "http/http_status.hpp"
+
 namespace config {
 
-Config::Config() : worker_num_(get_nprocs()) {
-  assert(worker_num_ > 0);
-}
+Config::Config() {}
 
 Config::Config(const Config &rhs) {
   *this = rhs;
@@ -17,21 +17,12 @@ Config::Config(const Config &rhs) {
 
 Config &Config::operator=(const Config &rhs) {
   if (this != &rhs) {
-    worker_num_ = rhs.worker_num_;
     servers_ = rhs.servers_;
   }
   return *this;
 }
 
 Config::~Config() {}
-
-int32_t Config::GetWorkerNum() {
-  return worker_num_;
-}
-
-void Config::SetWorkerNum(int32_t worker_num) {
-  worker_num_ = worker_num;
-}
 
 const VirtualServerConf *Config::GetVirtualServerConf(
     const PortType listen_port, const std::string &server_name) {
@@ -113,11 +104,81 @@ void Config::AppendVirtualServerConf(
 //     return http://localhost:8080/
 //   }
 // }
-// TODO
-// Config *GetSampleConfig() {
-//   Config *config = new Config();
-//
-//   config->AppendVirtualServerConf()
-// }
+Config GetSampleConfig() {
+  Config config;
+
+  // server 1
+  VirtualServerConf vserver1;
+  vserver1.SetListenPort(80);
+  vserver1.AppendServerName("localhost");
+
+  LocationConf location_v1_1;
+  location_v1_1.SetPathPattern("/");
+  location_v1_1.AppendAllowedMethod("GET");
+  location_v1_1.SetRootDir("/var/www/html");
+  location_v1_1.AppendIndexPages("index.html");
+  location_v1_1.AppendIndexPages("index.htm");
+  location_v1_1.AppendErrorPages(http::SERVER_ERROR, "/server_error_page.html");
+  location_v1_1.AppendErrorPages(http::NOT_FOUND, "/not_found.html");
+  location_v1_1.AppendErrorPages(http::FORBIDDEN, "/not_found.html");
+  vserver1.AppendLocation(location_v1_1);
+
+  LocationConf location_v1_2;
+  location_v1_2.SetPathPattern("/upload");
+  location_v1_2.AppendAllowedMethod("GET");
+  location_v1_2.AppendAllowedMethod("POST");
+  location_v1_2.AppendAllowedMethod("DELETE");
+  location_v1_2.SetRootDir("/var/www/user_uploads");
+  location_v1_2.SetAutoIndex(true);
+  vserver1.AppendLocation(location_v1_2);
+
+  config.AppendVirtualServerConf(vserver1);
+
+  // server 2
+  VirtualServerConf vserver2;
+  vserver2.SetListenPort(80);
+  vserver2.AppendServerName("www.webserv.com");
+  vserver2.AppendServerName("webserv.com");
+
+  LocationConf location_v2_1;
+  location_v2_1.SetPathPattern("/");
+  location_v2_1.SetRootDir("/var/www/html");
+  location_v2_1.AppendIndexPages("index.html");
+  vserver2.AppendLocation(location_v2_1);
+
+  LocationConf location_v2_2;
+  location_v2_2.SetPathPattern(".php");
+  location_v2_2.SetIsBackwardSearch(true);
+  location_v2_2.SetIsCgi(true);
+  location_v2_2.SetRootDir("/home/nginx/cgi_bins");
+  vserver2.AppendLocation(location_v2_2);
+
+  config.AppendVirtualServerConf(vserver2);
+
+  // server 3
+  VirtualServerConf vserver3;
+  vserver3.SetListenPort(8080);
+  vserver3.AppendServerName("localhost");
+
+  LocationConf location_v3_1;
+  location_v3_1.SetPathPattern("/");
+  location_v3_1.SetRootDir("/var/www/html");
+  location_v3_1.AppendIndexPages("index.html");
+  vserver3.AppendLocation(location_v3_1);
+
+  config.AppendVirtualServerConf(vserver3);
+
+  // server 4
+  VirtualServerConf vserver4;
+  vserver4.SetListenPort(9090);
+
+  LocationConf location_v4_1;
+  location_v4_1.SetRedirectUrl("http://localhost:8080/");
+  vserver4.AppendLocation(location_v4_1);
+
+  config.AppendVirtualServerConf(vserver4);
+
+  return config;
+}
 
 }  // namespace config

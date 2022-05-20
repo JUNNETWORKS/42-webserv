@@ -10,7 +10,7 @@ int main(int argc, char const *argv[]) {
 
   // Setup configuration
   // config::Config config = config::parseConfig(argv[1]);
-  // config::Config *config = config::GetSampleConfig();
+  config::Config config = config::GetSampleConfig();
 
   // listen_fd を作成
   int listen_fd = utils::inetListen("8080", 10, NULL);
