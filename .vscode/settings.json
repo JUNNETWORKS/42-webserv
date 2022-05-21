@@ -4,6 +4,16 @@
     "limits": "cpp",
     "typeinfo": "cpp",
     "atomic": "cpp",
-    "cstdint": "cpp"
+    "cstdint": "cpp",
+    "array": "cpp",
+    "*.tcc": "cpp",
+    "string": "cpp",
+    "vector": "cpp",
+    "string_view": "cpp",
+    "functional": "cpp",
+    "istream": "cpp",
+    "ostream": "cpp",
+    "sstream": "cpp",
+    "streambuf": "cpp"
   }
 }
