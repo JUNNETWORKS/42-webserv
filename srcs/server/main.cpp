@@ -1,5 +1,6 @@
 #include "config/config.hpp"
 #include "server/event_loop.hpp"
+#include "server/setup.hpp"
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 
@@ -10,13 +11,12 @@ int main(int argc, char const *argv[]) {
 
   // Setup configuration
   // config::Config config = config::parseConfig(argv[1]);
-  config::Config config = config::GetSampleConfig();
+  config::Config config = config::CreateSampleConfig();
 
   // listen_fd を作成
-  int listen_fd = utils::inetListen("8080", 10, NULL);
-  std::cout << "Listen at 127.0.0.1:8080" << std::endl;
+  std::vector<int> listen_fds = server::OpenLilstenFds(config);
 
-  server::StartEventLoop(listen_fd);
+  server::StartEventLoop(listen_fds, config);
 
   return 0;
 }

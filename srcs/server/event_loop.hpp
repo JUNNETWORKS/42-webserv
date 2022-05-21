@@ -31,7 +31,8 @@ struct SocketInfo {
   http::HttpResponse response;
 };
 
-int StartEventLoop(int listen_fd);
+int StartEventLoop(const std::vector<int> &listen_fds,
+                   const config::Config &config);
 
 };  // namespace server
 
