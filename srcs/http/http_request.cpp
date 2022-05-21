@@ -27,7 +27,7 @@ HttpRequest::~HttpRequest() {}
 
 void HttpRequest::AppendDataToBuffer(HttpRequest::Byte *buf, size_t size) {
   buffer_.insert(buffer_.end(), buf, buf + size);
-  printf("current buf len: %lu", buffer_.size());
+  printf("current buf len: %lu\n", buffer_.size());
 }
 
 // TODO

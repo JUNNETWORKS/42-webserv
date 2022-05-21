@@ -80,13 +80,13 @@ int StartEventLoop(const std::vector<int> &listen_fds,
       if (epevarr[0].events & EPOLLIN) {
         unsigned char buf[BUF_SIZE];
         int n = read(conn_fd, buf, sizeof(buf) - 1);
-        if (n < 0) {  // EOF(Connection end) or Error
+        if (n <= 0) {  // EOF(Connection end) or Error
           printf("Connection end\n");
           close(conn_fd);
           epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
         } else {
           socket_info->request.AppendDataToBuffer(buf, n);
-          printf("Received data: %s\n", buf);
+          printf("----- Received data -----\n%s", buf);
         }
       }
 

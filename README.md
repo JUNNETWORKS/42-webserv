@@ -7,6 +7,7 @@ Webserv is one of the projects in 42 cursus.
 **Table of Contents**
 
 - [Docs](#docs)
+- [使い方](#%E4%BD%BF%E3%81%84%E6%96%B9)
 - [コーディングルール](#%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%BC%E3%83%AB)
 - [キーワード](#%E3%82%AD%E3%83%BC%E3%83%AF%E3%83%BC%E3%83%89)
 - [サーバーの流れ](#%E3%82%B5%E3%83%BC%E3%83%90%E3%83%BC%E3%81%AE%E6%B5%81%E3%82%8C)
@@ -17,6 +18,12 @@ Webserv is one of the projects in 42 cursus.
 ## Docs
 
 - [configuration.md](docs/configuration.md)
+
+## 使い方
+
+`make re && ./webserv hoge` で起動｡
+
+`telnet 127.0.0.1 8080` でプログラムに接続｡
 
 ## コーディングルール
 
