@@ -41,12 +41,40 @@ void AcceptNewConnection(int epfd, int listen_fd) {
   LogConnectionInfoToStdout(client_addr);
 }
 
+void HandleReadEvent(const config::Config &config, int epfd,
+                     SocketInfo *socket_info) {
+  int conn_fd = socket_info->fd;
+  unsigned char buf[BUF_SIZE];
+  int n = read(conn_fd, buf, sizeof(buf) - 1);
+  if (n <= 0) {  // EOF(Connection end) or Error
+    printf("Connection end\n");
+    close(conn_fd);
+    epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
+  } else {
+    socket_info->request.AppendDataToBuffer(buf, n);
+    printf("----- Received data -----\n%s", buf);
+  }
+}
+
+void HandleWriteEvent(const config::Config &config, int epfd,
+                      SocketInfo *socket_info) {
+  // TODO: Send HTTP Response to the client
+}
+
+void HandleErrorEvent(int epfd, SocketInfo *socket_info) {
+  // if error or timeout close conn_fd and remove from epfd
+  int conn_fd = socket_info->fd;
+  printf("Connection error\n");
+  close(conn_fd);
+  epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
+}
+
 }  // namespace
 
 int StartEventLoop(const std::vector<int> &listen_fds,
                    const config::Config &config) {
   // epoll インスタンス作成
-  int epfd = epoll_create1(EPOLL_CLOEXEC);
+  int epfd = epoll_create(1);
 
   // epfd に listen_fd を追加
   for (std::vector<int>::const_iterator it = listen_fds.begin();
@@ -72,34 +100,14 @@ int StartEventLoop(const std::vector<int> &listen_fds,
       AcceptNewConnection(epfd, listen_fd);
     } else {
       int conn_fd = socket_info->fd;
-
-      // TODO: Phase によって処理を切り替える
-      // TODO: 文字ごと､または行ごとに
-
-      // if data in read buffer, read
       if (epevarr[0].events & EPOLLIN) {
-        unsigned char buf[BUF_SIZE];
-        int n = read(conn_fd, buf, sizeof(buf) - 1);
-        if (n <= 0) {  // EOF(Connection end) or Error
-          printf("Connection end\n");
-          close(conn_fd);
-          epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
-        } else {
-          socket_info->request.AppendDataToBuffer(buf, n);
-          printf("----- Received data -----\n%s", buf);
-        }
+        HandleReadEvent(config, epfd, socket_info);
       }
-
-      // if space in write buffer, read
       if (epevarr[0].events & EPOLLOUT) {
-        // TODO: Send HTTP Response to the client
+        HandleWriteEvent(config, epfd, socket_info);
       }
-
-      // error or timeout? close conn_fd and remove from epfd
       if (epevarr[0].events & (EPOLLERR | EPOLLHUP)) {
-        printf("Connection error\n");
-        close(conn_fd);
-        epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
+        HandleErrorEvent(epfd, socket_info);
       }
     }
   }
