@@ -24,11 +24,11 @@ Config &Config::operator=(const Config &rhs) {
 
 Config::~Config() {}
 
-const VirtualServerConf *Config::GetVirtualServerConf(
-    const PortType listen_port, const std::string &server_name) {
-  VirtualServerConf *virtual_server_conf = NULL;
+const VirtualServerConf &Config::GetVirtualServerConf(
+    const PortType listen_port, const std::string &server_name) const {
+  const VirtualServerConf *virtual_server_conf = NULL;
 
-  for (std::vector<VirtualServerConf>::iterator it = servers_.begin();
+  for (VirtualServerConfVector::const_iterator it = servers_.begin();
        it != servers_.end(); ++it) {
     if (it->GetListenPort() == listen_port) {
       if (virtual_server_conf == NULL) {
@@ -40,7 +40,11 @@ const VirtualServerConf *Config::GetVirtualServerConf(
     }
   }
 
-  return virtual_server_conf;
+  return *virtual_server_conf;
+}
+
+const std::vector<VirtualServerConf> &Config::GetVirtualServerConfs() const {
+  return servers_;
 }
 
 void Config::AppendVirtualServerConf(
@@ -104,12 +108,12 @@ void Config::AppendVirtualServerConf(
 //     return http://localhost:8080/
 //   }
 // }
-Config GetSampleConfig() {
+Config CreateSampleConfig() {
   Config config;
 
   // server 1
   VirtualServerConf vserver1;
-  vserver1.SetListenPort(80);
+  vserver1.SetListenPort("80");
   vserver1.AppendServerName("localhost");
 
   LocationConf location_v1_1;
@@ -136,7 +140,7 @@ Config GetSampleConfig() {
 
   // server 2
   VirtualServerConf vserver2;
-  vserver2.SetListenPort(80);
+  vserver2.SetListenPort("80");
   vserver2.AppendServerName("www.webserv.com");
   vserver2.AppendServerName("webserv.com");
 
@@ -157,7 +161,7 @@ Config GetSampleConfig() {
 
   // server 3
   VirtualServerConf vserver3;
-  vserver3.SetListenPort(8080);
+  vserver3.SetListenPort("8080");
   vserver3.AppendServerName("localhost");
 
   LocationConf location_v3_1;
@@ -170,7 +174,7 @@ Config GetSampleConfig() {
 
   // server 4
   VirtualServerConf vserver4;
-  vserver4.SetListenPort(9090);
+  vserver4.SetListenPort("9090");
 
   LocationConf location_v4_1;
   location_v4_1.SetRedirectUrl("http://localhost:8080/");

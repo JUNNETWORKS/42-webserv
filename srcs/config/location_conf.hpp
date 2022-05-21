@@ -38,47 +38,47 @@ class LocationConf {
 
   ~LocationConf();
 
-  std::string GetPathPattern();
+  std::string GetPathPattern() const;
 
   void SetPathPattern(std::string path_pattern);
 
-  bool GetIsBackwardSearch();
+  bool GetIsBackwardSearch() const;
 
   void SetIsBackwardSearch(bool is_backward_search);
 
-  bool IsMethodAllowed(std::string method);
+  bool IsMethodAllowed(std::string method) const;
 
   void AppendAllowedMethod(std::string method);
 
-  int64_t GetClientMaxBodySizeKB();
+  int64_t GetClientMaxBodySizeKB() const;
 
   void SetClientMaxBodySizeKB(int64_t client_max_body_size_kb);
 
-  std::string GetRootDir();
+  std::string GetRootDir() const;
 
   void SetRootDir(std::string root_dir);
 
-  const std::vector<std::string> &GetIndexPages();
+  const std::vector<std::string> &GetIndexPages() const;
 
   void AppendIndexPages(std::string filepath);
 
-  bool GetIsCgi();
+  bool GetIsCgi() const;
 
   void SetIsCgi(bool is_cgi);
 
-  const std::map<http::HttpStatus, std::string> &GetErrorPages();
+  const std::map<http::HttpStatus, std::string> &GetErrorPages() const;
 
   void AppendErrorPages(http::HttpStatus status, std::string filepath);
 
-  bool GetAutoIndex();
+  bool GetAutoIndex() const;
 
   void SetAutoIndex(bool auto_index_is_enabled);
 
-  std::string GetRedirectUrl();
+  std::string GetRedirectUrl() const;
 
   void SetRedirectUrl(std::string redirect_url);
 
-  bool IsMatchPattern(std::string path);
+  bool IsMatchPattern(std::string path) const;
 };
 
 };  // namespace config

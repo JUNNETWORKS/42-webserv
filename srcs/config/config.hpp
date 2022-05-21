@@ -13,8 +13,11 @@
 namespace config {
 
 class Config {
+ public:
+  typedef std::vector<VirtualServerConf> VirtualServerConfVector;
+
  private:
-  std::vector<VirtualServerConf> servers_;
+  VirtualServerConfVector servers_;
 
  public:
   Config();
@@ -25,14 +28,16 @@ class Config {
 
   ~Config();
 
-  const VirtualServerConf *GetVirtualServerConf(const PortType listen_port,
-                                                const std::string &server_name);
+  const VirtualServerConf &GetVirtualServerConf(
+      const PortType listen_port, const std::string &server_name) const;
+
+  const VirtualServerConfVector &GetVirtualServerConfs() const;
 
   void AppendVirtualServerConf(const VirtualServerConf &virtual_server_conf);
 };
 
 // TODO: Parserができたら消す｡
-Config GetSampleConfig();
+Config CreateSampleConfig();
 
 };  // namespace config
 

@@ -19,7 +19,7 @@ VirtualServerConf &VirtualServerConf::operator=(const VirtualServerConf &rhs) {
 
 VirtualServerConf::~VirtualServerConf() {}
 
-PortType VirtualServerConf::GetListenPort() {
+PortType VirtualServerConf::GetListenPort() const {
   return listen_port_;
 }
 
@@ -27,7 +27,7 @@ void VirtualServerConf::SetListenPort(PortType listen_port) {
   listen_port_ = listen_port;
 }
 
-bool VirtualServerConf::IsServerNameIncluded(std::string server_name) {
+bool VirtualServerConf::IsServerNameIncluded(std::string server_name) const {
   return server_names_.find(server_name) != server_names_.end();
 }
 
@@ -35,19 +35,19 @@ void VirtualServerConf::AppendServerName(std::string server_name) {
   server_names_.insert(server_name);
 }
 
-LocationConf *VirtualServerConf::GetLocation(std::string path) {
-  LocationConf *location_conf = NULL;
+const LocationConf &VirtualServerConf::GetLocation(std::string path) const {
+  const LocationConf *location_conf = NULL;
   // 最大文字数マッチが採用される｡
   std::string::size_type max_len = 0;
 
-  for (std::vector<LocationConf>::iterator it = locations_.begin();
+  for (LocationConfVector::const_iterator it = locations_.begin();
        it != locations_.end(); ++it) {
     if (it->GetPathPattern().size() > max_len && it->IsMatchPattern(path)) {
       location_conf = &(*it);
       max_len = it->GetPathPattern().size();
     }
   }
-  return location_conf;
+  return *location_conf;
 }
 
 void VirtualServerConf::AppendLocation(LocationConf location) {
