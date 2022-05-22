@@ -10,7 +10,7 @@
 
 namespace server {
 
-void CloseAllFd(const std::vector<int> &fds) {
+void CloseAllFds(const std::vector<int> &fds) {
   for (std::vector<int>::const_iterator it = fds.begin(); it != fds.end();
        ++it) {
     close(*it);
@@ -32,7 +32,7 @@ std::vector<int> OpenLilstenFds(const config::Config &config) {
     }
     int fd = utils::inetListen(it->GetListenPort().c_str(), SOMAXCONN, NULL);
     if (fd == -1) {
-      CloseAllFd(fds);
+      CloseAllFds(fds);
       throw std::exception();
     }
     fds.push_back(fd);
