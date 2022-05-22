@@ -85,6 +85,11 @@ int StartEventLoop(int listen_fd) {
       // if space in write buffer, read
       if (epevarr[0].events & EPOLLOUT) {
         // TODO: Send HTTP Response to the client
+        write(conn_fd, "HTTP/1.1 200 OK\r\n", 17);
+        write(conn_fd, "Content-Type: text/plain\r\n", 26);
+        write(conn_fd, "\r\n", 2);
+        write(conn_fd, "hello\r\n", 7);
+        close(conn_fd);
       }
 
       // error or timeout? close conn_fd and remove from epfd
