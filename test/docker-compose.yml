@@ -1,8 +1,17 @@
 version: '3'
 services:
+  webserv:
+    build: docker
+    container_name: webserv
+    ports:
+      - 49200:8080
+    volumes:
+       - ../:/root/workdir
+
   nginx:
     image: nginx:latest
+    container_name: nginx
     ports:
-      - 49200:80
+      - 49201:80
     volumes:
        - ./public:/usr/share/nginx/html
