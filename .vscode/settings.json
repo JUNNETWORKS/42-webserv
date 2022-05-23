@@ -15,5 +15,6 @@
     "ostream": "cpp",
     "sstream": "cpp",
     "streambuf": "cpp"
-  }
+  },
+  "C_Cpp.clang_format_style": "{BasedOnStyle: Google, AllowShortFunctionsOnASingleLine: Empty, AllowShortIfStatementsOnASingleLine: false}"
 }

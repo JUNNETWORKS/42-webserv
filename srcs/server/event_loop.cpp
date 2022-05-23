@@ -58,7 +58,13 @@ void HandleReadEvent(const config::Config &config, int epfd,
 
 void HandleWriteEvent(const config::Config &config, int epfd,
                       SocketInfo *socket_info) {
+  int conn_fd = socket_info->fd;
   // TODO: Send HTTP Response to the client
+  write(conn_fd, "HTTP/1.1 200 OK\r\n", 17);
+  write(conn_fd, "Content-Type: text/plain\r\n", 26);
+  write(conn_fd, "\r\n", 2);
+  write(conn_fd, "hello\r\n", 7);
+  close(conn_fd);
 }
 
 void HandleErrorEvent(int epfd, SocketInfo *socket_info) {
