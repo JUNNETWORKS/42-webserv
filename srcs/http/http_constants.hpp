@@ -8,5 +8,4 @@ const std::string kCrlf = "\r\n";
 const std::string kHeaderBoundary = kCrlf + kCrlf;
 }  // namespace http
 
-#endif /* ************************************************** HTTP_CONSTANTS_H \
-        */
+#endif
