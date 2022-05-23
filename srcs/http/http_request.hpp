@@ -27,6 +27,10 @@ class HttpRequest {
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
   ByteVector buffer_;
 
+  enum RequestPhase { kRequestLine, kHeaderField, kBudy };
+
+  RequestPhase phase_;
+
   static const ByteVector::size_type reserve_size_ = 2 * 1024;  // 2KB
 
  public:
