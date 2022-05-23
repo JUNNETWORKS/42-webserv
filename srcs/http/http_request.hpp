@@ -1,9 +1,12 @@
 #ifndef HTTP_HTTP_REQUEST_HPP_
 #define HTTP_HTTP_REQUEST_HPP_
 
+#include <cstring>
 #include <map>
 #include <string>
 #include <vector>
+
+#include "http_constants.hpp"
 
 namespace http {
 
@@ -27,7 +30,7 @@ class HttpRequest {
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
   ByteVector buffer_;
 
-  enum RequestPhase { kRequestLine, kHeaderField, kBudy };
+  enum RequestPhase { kRequestLine, kHeaderField, kBody, kParsed };
 
   RequestPhase phase_;
 
@@ -40,7 +43,15 @@ class HttpRequest {
   ~HttpRequest();
 
   void AppendDataToBuffer(Byte *buf, size_t size);
-  void ParseOneLine();
+  void ParseRequest();
+
+ private:
+  void ParseRequestLine();
+  void ParseHeaderField();
+  std::string ExtractFromBuffer(const char *pos);
+  const char *FindCrlf();
+  void EraseBufferHead(size_t size);
+  bool CompareBufferHead(const std::string &str);
 };
 
 };  // namespace http
