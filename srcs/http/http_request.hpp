@@ -1,6 +1,8 @@
 #ifndef HTTP_HTTP_REQUEST_HPP_
 #define HTTP_HTTP_REQUEST_HPP_
 
+#include <cctype>
+#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <string>
@@ -25,6 +27,7 @@ class HttpRequest {
  private:
   std::string method_;
   std::string path_;
+  int minor_version_;
   std::map<std::string, std::string> headers_;
   ByteVector body_;  // HTTP リクエストのボディ
 
@@ -57,7 +60,9 @@ class HttpRequest {
   bool CompareBufferHead(const std::string &str);
   HttpStatus ParseMethod(std::string &str);
   HttpStatus ParsePath(std::string &str);
+  HttpStatus ParseVersion(std::string &str);
   bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
+  bool IsCorrectHTTPVersion(const std::string &str);
 };
 
 };  // namespace http

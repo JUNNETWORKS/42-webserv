@@ -4,7 +4,8 @@
 
 namespace http {
 
-HttpRequest::HttpRequest() : phase_(kRequestLine), parse_status_(OK) {
+HttpRequest::HttpRequest()
+    : minor_version_(-1), phase_(kRequestLine), parse_status_(OK) {
   this->buffer_.reserve(reserve_size_);
 }
 
@@ -21,6 +22,7 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     buffer_ = rhs.buffer_;
     phase_ = rhs.phase_;
     parse_status_ = rhs.parse_status_;
+    minor_version_ = rhs.minor_version_;
   }
   return *this;
 }
@@ -76,9 +78,11 @@ void HttpRequest::ParseRequestLine() {
   if (crlf_pos != NULL) {
     std::string line = ExtractFromBuffer(crlf_pos);  // request-lineの解釈
     printf("request-line: %s\n", line.c_str());
-    if (ParseMethod(line) == OK && ParsePath(line) == OK) {
+    if (ParseMethod(line) == OK && ParsePath(line) == OK &&
+        ParseVersion(line) == OK) {
       printf("method_: %s\n", method_.c_str());
       printf("path_: %s\n", path_.c_str());
+      printf("version_: %d\n", minor_version_);
       phase_ = kHeaderField;
     }
     return;
@@ -143,4 +147,43 @@ HttpStatus HttpRequest::ParsePath(std::string &str) {
   return parse_status_ = BAD_REQUEST;
 }
 
+bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
+  if (str.find(kExpectMinorVersion) != 0)  // HTTP/ 1.0とかを弾く
+    return false;
+  std::string minor_ver = str.substr(kExpectMinorVersion.size(),
+                                     str.size() - kExpectMinorVersion.size());
+
+  if (minor_ver.size() == 0 ||
+      minor_ver.size() >
+          kMinorVersionDigitLimit)  // nginxだと 999はOK 1000はだめ
+    return false;                   // "HTTP/1."を弾く
+
+  for (std::string::iterator it = minor_ver.begin(); it != minor_ver.end();
+       it++) {  // HTTP/1.hogeとかを弾く
+    if (std::isdigit(*it) == false)
+      return false;
+  }
+  return true;
+}
+
+HttpStatus HttpRequest::ParseVersion(std::string &str) {
+  size_t http_name_pos = str.find(kHttpVersionPrefix);
+  if (http_name_pos != 0)
+    return parse_status_ = BAD_REQUEST;
+
+  str.erase(0, kHttpVersionPrefix.size());
+
+  if (IsCorrectHTTPVersion(str)) {
+    // HTTP1.~ が保証される
+    str.erase(0, kExpectMinorVersion.size());
+    minor_version_ = std::atoi(str.c_str());
+    return parse_status_ = OK;
+  } else if (std::isdigit(str[0]) == true && str[0] != '0' && str[0] != '1') {
+    // HTTP2.0とかHTTP/2hogeとか
+    return parse_status_ = HTTP_VERSION_NOT_SUPPORTED;
+  } else {
+    // 0.9とかHTTP/hogeとか
+    return parse_status_ = BAD_REQUEST;
+  }
+}
 };  // namespace http
