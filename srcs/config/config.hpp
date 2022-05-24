@@ -36,7 +36,8 @@ class Config {
   void AppendVirtualServerConf(const VirtualServerConf &virtual_server_conf);
 };
 
-// TODO: Parserができたら消す｡
+Config ParseConfig(const char *filename);
+
 Config CreateSampleConfig();
 
 };  // namespace config

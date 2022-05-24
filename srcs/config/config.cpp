@@ -5,6 +5,7 @@
 
 #include <cassert>
 
+#include "config/config_parser.hpp"
 #include "http/http_status.hpp"
 
 namespace config {
@@ -50,6 +51,11 @@ const std::vector<VirtualServerConf> &Config::GetVirtualServerConfs() const {
 void Config::AppendVirtualServerConf(
     const VirtualServerConf &virtual_server_conf) {
   servers_.push_back(virtual_server_conf);
+}
+
+Config ParseConfig(const char *filename) {
+  Parser parser = Parser(filename);
+  return parser.ParseConfig();
 }
 
 // server {
