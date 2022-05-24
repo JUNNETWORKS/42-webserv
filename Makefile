@@ -16,7 +16,7 @@ all: $(NAME)
 
 $(OBJS_DIR)/%.o: %.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -c $< -MMD -o $@
+	$(CXX) $(CXXFLAGS) -c $< -MMD -MP -o $@
 
 -include $(DEPENDENCIES)
 
