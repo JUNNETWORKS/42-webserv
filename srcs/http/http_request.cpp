@@ -76,7 +76,11 @@ void HttpRequest::ParseRequestLine() {
   if (crlf_pos != NULL) {
     std::string line = ExtractFromBuffer(crlf_pos);  // request-lineの解釈
     printf("request-line: %s\n", line.c_str());
-    phase_ = kHeaderField;
+    if (ParseMethod(line) == OK && ParsePath(line) == OK) {
+      printf("method_: %s\n", method_.c_str());
+      printf("path_: %s\n", path_.c_str());
+      phase_ = kHeaderField;
+    }
     return;
   }
 }
@@ -103,4 +107,40 @@ void HttpRequest::ParseHeaderField() {
     }
   }
 };
+
+bool HttpRequest::TryExtractBeforeWhiteSpace(std::string &src,
+                                             std::string &dest) {
+  size_t white_space_pos = src.find(" ");
+  if (white_space_pos == std::string::npos) {
+    return false;
+  }
+  dest = src.substr(0, white_space_pos);
+  src.erase(0, white_space_pos + 1);
+  return true;
+}
+
+HttpStatus HttpRequest::ParseMethod(std::string &str) {
+  if (TryExtractBeforeWhiteSpace(str, method_) == false) {
+    return parse_status_ = BAD_REQUEST;
+  }
+
+  if (method_ == method_strs::kGet || method_ == method_strs::kDelete ||
+      method_ == method_strs::kPost) {
+    // TODO 501 (Not Implemented)を判定する
+    return parse_status_ = OK;
+  }
+  return parse_status_ = BAD_REQUEST;
+}
+
+HttpStatus HttpRequest::ParsePath(std::string &str) {
+  if (TryExtractBeforeWhiteSpace(str, path_) == false) {
+    return parse_status_ = BAD_REQUEST;
+  }
+
+  if (true) {  // TODO 長いURLの時414(URI Too Long)を判定する
+    return parse_status_ = OK;
+  }
+  return parse_status_ = BAD_REQUEST;
+}
+
 };  // namespace http

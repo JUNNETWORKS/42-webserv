@@ -55,6 +55,9 @@ class HttpRequest {
   const char *FindCrlf();
   void EraseBufferHead(size_t size);
   bool CompareBufferHead(const std::string &str);
+  HttpStatus ParseMethod(std::string &str);
+  HttpStatus ParsePath(std::string &str);
+  bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
 };
 
 };  // namespace http
