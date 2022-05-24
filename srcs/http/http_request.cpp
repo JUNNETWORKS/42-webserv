@@ -4,7 +4,7 @@
 
 namespace http {
 
-HttpRequest::HttpRequest() : phase_(kRequestLine) {
+HttpRequest::HttpRequest() : phase_(kRequestLine), parse_status_(OK) {
   this->buffer_.reserve(reserve_size_);
 }
 
@@ -20,6 +20,7 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     body_ = rhs.body_;
     buffer_ = rhs.buffer_;
     phase_ = rhs.phase_;
+    parse_status_ = rhs.parse_status_;
   }
   return *this;
 }

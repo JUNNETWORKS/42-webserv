@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "http_constants.hpp"
+#include "http_status.hpp"
 
 namespace http {
 
@@ -33,6 +34,8 @@ class HttpRequest {
   enum RequestPhase { kRequestLine, kHeaderField, kBody, kParsed };
 
   RequestPhase phase_;
+
+  HttpStatus parse_status_;
 
   static const ByteVector::size_type reserve_size_ = 2 * 1024;  // 2KB
 
