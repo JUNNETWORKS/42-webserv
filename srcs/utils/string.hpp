@@ -15,6 +15,10 @@ bool ForwardMatch(std::string str, std::string pattern);
 //      str="/static/style.css", pattern="/upload/" then return false
 bool BackwardMatch(std::string str, std::string pattern);
 
+// idx が非NULLだった場合､変換に使用されなかったidxが代入される｡
+long long stoll(const std::string &str, size_t *idx = NULL,
+                long long base = 10);
+
 }  // namespace utils
 
 #endif
