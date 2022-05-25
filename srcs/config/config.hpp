@@ -28,6 +28,11 @@ class Config {
 
   ~Config();
 
+  // configとして正しいか
+  bool IsValid() const;
+
+  void Print() const;
+
   const VirtualServerConf &GetVirtualServerConf(
       const PortType listen_port, const std::string &server_name) const;
 

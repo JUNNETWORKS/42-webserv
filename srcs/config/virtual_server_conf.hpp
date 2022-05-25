@@ -34,6 +34,10 @@ class VirtualServerConf {
 
   ~VirtualServerConf();
 
+  bool IsValid() const;
+
+  void Print() const;
+
   PortType GetListenPort() const;
 
   void SetListenPort(PortType listen_port);

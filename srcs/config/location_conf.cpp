@@ -1,5 +1,7 @@
 #include "config/location_conf.hpp"
 
+#include <iostream>
+
 #include "utils/string.hpp"
 
 namespace config {
@@ -27,6 +29,44 @@ LocationConf &LocationConf::operator=(const LocationConf &rhs) {
 }
 
 LocationConf::~LocationConf() {}
+
+bool LocationConf::IsValid() const {
+  // root または return が設定されている必要がある｡
+  if (root_dir_.empty() || redirect_url_.empty()) {
+    return false;
+  }
+  return true;
+}
+
+void LocationConf::Print() const {
+  std::cout << "location " << path_pattern_ << " {\n";
+  std::cout << "is_backward_search: " << is_backward_search_ << ";\n";
+  std::cout << "allowed_methods:";
+  for (std::set<std::string>::const_iterator it = allowed_methods_.begin();
+       it != allowed_methods_.end(); ++it) {
+    std::cout << " " << *it;
+  }
+  std::cout << ";\n";
+  std::cout << "client_max_body_size_kb: " << client_max_body_size_kb_ << "\n";
+  std::cout << "root_dir: " << root_dir_ << "\n";
+  std::cout << "index_pages:";
+  for (std::vector<std::string>::const_iterator it = index_pages_.begin();
+       it != index_pages_.end(); ++it) {
+    std::cout << " " << *it;
+  }
+  std::cout << ";\n";
+  std::cout << "is_cgi: " << is_cgi_ << "\n";
+  std::cout << "error_pages:";
+  for (std::map<http::HttpStatus, std::string>::const_iterator it =
+           error_pages_.begin();
+       it != error_pages_.end(); ++it) {
+    std::cout << " " << it->first << "=" << it->second;
+  }
+  std::cout << ";\n";
+  std::cout << "auto_index: " << auto_index_ << "\n";
+  std::cout << "redirect_url: " << redirect_url_ << "\n";
+  std::cout << "}\n";
+}
 
 std::string LocationConf::GetPathPattern() const {
   return path_pattern_;

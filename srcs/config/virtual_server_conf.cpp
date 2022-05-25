@@ -1,5 +1,7 @@
 #include "config/virtual_server_conf.hpp"
 
+#include <iostream>
+
 namespace config {
 
 VirtualServerConf::VirtualServerConf() {}
@@ -18,6 +20,46 @@ VirtualServerConf &VirtualServerConf::operator=(const VirtualServerConf &rhs) {
 }
 
 VirtualServerConf::~VirtualServerConf() {}
+
+bool VirtualServerConf::IsValid() const {
+  // port番号がセットされている
+  if (listen_port_.empty()) {
+    return false;
+  }
+  // 1つ以上のlocation
+  if (locations_.empty()) {
+    return false;
+  }
+  // locationがすべてvalid
+  for (LocationConfVector::const_iterator it = locations_.begin();
+       it != locations_.end(); ++it) {
+    if (!(it->IsValid())) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void VirtualServerConf::Print() const {
+  std::cout << "server {\n";
+
+  std::cout << "listen: " << listen_port_ << ";"
+            << "\n";
+
+  std::cout << "server_name:";
+  for (std::set<std::string>::const_iterator it = server_names_.begin();
+       it != server_names_.end(); ++it) {
+    std::cout << " " << *it;
+  }
+  std::cout << ";\n";
+
+  for (LocationConfVector::const_iterator it = locations_.begin();
+       it != locations_.end(); ++it) {
+    it->Print();
+  }
+
+  std::cout << "}\n";
+}
 
 PortType VirtualServerConf::GetListenPort() const {
   return listen_port_;

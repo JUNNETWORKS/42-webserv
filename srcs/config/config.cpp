@@ -4,6 +4,7 @@
 #include <sys/sysinfo.h>
 
 #include <cassert>
+#include <iostream>
 
 #include "config/config_parser.hpp"
 #include "http/http_status.hpp"
@@ -24,6 +25,25 @@ Config &Config::operator=(const Config &rhs) {
 }
 
 Config::~Config() {}
+
+bool Config::IsValid() const {
+  for (VirtualServerConfVector::const_iterator it = servers_.begin();
+       it != servers_.end(); ++it) {
+    if (it->IsValid()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void Config::Print() const {
+  std::cout << " ===== Print Config =====\n";
+  for (VirtualServerConfVector::const_iterator it = servers_.begin();
+       it != servers_.end(); ++it) {
+    it->Print();
+    std::cout << "\n";
+  }
+}
 
 const VirtualServerConf &Config::GetVirtualServerConf(
     const PortType listen_port, const std::string &server_name) const {

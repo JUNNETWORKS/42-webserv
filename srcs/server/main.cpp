@@ -10,8 +10,9 @@ int main(int argc, char const *argv[]) {
   }
 
   // Setup configuration
-  // config::Config config = config::parseConfig(argv[1]);
-  config::Config config = config::CreateSampleConfig();
+  config::Config config = config::ParseConfig(argv[1]);
+  config.Print();
+  // config::Config config = config::CreateSampleConfig();
 
   // listen_fd を作成
   std::vector<int> listen_fds = server::OpenLilstenFds(config);

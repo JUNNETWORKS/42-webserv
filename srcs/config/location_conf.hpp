@@ -38,6 +38,10 @@ class LocationConf {
 
   ~LocationConf();
 
+  bool IsValid() const;
+
+  void Print() const;
+
   std::string GetPathPattern() const;
 
   void SetPathPattern(std::string path_pattern);
