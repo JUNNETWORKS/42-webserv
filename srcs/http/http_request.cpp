@@ -5,7 +5,14 @@
 namespace http {
 
 HttpRequest::HttpRequest()
-    : minor_version_(-1), phase_(kRequestLine), parse_status_(OK) {
+    : method_(""),
+      path_(""),
+      minor_version_(-1),
+      headers_(),
+      phase_(kRequestLine),
+      parse_status_(OK),
+      body_(),
+      buffer_() {
   this->buffer_.reserve(reserve_size_);
 }
 
@@ -17,12 +24,12 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
   if (this != &rhs) {
     method_ = rhs.method_;
     path_ = rhs.path_;
+    minor_version_ = rhs.minor_version_;
     headers_ = rhs.headers_;
-    body_ = rhs.body_;
-    buffer_ = rhs.buffer_;
     phase_ = rhs.phase_;
     parse_status_ = rhs.parse_status_;
-    minor_version_ = rhs.minor_version_;
+    body_ = rhs.body_;
+    buffer_ = rhs.buffer_;
   }
   return *this;
 }
