@@ -11,6 +11,7 @@
 
 #include "http_constants.hpp"
 #include "http_status.hpp"
+#include "utils/ByteVector.hpp"
 
 namespace http {
 
@@ -21,10 +22,6 @@ const std::string kDelete = "DELETE";
 };  // namespace method_strs
 
 class HttpRequest {
- public:
-  typedef unsigned char Byte;
-  typedef std::vector<Byte> ByteVector;
-
  private:
   enum RequestPhase { kRequestLine, kHeaderField, kBody, kParsed };
 

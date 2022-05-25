@@ -55,13 +55,14 @@ void HttpRequest::ParseRequest() {
 };
 
 void HttpRequest::ParseRequestLine() {
-  while (CompareBufferHead(kCrlf)) {
-    EraseBufferHead(kCrlf.size());  //空行を読み取ばす
+  while (utils::CompareByteVectorHead(buffer_, kCrlf)) {
+    utils::EraseByteVectorHead(buffer_, kCrlf.size());  //空行を読み取ばす
   }
 
-  const char *crlf_pos = FindCrlf();
+  const char *crlf_pos = utils::FindStrFromByteVector(buffer_, kCrlf);
   if (crlf_pos != NULL) {
-    std::string line = ExtractFromBuffer(crlf_pos);  // request-lineの解釈
+    std::string line = utils::ExtractStrFromByteVector(
+        buffer_, crlf_pos);  // request-lineの解釈
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
       phase_ = kHeaderField;
@@ -72,22 +73,23 @@ void HttpRequest::ParseRequestLine() {
 
 void HttpRequest::ParseHeaderField() {
   while (1) {
-    if (CompareBufferHead(kHeaderBoundary)) {
+    if (utils::CompareByteVectorHead(buffer_, kHeaderBoundary)) {
       //先頭が\r\n\r\nなので終了処理
       phase_ = kBody;
       return;
     }
 
-    if (CompareBufferHead(kCrlf)) {
+    if (utils::CompareByteVectorHead(buffer_, kCrlf)) {
       // HeaderBoundary判定用に残しておいたcrlfを削除
-      EraseBufferHead(kCrlf.size());
+      utils::EraseByteVectorHead(buffer_, kCrlf.size());
     }
 
-    const char *crlf_pos = FindCrlf();
+    const char *crlf_pos = utils::FindStrFromByteVector(buffer_, kCrlf);
     if (crlf_pos == NULL) {
       return;  // crlfがbuffer内に存在しない
     } else {
-      std::string line = ExtractFromBuffer(crlf_pos);  // headerfieldの解釈
+      std::string line = utils::ExtractStrFromByteVector(
+          buffer_, crlf_pos);  // headerfieldの解釈
       InterpretHeaderField(line);
     }
   }
@@ -167,30 +169,6 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 //========================================================================
 // Helper関数
 
-std::string HttpRequest::ExtractFromBuffer(const char *pos) {
-  const char *buffer_ptr = reinterpret_cast<const char *>(buffer_.data());
-  size_t size = pos - buffer_ptr;
-  std::string res(buffer_ptr, size);
-  buffer_.erase(buffer_.begin(), buffer_.begin() + size);
-
-  return res;
-};
-
-const char *HttpRequest::FindCrlf() {
-  buffer_.push_back('\0');
-  const char *res = std::strstr(reinterpret_cast<const char *>(buffer_.data()),
-                                kCrlf.c_str());
-  buffer_.pop_back();
-  return res;
-};
-
-bool HttpRequest::CompareBufferHead(const std::string &str) {
-  if (buffer_.size() < str.size())
-    return false;
-  return std::strncmp(reinterpret_cast<const char *>(buffer_.data()),
-                      str.c_str(), str.size()) == 0;
-};
-
 std::string HttpRequest::TrimWhiteSpace(std::string &str) {
   size_t start_pos = str.find_first_not_of(" ");
   size_t end_pos = str.find_last_not_of(" ");
@@ -210,10 +188,6 @@ bool HttpRequest::TryExtractBeforeWhiteSpace(std::string &src,
   dest = src.substr(0, white_space_pos);
   src.erase(0, white_space_pos + 1);
   return true;
-}
-
-void HttpRequest::EraseBufferHead(size_t size) {
-  buffer_.erase(buffer_.begin(), buffer_.begin() + size);
 }
 
 bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
