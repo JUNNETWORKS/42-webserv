@@ -7,7 +7,7 @@ namespace http {
 const std::string kCrlf = "\r\n";
 const std::string kHeaderBoundary = kCrlf + kCrlf;
 const std::string kHttpVersionPrefix = "HTTP/";
-const std::string kExpectMinorVersion = "1.";
+const std::string kExpectMajorVersion = "1.";
 const int kMinorVersionDigitLimit = 3;
 }  // namespace http
 

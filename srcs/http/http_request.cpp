@@ -180,10 +180,10 @@ HttpStatus HttpRequest::InterpretPath(std::string &str) {
 }
 
 bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
-  if (str.find(kExpectMinorVersion) != 0)  // HTTP/ 1.0とかを弾く
+  if (str.find(kExpectMajorVersion) != 0)  // HTTP/ 1.0とかを弾く
     return false;
-  std::string minor_ver = str.substr(kExpectMinorVersion.size(),
-                                     str.size() - kExpectMinorVersion.size());
+  std::string minor_ver = str.substr(kExpectMajorVersion.size(),
+                                     str.size() - kExpectMajorVersion.size());
 
   if (minor_ver.size() == 0 ||
       minor_ver.size() >
@@ -207,7 +207,7 @@ HttpStatus HttpRequest::InterpretVersion(std::string &str) {
 
   if (IsCorrectHTTPVersion(str)) {
     // HTTP1.~ が保証される
-    str.erase(0, kExpectMinorVersion.size());
+    str.erase(0, kExpectMajorVersion.size());
     minor_version_ = std::atoi(str.c_str());
     return parse_status_ = OK;
   } else if (std::isdigit(str[0]) == true && str[0] != '0' && str[0] != '1') {
