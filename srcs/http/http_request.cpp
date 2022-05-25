@@ -124,8 +124,8 @@ std::string HttpRequest::TrimWhiteSpace(std::string &str) {
 }
 
 HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
-  size_t collon_pos = str.find(":");
-  size_t white_space_pos = str.find(" ");
+  size_t collon_pos = str.find_first_of(":");
+  size_t white_space_pos = str.find_first_of(" ");
 
   if (collon_pos == std::string::npos || collon_pos == 0 ||
       (white_space_pos != std::string::npos && white_space_pos < collon_pos))
@@ -142,7 +142,7 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 
 bool HttpRequest::TryExtractBeforeWhiteSpace(std::string &src,
                                              std::string &dest) {
-  size_t white_space_pos = src.find(" ");
+  size_t white_space_pos = src.find_first_of(" ");
   if (white_space_pos == std::string::npos) {
     return false;
   }
