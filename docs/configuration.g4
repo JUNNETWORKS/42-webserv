@@ -1,8 +1,12 @@
 grammar configuration;
 
 config: server (NEWLINE server)*;
-server: 'server' '{' directive+ '}';
-directive: listen_directive | servername_directive;
+server: 'server' '{' server_directive+ '}';
+server_directive:
+	listen_directive
+	| servername_directive
+	| location_directive
+	| location_back_directive;
 
 listen_directive: 'listen' WHITESPACE NUMBER END_DIRECTIVE;
 servername_directive:
