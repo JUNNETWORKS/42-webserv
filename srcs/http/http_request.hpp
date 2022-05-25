@@ -26,20 +26,18 @@ class HttpRequest {
   typedef std::vector<Byte> ByteVector;
 
  private:
+  enum RequestPhase { kRequestLine, kHeaderField, kBody, kParsed };
+
   std::string method_;
   std::string path_;
   int minor_version_;
   std::map<std::string, std::string> headers_;
+  RequestPhase phase_;
+  HttpStatus parse_status_;
   ByteVector body_;  // HTTP リクエストのボディ
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
   ByteVector buffer_;
-
-  enum RequestPhase { kRequestLine, kHeaderField, kBody, kParsed };
-
-  RequestPhase phase_;
-
-  HttpStatus parse_status_;
 
   static const ByteVector::size_type reserve_size_ = 2 * 1024;  // 2KB
 
