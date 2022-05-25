@@ -6,7 +6,17 @@
 
 namespace config {
 
-LocationConf::LocationConf() {}
+LocationConf::LocationConf()
+    : path_pattern_(),
+      is_backward_search_(),
+      allowed_methods_(),
+      client_max_body_size_kb_(),
+      root_dir_(),
+      index_pages_(),
+      is_cgi_(false),
+      error_pages_(),
+      auto_index_(false),
+      redirect_url_() {}
 
 LocationConf::LocationConf(const LocationConf &rhs) {
   *this = rhs;

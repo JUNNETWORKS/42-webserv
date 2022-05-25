@@ -4,7 +4,8 @@
 
 namespace config {
 
-VirtualServerConf::VirtualServerConf() {}
+VirtualServerConf::VirtualServerConf()
+    : listen_port_(), server_names_(), locations_() {}
 
 VirtualServerConf::VirtualServerConf(const VirtualServerConf &rhs) {
   *this = rhs;

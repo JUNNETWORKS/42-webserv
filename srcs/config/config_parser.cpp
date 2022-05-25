@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #include <cstring>
+#include <string>
 
 #include "config/config.hpp"
 #include "config/location_conf.hpp"
@@ -17,9 +18,9 @@ namespace config {
 
 namespace {
 
-int GetFileSize(const char *filename) {
+int GetFileSize(const std::string &filename) {
   struct stat sbuf;
-  if (stat(filename, &sbuf) < 0) {
+  if (stat(filename.c_str(), &sbuf) < 0) {
     return -1;
   }
   return sbuf.st_size;
@@ -27,7 +28,7 @@ int GetFileSize(const char *filename) {
 
 }  // namespace
 
-Parser::Parser(const char *filename) {
+Parser::Parser(const std::string &filename) : file_content_(), buf_idx_(0) {
   LoadFileData(filename);
 }
 
@@ -45,12 +46,12 @@ Parser &Parser::operator=(const Parser &rhs) {
 
 Parser::~Parser() {}
 
-void Parser::LoadFileData(const char *filename) {
+void Parser::LoadFileData(const std::string &filename) {
   int filesize = GetFileSize(filename);
   if (filesize < 0) {
     throw ParserException("Failed to get file size in LoadFileData().");
   }
-  int fd = open(filename, O_RDONLY);
+  int fd = open(filename.c_str(), O_RDONLY);
   if (fd < 0) {
     throw ParserException("Failed open() in LoadFileData().");
   }
@@ -108,6 +109,7 @@ void Parser::ParseListenDirective(VirtualServerConf &vserver) {
   SkipSpaces();
   std::string port = GetWord();
   SkipSpaces();
+  // TODO: GetC() != ';' の記述を1つの関数にまとめる
   if (!IsUnsignedNumber(port) || GetC() != ';') {
     throw ParserException("Port directive's argument is invalid.");
   }
@@ -273,12 +275,14 @@ char Parser::UngetC() {
   return file_content_[buf_idx_];
 }
 
+// TODO: ';' がファイル名に含まれている場合などに正しく動かない
 std::string Parser::GetWord() {
   std::string word;
-  char c;
-  // TODO: ';' も含まれてしまう｡
-  while (!IsReachedEOF() && !isspace((c = GetC()))) {
+
+  char c = GetC();
+  while (!IsReachedEOF() && (!isspace(c))) {
     word += c;
+    c = GetC();
   }
   return word;
 }

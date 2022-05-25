@@ -12,7 +12,7 @@ namespace config {
 
 class Parser {
  public:
-  Parser(const char *filename);
+  Parser(const std::string &filename);
   Parser(const Parser &rhs);
   Parser &operator=(const Parser &rhs);
   ~Parser();
@@ -95,7 +95,7 @@ class Parser {
   bool IsReachedEOF();
 
   // filename の内容を file_content_ に載せる
-  void LoadFileData(const char *filename);
+  void LoadFileData(const std::string &filename);
 
   std::string file_content_;
   size_t buf_idx_;

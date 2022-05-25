@@ -11,7 +11,7 @@
 
 namespace config {
 
-Config::Config() {}
+Config::Config() : servers_() {}
 
 Config::Config(const Config &rhs) {
   *this = rhs;
@@ -37,7 +37,6 @@ bool Config::IsValid() const {
 }
 
 void Config::Print() const {
-  std::cout << " ===== Print Config =====\n";
   for (VirtualServerConfVector::const_iterator it = servers_.begin();
        it != servers_.end(); ++it) {
     it->Print();
