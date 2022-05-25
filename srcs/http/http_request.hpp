@@ -55,17 +55,18 @@ class HttpRequest {
   void ParseRequestLine();
   void ParseHeaderField();
   void ParseBody();
-  std::string ExtractFromBuffer(const char *pos);
-  const char *FindCrlf();
-  void EraseBufferHead(size_t size);
-  bool CompareBufferHead(const std::string &str);
-  bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
-  bool IsCorrectHTTPVersion(const std::string &str);
-  std::string TrimWhiteSpace(std::string &str);
   HttpStatus InterpretMethod(std::string &str);
   HttpStatus InterpretPath(std::string &str);
   HttpStatus InterpretVersion(std::string &str);
   HttpStatus InterpretHeaderField(std::string &str);
+
+  std::string TrimWhiteSpace(std::string &str);
+  const char *FindCrlf();
+  std::string ExtractFromBuffer(const char *pos);
+  void EraseBufferHead(size_t size);
+  bool CompareBufferHead(const std::string &str);
+  bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
+  bool IsCorrectHTTPVersion(const std::string &str);
   void PrintRequestInfo();
 };
 
