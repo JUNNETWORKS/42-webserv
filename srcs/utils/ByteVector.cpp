@@ -1,32 +1,71 @@
 #include "ByteVector.hpp"
 
+#include <stdio.h>
+
 namespace utils {
-std::string ExtractStrFromByteVector(ByteVector &vec, const char *pos) {
-  const char *buffer_ptr = reinterpret_cast<const char *>(vec.data());
-  size_t size = pos - buffer_ptr;
-  std::string res(buffer_ptr, size);
-  vec.erase(vec.begin(), vec.begin() + size);
 
-  return res;
-};
+ByteVector::ByteVector() : vec_() {
+  vec_.reserve(kReserveSize_);
+}
+ByteVector::ByteVector(ByteVector const& src) : vec_() {
+  *this = src;
+}
+ByteVector::~ByteVector() {}
 
-const char *FindStrFromByteVector(ByteVector &vec, const std::string &str) {
-  vec.push_back('\0');
-  const char *res =
-      std::strstr(reinterpret_cast<const char *>(vec.data()), str.c_str());
-  vec.pop_back();
-  return res;
-};
+ByteVector& ByteVector::operator=(ByteVector const& rhs) {
+  if (this != &rhs) {
+    this->vec_ = rhs.vec_;
+  }
+  return *this;
+}
 
-bool CompareByteVectorHead(ByteVector &vec, const std::string &str) {
-  if (vec.size() < str.size())
+ByteVector::iterator ByteVector::begin() {
+  return vec_.begin();
+}
+
+ByteVector::iterator ByteVector::end() {
+  return vec_.end();
+}
+
+void ByteVector::EraseHead(size_t size) {
+  vec_.erase(vec_.begin(), vec_.begin() + size);
+}
+
+bool ByteVector::CompareHead(const std::string& str) {
+  if (vec_.size() < str.size())
     return false;
-  return std::strncmp(reinterpret_cast<const char *>(vec.data()), str.c_str(),
-                      str.size()) == 0;
-};
+  return std::strncmp(GetReinterpretedData(), str.c_str(), str.size()) == 0;
+}
 
-void EraseByteVectorHead(ByteVector &vec, size_t size) {
-  vec.erase(vec.begin(), vec.begin() + size);
+ByteVector::iterator ByteVector::FindString(const std::string& str) {
+  vec_.push_back('\0');
+
+  const char* start = GetReinterpretedData();
+  const char* char_pos = std::strstr(start, str.c_str());
+  bool find_res = char_pos != NULL;
+  size_t pos;
+
+  if (find_res)
+    pos = char_pos - start;
+
+  vec_.pop_back();
+
+  return find_res ? iterator(&(vec_[pos])) : end();
+}
+
+std::string ByteVector::ExtractBeforePos(ByteVector::iterator pos) {
+  std::string res = std::string(begin(), pos);
+  vec_.erase(begin(), pos);
+  return res;
+}
+
+void ByteVector::AppendDataToBuffer(Byte* buf, size_t size) {
+  vec_.insert(vec_.end(), buf, buf + size);
+  printf("current buf len: %lu\n", vec_.size());
+}
+
+const char* ByteVector::GetReinterpretedData() {
+  return reinterpret_cast<const char*>(vec_.data());
 }
 
 }  // namespace utils

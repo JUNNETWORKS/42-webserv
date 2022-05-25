@@ -9,12 +9,35 @@
 
 namespace utils {
 typedef unsigned char Byte;
-typedef std::vector<Byte> ByteVector;
 
-std::string ExtractStrFromByteVector(ByteVector &vec, const char *pos);
-const char *FindStrFromByteVector(ByteVector &vec, const std::string &str);
-bool CompareByteVectorHead(ByteVector &vec, const std::string &str);
-void EraseByteVectorHead(ByteVector &vec, size_t size);
+class ByteVector {
+ public:
+  typedef std::vector<Byte> container_type;
+  typedef container_type::iterator iterator;
+
+  ByteVector();
+  ByteVector(ByteVector const& src);
+  ~ByteVector();
+
+  ByteVector& operator=(ByteVector const& rhs);
+
+  iterator begin();
+  iterator end();
+
+  void EraseHead(size_t size);
+  bool CompareHead(const std::string& str);
+  iterator FindString(const std::string& str);
+  std::string ExtractBeforePos(iterator pos);
+
+  void AppendDataToBuffer(Byte* buf, size_t size);
+
+ private:
+  static const container_type::size_type kReserveSize_ = 2 * 1024;  // 2KB
+
+  const char* GetReinterpretedData();
+
+  container_type vec_;
+};
 
 }  // namespace utils
 
