@@ -128,8 +128,7 @@ HttpStatus HttpRequest::InterpretPath(std::string &str) {
 }
 
 HttpStatus HttpRequest::InterpretVersion(std::string &str) {
-  size_t http_name_pos = str.find(kHttpVersionPrefix);
-  if (http_name_pos != 0)
+  if (!utils::ForwardMatch(str, kHttpVersionPrefix))
     return parse_status_ = BAD_REQUEST;
 
   str.erase(0, kHttpVersionPrefix.size());
@@ -170,7 +169,7 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 // Helper関数
 
 bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
-  if (str.find(kExpectMajorVersion) != 0)  // HTTP/ 1.0とかを弾く
+  if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
     return false;
   std::string minor_ver = str.substr(kExpectMajorVersion.size(),
                                      str.size() - kExpectMajorVersion.size());
