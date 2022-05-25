@@ -104,7 +104,7 @@ void HttpRequest::ParseBody() {
 // Interpret系関数　文字列を解釈する関数　主にparse_statusで動作管理(OKじゃなくなったら次は実行されない)
 
 HttpStatus HttpRequest::InterpretMethod(std::string &str) {
-  if (TryExtractBeforeWhiteSpace(str, method_) == false) {
+  if (utils::TryExtractBeforeWhiteSpace(str, method_) == false) {
     return parse_status_ = BAD_REQUEST;
   }
 
@@ -117,7 +117,7 @@ HttpStatus HttpRequest::InterpretMethod(std::string &str) {
 }
 
 HttpStatus HttpRequest::InterpretPath(std::string &str) {
-  if (TryExtractBeforeWhiteSpace(str, path_) == false) {
+  if (utils::TryExtractBeforeWhiteSpace(str, path_) == false) {
     return parse_status_ = BAD_REQUEST;
   }
 
@@ -159,7 +159,7 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   std::string header = str.substr(0, collon_pos);
   std::transform(header.begin(), header.end(), header.begin(), toupper);
   str.erase(0, collon_pos + 1);
-  std::string field = TrimWhiteSpace(str);
+  std::string field = utils::TrimWhiteSpace(str);
 
   headers_[header].push_back(field);
   phase_ = kBody;
@@ -168,27 +168,6 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 
 //========================================================================
 // Helper関数
-
-std::string HttpRequest::TrimWhiteSpace(std::string &str) {
-  size_t start_pos = str.find_first_not_of(" ");
-  size_t end_pos = str.find_last_not_of(" ");
-  if (start_pos == std::string::npos)
-    str.erase(str.begin(), str.end());
-  str.erase(str.begin(), str.begin() + start_pos);
-  str.erase(str.begin() + end_pos, str.end());
-  return str;
-}
-
-bool HttpRequest::TryExtractBeforeWhiteSpace(std::string &src,
-                                             std::string &dest) {
-  size_t white_space_pos = src.find_first_of(" ");
-  if (white_space_pos == std::string::npos) {
-    return false;
-  }
-  dest = src.substr(0, white_space_pos);
-  src.erase(0, white_space_pos + 1);
-  return true;
-}
 
 bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
   if (str.find(kExpectMajorVersion) != 0)  // HTTP/ 1.0とかを弾く

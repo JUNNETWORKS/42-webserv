@@ -12,6 +12,7 @@
 #include "http_constants.hpp"
 #include "http_status.hpp"
 #include "utils/ByteVector.hpp"
+#include "utils/string.hpp"
 
 namespace http {
 
@@ -57,8 +58,6 @@ class HttpRequest {
   HttpStatus InterpretVersion(std::string &str);
   HttpStatus InterpretHeaderField(std::string &str);
 
-  std::string TrimWhiteSpace(std::string &str);
-  bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
   bool IsCorrectHTTPVersion(const std::string &str);
   void PrintRequestInfo();
 };
