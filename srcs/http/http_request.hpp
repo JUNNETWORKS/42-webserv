@@ -31,12 +31,12 @@ class HttpRequest {
   std::map<std::string, std::vector<std::string> > headers_;
   RequestPhase phase_;
   HttpStatus parse_status_;
-  ByteVector body_;  // HTTP リクエストのボディ
+  utils::ByteVector body_;  // HTTP リクエストのボディ
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
-  ByteVector buffer_;
+  utils::ByteVector buffer_;
 
-  static const ByteVector::size_type reserve_size_ = 2 * 1024;  // 2KB
+  static const utils::ByteVector::size_type reserve_size_ = 2 * 1024;  // 2KB
 
  public:
   HttpRequest();
@@ -44,7 +44,7 @@ class HttpRequest {
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
 
-  void AppendDataToBuffer(Byte *buf, size_t size);
+  void AppendDataToBuffer(utils::Byte *buf, size_t size);
   void ParseRequest();
   bool IsCorrectRequest();
 
