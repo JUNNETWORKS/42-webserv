@@ -1,6 +1,7 @@
 #ifndef HTTP_HTTP_REQUEST_HPP_
 #define HTTP_HTTP_REQUEST_HPP_
 
+#include <algorithm>
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
@@ -63,6 +64,8 @@ class HttpRequest {
   HttpStatus ParseVersion(std::string &str);
   bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
   bool IsCorrectHTTPVersion(const std::string &str);
+  HttpStatus InterpretHeaderField(std::string &str);
+  std::string TrimWhiteSpace(std::string &str);
 };
 
 };  // namespace http

@@ -107,10 +107,38 @@ void HttpRequest::ParseHeaderField() {
       return;  // crlfがbuffer内に存在しない
     } else {
       std::string line = ExtractFromBuffer(crlf_pos);  // headerfieldの解釈
-      printf("headerfield: %s\n", line.c_str());
+      // printf("headerfield: %s\n", line.c_str());
+      InterpretHeaderField(line);
     }
   }
 };
+
+std::string HttpRequest::TrimWhiteSpace(std::string &str) {
+  size_t start_pos = str.find_first_not_of(" ");
+  size_t end_pos = str.find_last_not_of(" ");
+  if (start_pos == std::string::npos)
+    str.erase(str.begin(), str.end());
+  str.erase(str.begin(), str.begin() + start_pos);
+  str.erase(str.begin() + end_pos, str.end());
+  return str;
+}
+
+HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
+  size_t collon_pos = str.find(":");
+  size_t white_space_pos = str.find(" ");
+
+  if (collon_pos == std::string::npos || collon_pos == 0 ||
+      (white_space_pos != std::string::npos && white_space_pos < collon_pos))
+    return parse_status_ = BAD_REQUEST;
+
+  std::string header = str.substr(0, collon_pos);
+  std::transform(header.begin(), header.end(), header.begin(), toupper);
+  str.erase(0, collon_pos + 1);
+  std::string field = TrimWhiteSpace(str);
+
+  printf("%s: %s\n", header.c_str(), field.c_str());
+  return parse_status_ = OK;
+}
 
 bool HttpRequest::TryExtractBeforeWhiteSpace(std::string &src,
                                              std::string &dest) {
