@@ -63,6 +63,9 @@ void HttpRequest::ParseRequest() {
     ParseRequestLine();
   if (phase_ == kHeaderField)
     ParseHeaderField();
+  if (phase_ == kBody)
+    ParseBody();
+  PrintRequestInfo();
 };
 
 void HttpRequest::EraseBufferHead(size_t size) {
@@ -77,12 +80,8 @@ void HttpRequest::ParseRequestLine() {
   const char *crlf_pos = FindCrlf();
   if (crlf_pos != NULL) {
     std::string line = ExtractFromBuffer(crlf_pos);  // request-lineの解釈
-    printf("request-line: %s\n", line.c_str());
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
-      printf("method_: %s\n", method_.c_str());
-      printf("path_: %s\n", path_.c_str());
-      printf("version_: %d\n", minor_version_);
       phase_ = kHeaderField;
     }
     return;
@@ -107,11 +106,15 @@ void HttpRequest::ParseHeaderField() {
       return;  // crlfがbuffer内に存在しない
     } else {
       std::string line = ExtractFromBuffer(crlf_pos);  // headerfieldの解釈
-      // printf("headerfield: %s\n", line.c_str());
       InterpretHeaderField(line);
     }
   }
 };
+
+void HttpRequest::ParseBody() {
+  // TODO Content-Lengthの判定,Bodyのパース
+  phase_ = kParsed;
+}
 
 std::string HttpRequest::TrimWhiteSpace(std::string &str) {
   size_t start_pos = str.find_first_not_of(" ");
@@ -215,4 +218,27 @@ HttpStatus HttpRequest::InterpretVersion(std::string &str) {
     return parse_status_ = BAD_REQUEST;
   }
 }
+
+void HttpRequest::PrintRequestInfo() {
+  printf("====Request Parser====\n");
+  if (parse_status_ != OK) {
+    printf("ErrorConnection: %d\n", parse_status_);
+    printf("Phase: %d\n", phase_);
+  } else {
+    printf("method_: %s\n", method_.c_str());
+    printf("path_: %s\n", path_.c_str());
+    printf("version_: %d\n", minor_version_);
+    for (std::map<std::string, std::vector<std::string> >::iterator it =
+             headers_.begin();
+         it != headers_.end(); it++) {
+      printf("%s: ", (*it).first.c_str());
+      for (std::vector<std::string>::iterator sit = (*it).second.begin();
+           sit != (*it).second.end(); sit++) {
+        printf("%s, ", (*sit).c_str());
+      }
+      printf("\n");
+    }
+  }
+  printf("=====================\n");
+};
 };  // namespace http

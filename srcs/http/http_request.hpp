@@ -53,6 +53,7 @@ class HttpRequest {
  private:
   void ParseRequestLine();
   void ParseHeaderField();
+  void ParseBody();
   std::string ExtractFromBuffer(const char *pos);
   const char *FindCrlf();
   void EraseBufferHead(size_t size);
@@ -64,6 +65,7 @@ class HttpRequest {
   HttpStatus InterpretPath(std::string &str);
   HttpStatus InterpretVersion(std::string &str);
   HttpStatus InterpretHeaderField(std::string &str);
+  void PrintRequestInfo();
 };
 
 };  // namespace http
