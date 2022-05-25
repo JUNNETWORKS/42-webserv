@@ -221,10 +221,9 @@ HttpStatus HttpRequest::InterpretVersion(std::string &str) {
 
 void HttpRequest::PrintRequestInfo() {
   printf("====Request Parser====\n");
-  if (parse_status_ != OK) {
-    printf("ErrorConnection: %d\n", parse_status_);
-    printf("Phase: %d\n", phase_);
-  } else {
+  printf("ParseStatus_: %d\n", parse_status_);
+  printf("Phase: %d\n", phase_);
+  if (parse_status_ == OK) {
     printf("method_: %s\n", method_.c_str());
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
@@ -241,4 +240,9 @@ void HttpRequest::PrintRequestInfo() {
   }
   printf("=====================\n");
 };
+
+bool HttpRequest::IsCorrectRequest() {
+  return phase_ == kParsed && parse_status_ == OK;
+};
+
 };  // namespace http

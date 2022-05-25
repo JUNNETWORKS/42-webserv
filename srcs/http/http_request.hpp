@@ -49,6 +49,7 @@ class HttpRequest {
 
   void AppendDataToBuffer(Byte *buf, size_t size);
   void ParseRequest();
+  bool IsCorrectRequest();
 
  private:
   void ParseRequestLine();
