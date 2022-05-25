@@ -83,13 +83,13 @@ Config ParseConfig(const char *filename) {
 //   server_name localhost;
 //
 //   location / {
-//     allow_method GET
+//     allow_method GET;
 //
 //     root /var/www/html;
 //     index index.html index.htm;
 //
-//     error_page 500 /server_error_page.html
-//     error_page 404 403 /not_found.html
+//     error_page 500 /server_error_page.html;
+//     error_page 404 403 /not_found.html;
 //   }
 //
 //   location /upload {
@@ -131,7 +131,7 @@ Config ParseConfig(const char *filename) {
 //   listen 9090;
 //
 //   location / {
-//     return http://localhost:8080/
+//     return http://localhost:8080/;
 //   }
 // }
 Config CreateSampleConfig() {
