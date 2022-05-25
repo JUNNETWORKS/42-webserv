@@ -35,9 +35,6 @@ class HttpRequest {
   utils::ByteVector body_;  // HTTP リクエストのボディ
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
-  utils::ByteVector buffer_;
-
-  static const utils::ByteVector::size_type reserve_size_ = 2 * 1024;  // 2KB
 
  public:
   HttpRequest();
@@ -45,9 +42,10 @@ class HttpRequest {
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
 
-  void AppendDataToBuffer(utils::Byte *buf, size_t size);
   void ParseRequest();
   bool IsCorrectRequest();
+
+  utils::ByteVector buffer_;  // bufferはSocketInfoに移動予定
 
  private:
   void ParseRequestLine();

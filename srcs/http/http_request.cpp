@@ -12,9 +12,7 @@ HttpRequest::HttpRequest()
       phase_(kRequestLine),
       parse_status_(OK),
       body_(),
-      buffer_() {
-  this->buffer_.reserve(reserve_size_);
-}
+      buffer_() {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
   *this = rhs;
@@ -36,11 +34,6 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
 
 HttpRequest::~HttpRequest() {}
 
-void HttpRequest::AppendDataToBuffer(utils::Byte *buf, size_t size) {
-  buffer_.insert(buffer_.end(), buf, buf + size);
-  printf("current buf len: %lu\n", buffer_.size());
-}
-
 //========================================================================
 // Parse系関数　内部でInterpret系関数を呼び出す　主にphaseで動作管理
 
@@ -55,14 +48,13 @@ void HttpRequest::ParseRequest() {
 };
 
 void HttpRequest::ParseRequestLine() {
-  while (utils::CompareByteVectorHead(buffer_, kCrlf)) {
-    utils::EraseByteVectorHead(buffer_, kCrlf.size());  //空行を読み取ばす
+  while (buffer_.CompareHead(kCrlf)) {
+    buffer_.EraseHead(kCrlf.size());
   }
 
-  const char *crlf_pos = utils::FindStrFromByteVector(buffer_, kCrlf);
-  if (crlf_pos != NULL) {
-    std::string line = utils::ExtractStrFromByteVector(
-        buffer_, crlf_pos);  // request-lineの解釈
+  utils::ByteVector::iterator it = buffer_.FindString(kCrlf);
+  if (it != buffer_.end()) {
+    std::string line = buffer_.ExtractBeforePos(it);
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
       phase_ = kHeaderField;
@@ -73,23 +65,24 @@ void HttpRequest::ParseRequestLine() {
 
 void HttpRequest::ParseHeaderField() {
   while (1) {
-    if (utils::CompareByteVectorHead(buffer_, kHeaderBoundary)) {
+    if (buffer_.CompareHead(kHeaderBoundary)) {
       //先頭が\r\n\r\nなので終了処理
       phase_ = kBody;
       return;
     }
 
-    if (utils::CompareByteVectorHead(buffer_, kCrlf)) {
+    if (buffer_.CompareHead(kCrlf)) {
       // HeaderBoundary判定用に残しておいたcrlfを削除
-      utils::EraseByteVectorHead(buffer_, kCrlf.size());
+      buffer_.EraseHead(kCrlf.size());
     }
 
-    const char *crlf_pos = utils::FindStrFromByteVector(buffer_, kCrlf);
-    if (crlf_pos == NULL) {
+    utils::ByteVector::iterator it = buffer_.FindString(kCrlf);
+    if (it == buffer_.end()) {
       return;  // crlfがbuffer内に存在しない
     } else {
-      std::string line = utils::ExtractStrFromByteVector(
-          buffer_, crlf_pos);  // headerfieldの解釈
+      // std::string line = utils::ExtractStrFromByteVector(
+      //     buffer_, crlf_pos);  // headerfieldの解釈
+      std::string line = buffer_.ExtractBeforePos(it);  // headerfieldの解釈
       InterpretHeaderField(line);
     }
   }

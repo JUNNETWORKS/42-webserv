@@ -77,7 +77,8 @@ int StartEventLoop(int listen_fd) {
           close(conn_fd);
           epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
         } else {
-          socket_info->request.AppendDataToBuffer(buf, n);
+          //   socket_info->request.buffer_.AppendDataToBuffer();
+          socket_info->request.buffer_.AppendDataToBuffer(buf, n);
           socket_info->request.ParseRequest();
           // printf("----- Received data -----\n%s", buf);
         }
