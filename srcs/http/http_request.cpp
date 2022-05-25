@@ -78,8 +78,8 @@ void HttpRequest::ParseRequestLine() {
   if (crlf_pos != NULL) {
     std::string line = ExtractFromBuffer(crlf_pos);  // request-lineの解釈
     printf("request-line: %s\n", line.c_str());
-    if (ParseMethod(line) == OK && ParsePath(line) == OK &&
-        ParseVersion(line) == OK) {
+    if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
+        InterpretVersion(line) == OK) {
       printf("method_: %s\n", method_.c_str());
       printf("path_: %s\n", path_.c_str());
       printf("version_: %d\n", minor_version_);
@@ -151,7 +151,7 @@ bool HttpRequest::TryExtractBeforeWhiteSpace(std::string &src,
   return true;
 }
 
-HttpStatus HttpRequest::ParseMethod(std::string &str) {
+HttpStatus HttpRequest::InterpretMethod(std::string &str) {
   if (TryExtractBeforeWhiteSpace(str, method_) == false) {
     return parse_status_ = BAD_REQUEST;
   }
@@ -164,7 +164,7 @@ HttpStatus HttpRequest::ParseMethod(std::string &str) {
   return parse_status_ = BAD_REQUEST;
 }
 
-HttpStatus HttpRequest::ParsePath(std::string &str) {
+HttpStatus HttpRequest::InterpretPath(std::string &str) {
   if (TryExtractBeforeWhiteSpace(str, path_) == false) {
     return parse_status_ = BAD_REQUEST;
   }
@@ -194,7 +194,7 @@ bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
   return true;
 }
 
-HttpStatus HttpRequest::ParseVersion(std::string &str) {
+HttpStatus HttpRequest::InterpretVersion(std::string &str) {
   size_t http_name_pos = str.find(kHttpVersionPrefix);
   if (http_name_pos != 0)
     return parse_status_ = BAD_REQUEST;

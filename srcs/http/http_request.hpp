@@ -59,13 +59,13 @@ class HttpRequest {
   const char *FindCrlf();
   void EraseBufferHead(size_t size);
   bool CompareBufferHead(const std::string &str);
-  HttpStatus ParseMethod(std::string &str);
-  HttpStatus ParsePath(std::string &str);
-  HttpStatus ParseVersion(std::string &str);
   bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
   bool IsCorrectHTTPVersion(const std::string &str);
-  HttpStatus InterpretHeaderField(std::string &str);
   std::string TrimWhiteSpace(std::string &str);
+  HttpStatus InterpretMethod(std::string &str);
+  HttpStatus InterpretPath(std::string &str);
+  HttpStatus InterpretVersion(std::string &str);
+  HttpStatus InterpretHeaderField(std::string &str);
 };
 
 };  // namespace http
