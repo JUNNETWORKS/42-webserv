@@ -31,7 +31,7 @@ class HttpRequest {
   std::string method_;
   std::string path_;
   int minor_version_;
-  std::map<std::string, std::string> headers_;
+  std::map<std::string, std::vector<std::string> > headers_;
   RequestPhase phase_;
   HttpStatus parse_status_;
   ByteVector body_;  // HTTP リクエストのボディ

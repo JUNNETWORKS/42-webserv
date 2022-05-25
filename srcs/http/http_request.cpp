@@ -136,7 +136,8 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   str.erase(0, collon_pos + 1);
   std::string field = TrimWhiteSpace(str);
 
-  printf("%s: %s\n", header.c_str(), field.c_str());
+  headers_[header].push_back(field);
+  phase_ = kBody;
   return parse_status_ = OK;
 }
 
