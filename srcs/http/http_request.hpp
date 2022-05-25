@@ -58,10 +58,6 @@ class HttpRequest {
   HttpStatus InterpretHeaderField(std::string &str);
 
   std::string TrimWhiteSpace(std::string &str);
-  const char *FindCrlf();
-  std::string ExtractFromBuffer(const char *pos);
-  void EraseBufferHead(size_t size);
-  bool CompareBufferHead(const std::string &str);
   bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
   bool IsCorrectHTTPVersion(const std::string &str);
   void PrintRequestInfo();
