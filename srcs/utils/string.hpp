@@ -2,6 +2,7 @@
 #define UTILS_STRING_HPP
 
 #include <string>
+#include <vector>
 
 namespace utils {
 
@@ -15,9 +16,15 @@ bool ForwardMatch(std::string str, std::string pattern);
 //      str="/static/style.css", pattern="/upload/" then return false
 bool BackwardMatch(std::string str, std::string pattern);
 
+// std::string を long long に変換したものを返す｡
 // idx が非NULLだった場合､変換に使用されなかったidxが代入される｡
-long long stoll(const std::string &str, size_t *idx = NULL,
+long long Stoll(const std::string &str, size_t *idx = NULL,
                 long long base = 10);
+
+// str を delim で区切った文字列vectorを返す｡
+// e.g. SplitString("a,bc,,d", ",") return ["a", "bc", ,"", "d"]
+std::vector<std::string> SplitString(const std::string &str,
+                                     const std::string &delim);
 
 }  // namespace utils
 
