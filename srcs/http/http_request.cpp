@@ -54,7 +54,7 @@ void HttpRequest::ParseRequestLine() {
 
   utils::ByteVector::iterator it = buffer_.FindString(kCrlf);
   if (it != buffer_.end()) {
-    std::string line = buffer_.ExtractBeforePos(it);
+    std::string line = buffer_.CutSubstrBeforePos(it);
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
       phase_ = kHeaderField;
@@ -80,7 +80,7 @@ void HttpRequest::ParseHeaderField() {
     if (it == buffer_.end()) {
       return;  // crlfがbuffer内に存在しない
     } else {
-      std::string line = buffer_.ExtractBeforePos(it);  // headerfieldの解釈
+      std::string line = buffer_.CutSubstrBeforePos(it);  // headerfieldの解釈
       InterpretHeaderField(line);
     }
   }

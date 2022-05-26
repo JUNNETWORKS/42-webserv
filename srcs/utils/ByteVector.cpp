@@ -43,7 +43,7 @@ ByteVector::iterator ByteVector::FindString(const std::string& str) {
   return find_res ? iterator(&((*this)[pos])) : end();
 }
 
-std::string ByteVector::ExtractBeforePos(ByteVector::iterator pos) {
+std::string ByteVector::CutSubstrBeforePos(ByteVector::iterator pos) {
   std::string res = std::string(begin(), pos);
   erase(begin(), pos);
   return res;
