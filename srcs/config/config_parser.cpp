@@ -113,8 +113,7 @@ void Parser::ParseListenDirective(VirtualServerConf &vserver) {
   SkipSpaces();
   std::string port = GetWord();
   SkipSpaces();
-  // TODO: GetC() != ';' の記述を1つの関数にまとめる
-  if (!IsUnsignedNumber(port) || GetC() != ';') {
+  if (!IsUnsignedNumber(port) || !IsPortInValidRange(port) || GetC() != ';') {
     throw ParserException("Port directive's argument is invalid.");
   }
   vserver.SetListenPort(port);
@@ -408,6 +407,17 @@ bool Parser::IsHttpMethod(const std::string &method) {
     return true;
   }
   return false;
+}
+
+bool Parser::IsPortInValidRange(const std::string port) {
+  long long num;
+  try {
+    num = utils::Stoll(port);
+  } catch (...) {
+    return false;
+  }
+
+  return num >= kMinPortNumber && num <= kMaxPortNumber;
 }
 
 bool Parser::ParseOnOff(const std::string &on_or_off) {
