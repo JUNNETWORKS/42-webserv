@@ -184,13 +184,13 @@ bool IsCorrectHTTPVersion(const std::string &str) {
   return true;
 }
 
-bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest) {
-  size_t white_space_pos = src.find_first_of(" ");
+bool TryCutSubstrBeforeWhiteSpace(std::string &buffer, std::string &res) {
+  size_t white_space_pos = buffer.find_first_of(" ");
   if (white_space_pos == std::string::npos) {
     return false;
   }
-  dest = src.substr(0, white_space_pos);
-  src.erase(0, white_space_pos + 1);
+  res = buffer.substr(0, white_space_pos);
+  buffer.erase(0, white_space_pos + 1);
   return true;
 }
 
