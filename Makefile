@@ -1,6 +1,7 @@
 CXX := c++
 CXXFLAGS := -Wall -Wextra -Werror
 CXXFLAGS += --std=c++98
+CXXFLAGS += -g -fsanitize=address
 NAME := webserv
 
 SRCS_DIR := srcs
