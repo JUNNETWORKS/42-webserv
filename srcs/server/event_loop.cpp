@@ -24,7 +24,7 @@ int AppendNewSockFdIntoEpfd(int epfd, int sockfd,
 void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr) {
   socklen_t len = sizeof(struct sockaddr_storage);
   char addrStr[utils::IS_ADDR_STR_LEN];
-  utils::inetAddressStr((struct sockaddr *)&client_addr, len, addrStr,
+  utils::InetAddressStr((struct sockaddr *)&client_addr, len, addrStr,
                         utils::IS_ADDR_STR_LEN);
   printf("Connection from %s\n", addrStr);
 }

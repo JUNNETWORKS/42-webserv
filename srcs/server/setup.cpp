@@ -30,7 +30,8 @@ std::vector<int> OpenLilstenFds(const config::Config &config) {
       // The port has already binded
       continue;
     }
-    int fd = utils::inetListen(it->GetListenPort().c_str(), SOMAXCONN, NULL);
+    std::cout << "Open " << it->GetListenPort() << std::endl;
+    int fd = utils::InetListen(it->GetListenPort().c_str(), SOMAXCONN, NULL);
     if (fd == -1) {
       CloseAllFds(fds);
       throw std::exception();
