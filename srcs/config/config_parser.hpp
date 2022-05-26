@@ -74,6 +74,9 @@ class Parser {
   // 空白文字以外が見つかるまで buf_idx_ を進める
   void SkipSpaces();
 
+  // GetC() して返り値がセミコロンかどうかをboolで返す
+  bool GetCAndExpectSemicolon();
+
   // 次のスペース(改行等含む)までの文字列を取得し返す｡
   // そしてその文字数分 buf_idx_ を進める｡
   // 現在の buf_idx_ の位置が 'server {' の1文字目だった場合､ "server" を返す｡
@@ -100,8 +103,11 @@ class Parser {
   // METHOD: 'GET' | 'POST' | 'DELETE';
   bool IsHttpMethod(const std::string &method);
 
-  // portがポート番号(0~65535)までの範囲かどうか
-  bool IsPortInValidRange(const std::string port);
+  // 正しいHTTPステータスコードか
+  bool IsValidHttpStatusCode(const std::string &code);
+
+  // portが符号なし整数であり､ポート番号の範囲に収まっているかチェックする
+  bool IsValidPort(const std::string port);
 
   // "on" なら true, "off" なら false を返す｡
   bool ParseOnOff(const std::string &on_or_off);
@@ -122,7 +128,7 @@ class Parser {
   // ポート番号の最小値
   static const int kMinPortNumber = 0;
   // ポート番号の最大値
-  static const int kMaxPortNumber = 2 ^ 16 - 1;
+  static const int kMaxPortNumber = (2 ^ 16) - 1;
 };
 
 };  // namespace config

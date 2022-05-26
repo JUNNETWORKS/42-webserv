@@ -113,7 +113,7 @@ void Parser::ParseListenDirective(VirtualServerConf &vserver) {
   SkipSpaces();
   std::string port = GetWord();
   SkipSpaces();
-  if (!IsUnsignedNumber(port) || !IsPortInValidRange(port) || GetC() != ';') {
+  if (!IsValidPort(port) || GetC() != ';') {
     throw ParserException("Port directive's argument is invalid.");
   }
   vserver.SetListenPort(port);
@@ -245,7 +245,7 @@ void Parser::ParseErrorPage(LocationConf &location) {
 
   std::string &error_page = args.back();
   for (size_t i = 0; i < args.size() - 1; ++i) {
-    if (!IsUnsignedNumber(args[i])) {
+    if (!IsValidHttpStatusCode(args[i])) {
       // TODO: HTTPステータスコードの範囲内かチェックするメソッドで検査する｡
       throw ParserException("error_page directive arg isn't valid number.");
     }
@@ -409,7 +409,19 @@ bool Parser::IsHttpMethod(const std::string &method) {
   return false;
 }
 
-bool Parser::IsPortInValidRange(const std::string port) {
+bool Parser::IsValidHttpStatusCode(const std::string &code) {
+  // TODO: HTTP Status Code が3桁かどうか以外の条件もありそう｡
+  if (IsUnsignedNumber(code) && code.length() == 3) {
+    return true;
+  }
+  return false;
+}
+
+bool Parser::IsValidPort(const std::string port) {
+  if (!IsUnsignedNumber(port)) {
+    return false;
+  }
+
   long long num;
   try {
     num = utils::Stoll(port);
