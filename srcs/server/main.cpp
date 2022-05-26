@@ -5,14 +5,15 @@
 #include "utils/inet_sockets.hpp"
 
 int main(int argc, char const *argv[]) {
-  if (argc != 2) {
-    utils::ErrExit("%s <config_path>\n", argv[0]);
+  config::Config config;
+  if (argc >= 2) {
+    config = config::ParseConfig(argv[1]);
+  } else {
+    config = config::CreateSampleConfig();
   }
 
   // Setup configuration
-  config::Config config = config::ParseConfig(argv[1]);
   config.Print();
-  // config::Config config = config::CreateSampleConfig();
 
   // listen_fd を作成
   std::vector<int> listen_fds = server::OpenLilstenFds(config);
