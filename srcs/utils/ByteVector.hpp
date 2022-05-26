@@ -10,19 +10,13 @@
 namespace utils {
 typedef unsigned char Byte;
 
-class ByteVector {
+class ByteVector : public std::vector<Byte> {
  public:
-  typedef std::vector<Byte> container_type;
-  typedef container_type::iterator iterator;
-
   ByteVector();
   ByteVector(ByteVector const& src);
   ~ByteVector();
 
   ByteVector& operator=(ByteVector const& rhs);
-
-  iterator begin();
-  iterator end();
 
   void EraseHead(size_t size);
   bool CompareHead(const std::string& str);
@@ -32,11 +26,9 @@ class ByteVector {
   void AppendDataToBuffer(Byte* buf, size_t size);
 
  private:
-  static const container_type::size_type kReserveSize_ = 2 * 1024;  // 2KB
+  static const size_type kReserveSize_ = 2 * 1024;  // 2KB
 
   const char* GetReinterpretedData();
-
-  container_type vec_;
 };
 
 }  // namespace utils

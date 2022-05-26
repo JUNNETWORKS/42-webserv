@@ -4,41 +4,31 @@
 
 namespace utils {
 
-ByteVector::ByteVector() : vec_() {
-  vec_.reserve(kReserveSize_);
+ByteVector::ByteVector() {
+  reserve(kReserveSize_);
 }
-ByteVector::ByteVector(ByteVector const& src) : vec_() {
+ByteVector::ByteVector(ByteVector const& src) : std::vector<Byte>(src) {
   *this = src;
 }
 ByteVector::~ByteVector() {}
 
 ByteVector& ByteVector::operator=(ByteVector const& rhs) {
-  if (this != &rhs) {
-    this->vec_ = rhs.vec_;
-  }
+  std::vector<Byte>::operator=(rhs);
   return *this;
 }
 
-ByteVector::iterator ByteVector::begin() {
-  return vec_.begin();
-}
-
-ByteVector::iterator ByteVector::end() {
-  return vec_.end();
-}
-
 void ByteVector::EraseHead(size_t size) {
-  vec_.erase(vec_.begin(), vec_.begin() + size);
+  erase(begin(), begin() + size);
 }
 
 bool ByteVector::CompareHead(const std::string& str) {
-  if (vec_.size() < str.size())
+  if (size() < str.size())
     return false;
   return std::strncmp(GetReinterpretedData(), str.c_str(), str.size()) == 0;
 }
 
 ByteVector::iterator ByteVector::FindString(const std::string& str) {
-  vec_.push_back('\0');
+  push_back('\0');
 
   const char* start = GetReinterpretedData();
   const char* char_pos = std::strstr(start, str.c_str());
@@ -48,24 +38,24 @@ ByteVector::iterator ByteVector::FindString(const std::string& str) {
   if (find_res)
     pos = char_pos - start;
 
-  vec_.pop_back();
+  pop_back();
 
-  return find_res ? iterator(&(vec_[pos])) : end();
+  return find_res ? iterator(&((*this)[pos])) : end();
 }
 
 std::string ByteVector::ExtractBeforePos(ByteVector::iterator pos) {
   std::string res = std::string(begin(), pos);
-  vec_.erase(begin(), pos);
+  erase(begin(), pos);
   return res;
 }
 
 void ByteVector::AppendDataToBuffer(Byte* buf, size_t size) {
-  vec_.insert(vec_.end(), buf, buf + size);
-  printf("current buf len: %lu\n", vec_.size());
+  insert(end(), buf, buf + size);
+  printf("current buf len: %lu\n", this->size());
 }
 
 const char* ByteVector::GetReinterpretedData() {
-  return reinterpret_cast<const char*>(vec_.data());
+  return reinterpret_cast<const char*>(data());
 }
 
 }  // namespace utils
