@@ -44,15 +44,15 @@ HttpRequest::~HttpRequest() {}
 
 void HttpRequest::ParseRequest() {
   if (phase_ == kRequestLine)
-    ParseRequestLine();
+    phase_ = ParseRequestLine();
   if (phase_ == kHeaderField)
-    ParseHeaderField();
+    phase_ = ParseHeaderField();
   if (phase_ == kBody)
-    ParseBody();
+    phase_ = ParseBody();
   PrintRequestInfo();
 };
 
-void HttpRequest::ParseRequestLine() {
+HttpRequest::RequestPhase HttpRequest::ParseRequestLine() {
   while (buffer_.CompareHead(kCrlf)) {
     buffer_.EraseHead(kCrlf.size());
   }
@@ -62,18 +62,17 @@ void HttpRequest::ParseRequestLine() {
     std::string line = buffer_.CutSubstrBeforePos(it);
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
-      phase_ = kHeaderField;
+      return kHeaderField;
     }
-    return;
   }
+  return phase_;
 }
 
-void HttpRequest::ParseHeaderField() {
+HttpRequest::RequestPhase HttpRequest::ParseHeaderField() {
   while (1) {
     if (buffer_.CompareHead(kHeaderBoundary)) {
       //先頭が\r\n\r\nなので終了処理
-      phase_ = kBody;
-      return;
+      return kBody;
     }
 
     if (buffer_.CompareHead(kCrlf)) {
@@ -83,7 +82,7 @@ void HttpRequest::ParseHeaderField() {
 
     utils::ByteVector::iterator it = buffer_.FindString(kCrlf);
     if (it == buffer_.end()) {
-      return;  // crlfがbuffer内に存在しない
+      return phase_;  // crlfがbuffer内に存在しない
     } else {
       std::string line = buffer_.CutSubstrBeforePos(it);  // headerfieldの解釈
       InterpretHeaderField(line);
@@ -91,9 +90,9 @@ void HttpRequest::ParseHeaderField() {
   }
 };
 
-void HttpRequest::ParseBody() {
+HttpRequest::RequestPhase HttpRequest::ParseBody() {
   // TODO Content-Lengthの判定,Bodyのパース
-  phase_ = kParsed;
+  return kParsed;
 }
 
 //========================================================================

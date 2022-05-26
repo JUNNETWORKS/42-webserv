@@ -48,9 +48,9 @@ class HttpRequest {
   utils::ByteVector buffer_;  // bufferはSocketInfoに移動予定
 
  private:
-  void ParseRequestLine();
-  void ParseHeaderField();
-  void ParseBody();
+  RequestPhase ParseRequestLine();
+  RequestPhase ParseHeaderField();
+  RequestPhase ParseBody();
   HttpStatus InterpretMethod(std::string &str);
   HttpStatus InterpretPath(std::string &str);
   HttpStatus InterpretVersion(std::string &str);
