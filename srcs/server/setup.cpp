@@ -10,6 +10,12 @@
 
 namespace server {
 
+ServerException::ServerException(const char *errmsg) : errmsg_(errmsg) {}
+
+const char *ServerException::what() const throw() {
+  return errmsg_;
+}
+
 void CloseAllFds(const std::vector<int> &fds) {
   for (std::vector<int>::const_iterator it = fds.begin(); it != fds.end();
        ++it) {
@@ -34,7 +40,7 @@ std::vector<int> OpenLilstenFds(const config::Config &config) {
     int fd = utils::InetListen(it->GetListenPort().c_str(), SOMAXCONN, NULL);
     if (fd == -1) {
       CloseAllFds(fds);
-      throw std::exception();
+      throw ServerException("OpenListenFds: failed to create socket.");
     }
     fds.push_back(fd);
     used_ports.insert(it->GetListenPort());

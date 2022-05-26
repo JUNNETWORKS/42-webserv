@@ -7,6 +7,15 @@
 
 namespace server {
 
+class ServerException : public std::exception {
+ public:
+  ServerException(const char *errmsg = "Server error.");
+  const char *what() const throw();
+
+ private:
+  const char *errmsg_;
+};
+
 // config内のバーチャルサーバの情報を元に必要なソケットをオープンし､リッスン状態にする｡
 // ソケットの作成に失敗した場合は std::exception が投げられる｡
 std::vector<int> OpenLilstenFds(const config::Config &config);
