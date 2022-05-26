@@ -128,7 +128,7 @@ class Parser {
   // ポート番号の最小値
   static const int kMinPortNumber = 0;
   // ポート番号の最大値
-  static const int kMaxPortNumber = (2 ^ 16) - 1;
+  static const int kMaxPortNumber = 65535;
 };
 
 };  // namespace config
