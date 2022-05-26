@@ -6,7 +6,8 @@ namespace http {
 
 namespace {
 bool IsCorrectHTTPVersion(const std::string &str);
-}
+bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest);
+}  // namespace
 
 HttpRequest::HttpRequest()
     : method_(""),
@@ -99,7 +100,7 @@ void HttpRequest::ParseBody() {
 // Interpret系関数　文字列を解釈する関数　主にparse_statusで動作管理(OKじゃなくなったら次は実行されない)
 
 HttpStatus HttpRequest::InterpretMethod(std::string &str) {
-  if (utils::TryExtractBeforeWhiteSpace(str, method_) == false) {
+  if (TryCutSubstrBeforeWhiteSpace(str, method_) == false) {
     return parse_status_ = BAD_REQUEST;
   }
 
@@ -112,7 +113,7 @@ HttpStatus HttpRequest::InterpretMethod(std::string &str) {
 }
 
 HttpStatus HttpRequest::InterpretPath(std::string &str) {
-  if (utils::TryExtractBeforeWhiteSpace(str, path_) == false) {
+  if (TryCutSubstrBeforeWhiteSpace(str, path_) == false) {
     return parse_status_ = BAD_REQUEST;
   }
 
@@ -182,6 +183,17 @@ bool IsCorrectHTTPVersion(const std::string &str) {
   }
   return true;
 }
+
+bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest) {
+  size_t white_space_pos = src.find_first_of(" ");
+  if (white_space_pos == std::string::npos) {
+    return false;
+  }
+  dest = src.substr(0, white_space_pos);
+  src.erase(0, white_space_pos + 1);
+  return true;
+}
+
 }  // namespace
 
 //========================================================================
