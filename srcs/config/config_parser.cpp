@@ -314,8 +314,8 @@ void Parser::SkipSpaces() {
 }
 
 char Parser::GetC() {
-  if (buf_idx_ + 1 >= file_content_.length()) {
-    throw ParserException("GetC");
+  if (buf_idx_ >= file_content_.length()) {
+    throw ParserException("GetC: buf_idx_ has already reached to EOF.");
   }
   return file_content_[buf_idx_++];
 }
@@ -420,7 +420,7 @@ bool Parser::ParseOnOff(const std::string &on_or_off) {
 }
 
 bool Parser::IsReachedEOF() {
-  return buf_idx_ + 1 >= file_content_.length();
+  return buf_idx_ >= file_content_.length();
 }
 
 Parser::ParserException::ParserException(const char *errmsg)
