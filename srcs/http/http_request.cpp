@@ -80,8 +80,6 @@ void HttpRequest::ParseHeaderField() {
     if (it == buffer_.end()) {
       return;  // crlfがbuffer内に存在しない
     } else {
-      // std::string line = utils::ExtractStrFromByteVector(
-      //     buffer_, crlf_pos);  // headerfieldの解釈
       std::string line = buffer_.ExtractBeforePos(it);  // headerfieldの解釈
       InterpretHeaderField(line);
     }
