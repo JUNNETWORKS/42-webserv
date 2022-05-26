@@ -4,6 +4,10 @@
 
 namespace http {
 
+namespace {
+bool IsCorrectHTTPVersion(const std::string &str);
+}
+
 HttpRequest::HttpRequest()
     : method_(""),
       path_(""),
@@ -159,7 +163,8 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 //========================================================================
 // Helper関数
 
-bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
+namespace {
+bool IsCorrectHTTPVersion(const std::string &str) {
   if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
     return false;
   std::string minor_ver = str.substr(kExpectMajorVersion.size(),
@@ -177,6 +182,7 @@ bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
   }
   return true;
 }
+}  // namespace
 
 //========================================================================
 // こいつらは多分そのうち消える

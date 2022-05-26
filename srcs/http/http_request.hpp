@@ -56,7 +56,6 @@ class HttpRequest {
   HttpStatus InterpretVersion(std::string &str);
   HttpStatus InterpretHeaderField(std::string &str);
 
-  bool IsCorrectHTTPVersion(const std::string &str);
   void PrintRequestInfo();
 };
 
