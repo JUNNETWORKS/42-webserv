@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "config/config.hpp"
 #include "http/http_request.hpp"
 #include "http/http_response.hpp"
 

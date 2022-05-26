@@ -45,6 +45,8 @@ void AcceptNewConnection(int epfd, int listen_fd) {
 
 int StartEventLoop(const std::vector<int> &listen_fds,
                    const config::Config &config) {
+  // TODO: configを利用するようにする
+  (void)config;
   // epoll インスタンス作成
   int epfd = epoll_create1(EPOLL_CLOEXEC);
 
