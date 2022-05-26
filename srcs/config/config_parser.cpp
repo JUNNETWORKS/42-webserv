@@ -29,9 +29,7 @@ int GetFileSize(const std::string &filename) {
 
 }  // namespace
 
-Parser::Parser(const std::string &filename) : file_content_(), buf_idx_(0) {
-  LoadFileData(filename);
-}
+Parser::Parser() : file_content_(), buf_idx_(0) {}
 
 Parser::Parser(const Parser &rhs) {
   *this = rhs;
@@ -47,21 +45,25 @@ Parser &Parser::operator=(const Parser &rhs) {
 
 Parser::~Parser() {}
 
-void Parser::LoadFileData(const std::string &filename) {
+void Parser::LoadFile(const std::string &filename) {
   int filesize = GetFileSize(filename);
   if (filesize < 0) {
-    throw ParserException("Failed to get file size in LoadFileData().");
+    throw ParserException("Failed to get file size in LoadFile().");
   }
   int fd = open(filename.c_str(), O_RDONLY);
   if (fd < 0) {
-    throw ParserException("Failed open() in LoadFileData().");
+    throw ParserException("Failed open() in LoadFile().");
   }
   void *p = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
   if (p == NULL) {
-    throw ParserException("Failed mmap() in LoadFileData().");
+    throw ParserException("Failed mmap() in LoadFile().");
   }
   file_content_ = std::string(static_cast<char *>(p));
   munmap(p, filesize);
+}
+
+void Parser::LoadData(const std::string &data) {
+  file_content_ = data;
 }
 
 Config Parser::ParseConfig() {

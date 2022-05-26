@@ -12,10 +12,16 @@ namespace config {
 
 class Parser {
  public:
-  Parser(const std::string &filename);
+  Parser();
   Parser(const Parser &rhs);
   Parser &operator=(const Parser &rhs);
   ~Parser();
+
+  // filename のファイルデータを file_content_ に載せる
+  void LoadFile(const std::string &filename);
+
+  // data の内容を file_content_ に載せる｡テストとかで使う｡
+  void LoadData(const std::string &data);
 
   // config: server (NEWLINE server)*;
   Config ParseConfig();
@@ -114,9 +120,6 @@ class Parser {
 
   // file_content_ をすべて読み込んだか
   bool IsReachedEOF();
-
-  // filename の内容を file_content_ に載せる
-  void LoadFileData(const std::string &filename);
 
   std::string file_content_;
   size_t buf_idx_;
