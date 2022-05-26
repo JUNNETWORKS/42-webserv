@@ -44,7 +44,8 @@ class Parser {
 
   // location block
   // location_directive: 'location' PATH '{' directive_in_location+ '}';
-  void ParseLocationBlock(VirtualServerConf &vserver);
+  void ParseLocationBlock(VirtualServerConf &vserver,
+                          bool is_location_back = false);
 
   void ParseAllowMethodDirective(LocationConf &location);
 
@@ -55,6 +56,8 @@ class Parser {
   void ParseIndexDirective(LocationConf &location);
 
   void ParseAutoindexDirective(LocationConf &location);
+
+  void ParseErrorPage(LocationConf &location);
 
   void ParseIscgiDirective(LocationConf &location);
 
@@ -80,9 +83,18 @@ class Parser {
   bool IsUnsignedNumber(const std::string &str);
 
   // ドメイン名の条件に合っているか
-  // DOMAIN_NAME: (ALPHABET | NUMBER)+
-  //   | (ALPHABET | NUMBER)+ (ALPHABET | NUMBER | HYPHEN)* (ALPHABET| NUMBER)+;
+  // https://www.nic.ad.jp/ja/dom/system.html
+  //
+  // DOMAIN_NAME: DOMAIN_LABEL ('.' DOMAIN_LABEL)*;
   bool IsDomainName(const std::string &domain_name);
+
+  // ドメインのラベル(ドメイン内の'.'で区切られた文字列のこと)
+  // DOMAIN_LABEL: (ALPHABET | NUMBER)+
+  // 	| (ALPHABET | NUMBER)+ (ALPHABET | NUMBER | HYPHEN)* (
+  // 		ALPHABET
+  // 		| NUMBER
+  // 	)+;
+  bool IsDomainLabel(const std::string &label);
 
   // webservで利用可能なメソッドか
   // METHOD: 'GET' | 'POST' | 'DELETE';
@@ -99,6 +111,11 @@ class Parser {
 
   std::string file_content_;
   size_t buf_idx_;
+
+  // ピリオドを含むドメイン全体の長さ
+  static const int kMaxDomainLength = 253;
+  // ドメインの各ラベル(ピリオド区切りの文字列)の最大長
+  static const int kMaxDomainLabelLength = 63;
 };
 
 };  // namespace config

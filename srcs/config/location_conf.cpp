@@ -10,7 +10,7 @@ LocationConf::LocationConf()
     : path_pattern_(),
       is_backward_search_(),
       allowed_methods_(),
-      client_max_body_size_kb_(),
+      client_max_body_size_kb_(kDefaultClientMaxBodySize),
       root_dir_(),
       index_pages_(),
       is_cgi_(false),

@@ -1,6 +1,7 @@
 #include "config/config_parser.hpp"
 
 #include <fcntl.h>
+#include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -71,8 +72,9 @@ Config Parser::ParseConfig() {
     if (directive == "server") {
       ParseServerBlock(config);
     } else {
-      throw ParserException();
+      throw ParserException("Unknown directive in config.");
     }
+    SkipSpaces();
   }
   return config;
 }
@@ -81,7 +83,7 @@ void Parser::ParseServerBlock(Config &config) {
   VirtualServerConf vserver;
   SkipSpaces();
   if (GetC() != '{') {
-    throw ParserException();
+    throw ParserException("There was no '{' after the Server directive.");
   }
   while (GetC() != '}') {
     UngetC();
@@ -92,11 +94,13 @@ void Parser::ParseServerBlock(Config &config) {
     } else if (directive == "server_name") {
       ParseServerNameDirective(vserver);
     } else if (directive == "location") {
-      // TODO: location_back対応
-      ParseLocationBlock(vserver);
+      ParseLocationBlock(vserver, false);
+    } else if (directive == "location_back") {
+      ParseLocationBlock(vserver, true);
     } else {
       throw ParserException("Unknown directive in server block.");
     }
+    SkipSpaces();
   }
 
   config.AppendVirtualServerConf(vserver);
@@ -129,11 +133,17 @@ void Parser::ParseServerNameDirective(VirtualServerConf &vserver) {
   }
 }
 
-void Parser::ParseLocationBlock(VirtualServerConf &vserver) {
+void Parser::ParseLocationBlock(VirtualServerConf &vserver,
+                                bool is_location_back) {
   LocationConf location;
+  location.SetIsBackwardSearch(is_location_back);
+  SkipSpaces();
+  // Get path
+  std::string path_pattern = GetWord();
+  location.SetPathPattern(path_pattern);
   SkipSpaces();
   if (GetC() != '{') {
-    throw ParserException();
+    throw ParserException("There was no '{' after the Location directive.");
   }
   while (GetC() != '}') {
     UngetC();
@@ -151,17 +161,21 @@ void Parser::ParseLocationBlock(VirtualServerConf &vserver) {
       ParseAutoindexDirective(location);
     } else if (directive == "is_cgi") {
       ParseIscgiDirective(location);
+    } else if (directive == "error_page") {
+      ParseErrorPage(location);
     } else if (directive == "return") {
       ParseReturnDirective(location);
     } else {
-      throw ParserException("Unknown directive in server block.");
+      throw ParserException("Unknown directive in Location block.");
     }
+    SkipSpaces();
   }
 
   vserver.AppendLocation(location);
 }
 
 void Parser::ParseAllowMethodDirective(LocationConf &location) {
+  SkipSpaces();
   while (GetC() != ';') {
     UngetC();
     SkipSpaces();
@@ -174,14 +188,11 @@ void Parser::ParseAllowMethodDirective(LocationConf &location) {
 }
 
 void Parser::ParseClientMaxBodySizeDirective(LocationConf &location) {
-  if (location.GetClientMaxBodySizeKB() >= 0) {
-    throw ParserException("client_max_body_size has already set.");
-  }
   SkipSpaces();
   std::string body_size_str = GetWord();
   int64_t body_size;
   try {
-    body_size = utils::stoll(body_size_str);
+    body_size = utils::Stoll(body_size_str);
   } catch (const std::exception &e) {
     throw ParserException("Invalid body size.");
   }
@@ -213,6 +224,43 @@ void Parser::ParseIndexDirective(LocationConf &location) {
     std::string filename = GetWord();
     location.AppendIndexPages(filename);
     SkipSpaces();
+  }
+}
+
+void Parser::ParseErrorPage(LocationConf &location) {
+  SkipSpaces();
+  // 最後のargがエラーページのpathになってる｡
+  std::vector<std::string> args;
+  while (GetC() != ';') {
+    UngetC();
+    SkipSpaces();
+    std::string arg = GetWord();
+    args.push_back(arg);
+  }
+  UngetC();
+
+  if (args.size() < 2) {
+    throw ParserException(
+        "error_page need to specify http status and error page path.");
+  }
+
+  std::string &error_page = args.back();
+  for (size_t i = 0; i < args.size() - 1; ++i) {
+    if (!IsUnsignedNumber(args[i])) {
+      // TODO: HTTPステータスコードの範囲内かチェックするメソッドで検査する｡
+      throw ParserException("error_page directive arg isn't valid number.");
+    }
+    http::HttpStatus status =
+        static_cast<http::HttpStatus>(atoi(args[i].c_str()));
+    if (location.GetErrorPages().find(status) ==
+        location.GetErrorPages().end()) {
+      location.AppendErrorPages(status, error_page);
+    }
+  }
+
+  SkipSpaces();
+  if (GetC() != ';') {
+    throw ParserException("Can't find semicolon after error_page directive.");
   }
 }
 
@@ -251,17 +299,22 @@ void Parser::ParseReturnDirective(LocationConf &location) {
 // Parser utils
 
 void Parser::SkipSpaces() {
-  if (!IsReachedEOF() && !isspace(GetC())) {
+  if (IsReachedEOF()) {
+    return;
+  }
+  if (!isspace(GetC())) {
     UngetC();
     return;
   }
-  while (isspace(GetC())) {
+  while (!IsReachedEOF() && isspace(GetC())) {
   }
-  UngetC();
+  if (!IsReachedEOF()) {
+    UngetC();
+  }
 }
 
 char Parser::GetC() {
-  if (buf_idx_ >= file_content_.length() - 1) {
+  if (buf_idx_ + 1 >= file_content_.length()) {
     throw ParserException("GetC");
   }
   return file_content_[buf_idx_++];
@@ -275,15 +328,27 @@ char Parser::UngetC() {
   return file_content_[buf_idx_];
 }
 
-// TODO: ';' がファイル名に含まれている場合などに正しく動かない
 std::string Parser::GetWord() {
   std::string word;
 
+  bool is_escaped_char = false;
   char c = GetC();
-  while (!IsReachedEOF() && (!isspace(c))) {
-    word += c;
+  // 継続条件
+  // EOFに到達してない
+  // 空白文字じゃないし､ディレクティブ終了の';'でもない
+  // 空白文字､';' だとしてもエスケープされている
+  while (!IsReachedEOF() &&
+         ((!isspace(c) && !strchr(";{}", c)) ||
+          (is_escaped_char && (isspace(c) || strchr(";{}", c))))) {
+    if (!is_escaped_char && c == '\\') {
+      is_escaped_char = true;
+    } else {
+      word += c;
+      is_escaped_char = false;
+    }
     c = GetC();
   }
+  UngetC();
   return word;
 }
 
@@ -300,20 +365,38 @@ bool Parser::IsUnsignedNumber(const std::string &str) {
 }
 
 bool Parser::IsDomainName(const std::string &domain_name) {
-  if (domain_name.empty()) {
+  if (domain_name.empty() || domain_name.size() > kMaxDomainLength) {
+    return false;
+  }
+
+  // split to labels
+  std::vector<std::string> labels = utils::SplitString(domain_name, ".");
+
+  // check each label
+  for (std::vector<std::string>::const_iterator it = labels.begin();
+       it != labels.end(); ++it) {
+    if (!IsDomainLabel(*it)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Parser::IsDomainLabel(const std::string &label) {
+  if (label.empty() || label.length() > kMaxDomainLabelLength) {
     return false;
   }
   size_t idx = 0;
-  if (!isalnum(domain_name[idx])) {
+  if (!isalnum(label[idx])) {
     return false;
   }
-  while (idx < domain_name.length() - 1) {
-    if (!isalnum(domain_name[idx]) && domain_name[idx] != '-') {
+  while (idx < label.length() - 1) {
+    if (!isalnum(label[idx]) && label[idx] != '-') {
       return false;
     }
     idx++;
   }
-  if (!isalnum(domain_name[idx])) {
+  if (!isalnum(label[idx])) {
     return false;
   }
   return true;
@@ -328,16 +411,16 @@ bool Parser::IsHttpMethod(const std::string &method) {
 }
 
 bool Parser::ParseOnOff(const std::string &on_or_off) {
-  if (on_or_off == "yes") {
+  if (on_or_off == "on") {
     return true;
-  } else if (on_or_off == "no") {
+  } else if (on_or_off == "off") {
     return false;
   }
   throw ParserException("ParseOnOff");
 }
 
 bool Parser::IsReachedEOF() {
-  return buf_idx_ >= file_content_.length();
+  return buf_idx_ + 1 >= file_content_.length();
 }
 
 Parser::ParserException::ParserException(const char *errmsg)
