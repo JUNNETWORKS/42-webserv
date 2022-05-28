@@ -18,7 +18,7 @@ class LocationConf {
   std::string path_pattern_;
   bool is_backward_search_;
   std::set<std::string> allowed_methods_;
-  int64_t client_max_body_size_kb_;
+  int64_t client_max_body_size_;
   std::string root_dir_;
   std::vector<std::string> index_pages_;
   bool is_cgi_;
@@ -56,9 +56,9 @@ class LocationConf {
 
   void AppendAllowedMethod(std::string method);
 
-  int64_t GetClientMaxBodySizeKB() const;
+  int64_t GetClientMaxBodySize() const;
 
-  void SetClientMaxBodySizeKB(int64_t client_max_body_size_kb);
+  void SetClientMaxBodySize(int64_t client_max_body_size);
 
   std::string GetRootDir() const;
 

@@ -10,7 +10,7 @@ LocationConf::LocationConf()
     : path_pattern_(),
       is_backward_search_(),
       allowed_methods_(),
-      client_max_body_size_kb_(kDefaultClientMaxBodySize),
+      client_max_body_size_(kDefaultClientMaxBodySize),
       root_dir_(),
       index_pages_(),
       is_cgi_(false),
@@ -27,7 +27,7 @@ LocationConf &LocationConf::operator=(const LocationConf &rhs) {
     path_pattern_ = rhs.path_pattern_;
     is_backward_search_ = rhs.is_backward_search_;
     allowed_methods_ = rhs.allowed_methods_;
-    client_max_body_size_kb_ = rhs.client_max_body_size_kb_;
+    client_max_body_size_ = rhs.client_max_body_size_;
     root_dir_ = rhs.root_dir_;
     index_pages_ = rhs.index_pages_;
     is_cgi_ = rhs.is_cgi_;
@@ -57,7 +57,7 @@ void LocationConf::Print() const {
     std::cout << " " << *it;
   }
   std::cout << ";\n";
-  std::cout << "client_max_body_size_kb: " << client_max_body_size_kb_ << "\n";
+  std::cout << "client_max_body_size_kb: " << client_max_body_size_ << "\n";
   std::cout << "root_dir: " << root_dir_ << "\n";
   std::cout << "index_pages:";
   for (std::vector<std::string>::const_iterator it = index_pages_.begin();
@@ -102,12 +102,12 @@ void LocationConf::AppendAllowedMethod(std::string method) {
   allowed_methods_.insert(method);
 }
 
-int64_t LocationConf::GetClientMaxBodySizeKB() const {
-  return client_max_body_size_kb_;
+int64_t LocationConf::GetClientMaxBodySize() const {
+  return client_max_body_size_;
 }
 
-void LocationConf::SetClientMaxBodySizeKB(int64_t client_max_body_size_kb) {
-  client_max_body_size_kb_ = client_max_body_size_kb;
+void LocationConf::SetClientMaxBodySize(int64_t client_max_body_size_kb) {
+  client_max_body_size_ = client_max_body_size_kb;
 }
 
 std::string LocationConf::GetRootDir() const {

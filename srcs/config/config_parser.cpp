@@ -200,7 +200,7 @@ void Parser::ParseClientMaxBodySizeDirective(LocationConf &location) {
   if (body_size < 0) {
     throw ParserException("Invalid body size.");
   }
-  location.SetClientMaxBodySizeKB(body_size);
+  location.SetClientMaxBodySize(body_size);
   SkipSpaces();
   if (GetC() != ';') {
     throw ParserException(
