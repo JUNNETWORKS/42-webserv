@@ -46,7 +46,9 @@ class VirtualServerConf {
 
   void AppendServerName(std::string server_name);
 
-  const LocationConf &GetLocation(std::string path) const;
+  // path を元に適切な LocationConf を返す｡
+  // path に該当する LocationConf がない場合はNULLを返す｡
+  const LocationConf *GetLocation(std::string path) const;
 
   void AppendLocation(LocationConf location);
 };

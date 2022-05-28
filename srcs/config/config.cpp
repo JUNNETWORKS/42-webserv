@@ -44,7 +44,7 @@ void Config::Print() const {
   }
 }
 
-const VirtualServerConf &Config::GetVirtualServerConf(
+const VirtualServerConf *Config::GetVirtualServerConf(
     const PortType listen_port, const std::string &server_name) const {
   const VirtualServerConf *virtual_server_conf = NULL;
 
@@ -60,7 +60,7 @@ const VirtualServerConf &Config::GetVirtualServerConf(
     }
   }
 
-  return *virtual_server_conf;
+  return virtual_server_conf;
 }
 
 const std::vector<VirtualServerConf> &Config::GetVirtualServerConfs() const {

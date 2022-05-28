@@ -75,7 +75,7 @@ void VirtualServerConf::AppendServerName(std::string server_name) {
   server_names_.insert(server_name);
 }
 
-const LocationConf &VirtualServerConf::GetLocation(std::string path) const {
+const LocationConf *VirtualServerConf::GetLocation(std::string path) const {
   const LocationConf *location_conf = NULL;
   // 最大文字数マッチが採用される｡
   std::string::size_type max_len = 0;
@@ -87,7 +87,7 @@ const LocationConf &VirtualServerConf::GetLocation(std::string path) const {
       max_len = it->GetPathPattern().size();
     }
   }
-  return *location_conf;
+  return location_conf;
 }
 
 void VirtualServerConf::AppendLocation(LocationConf location) {
