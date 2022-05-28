@@ -29,7 +29,7 @@ Config::~Config() {}
 bool Config::IsValid() const {
   for (VirtualServerConfVector::const_iterator it = servers_.begin();
        it != servers_.end(); ++it) {
-    if (it->IsValid()) {
+    if (!(it->IsValid())) {
       return false;
     }
   }
