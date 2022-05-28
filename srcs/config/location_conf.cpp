@@ -42,7 +42,7 @@ LocationConf::~LocationConf() {}
 
 bool LocationConf::IsValid() const {
   // root または return が設定されている必要がある｡
-  if (root_dir_.empty() || redirect_url_.empty()) {
+  if (root_dir_.empty() && redirect_url_.empty()) {
     return false;
   }
   return true;
