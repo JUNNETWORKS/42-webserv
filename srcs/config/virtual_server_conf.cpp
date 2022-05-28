@@ -94,4 +94,9 @@ void VirtualServerConf::AppendLocation(LocationConf location) {
   locations_.push_back(location);
 }
 
+bool VirtualServerConf::operator==(const VirtualServerConf &rhs) const {
+  return listen_port_ == rhs.listen_port_ &&
+         server_names_ == rhs.server_names_ && locations_ == rhs.locations_;
+}
+
 };  // namespace config

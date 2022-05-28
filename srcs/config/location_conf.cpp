@@ -170,4 +170,14 @@ bool LocationConf::IsMatchPattern(std::string path) const {
   }
 }
 
+bool LocationConf::operator==(const LocationConf &rhs) const {
+  return path_pattern_ == rhs.path_pattern_ &&
+         is_backward_search_ == rhs.is_backward_search_ &&
+         allowed_methods_ == rhs.allowed_methods_ &&
+         client_max_body_size_ == rhs.client_max_body_size_ &&
+         root_dir_ == rhs.root_dir_ && index_pages_ == rhs.index_pages_ &&
+         is_cgi_ == rhs.is_cgi_ && error_pages_ == rhs.error_pages_ &&
+         auto_index_ == rhs.auto_index_ && redirect_url_ == rhs.redirect_url_;
+}
+
 };  // namespace config

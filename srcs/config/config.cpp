@@ -72,6 +72,10 @@ void Config::AppendVirtualServerConf(
   servers_.push_back(virtual_server_conf);
 }
 
+bool Config::operator==(const Config &rhs) const {
+  return servers_ == rhs.servers_;
+}
+
 Config ParseConfig(const char *filename) {
   Parser parser;
   parser.LoadFile(filename);

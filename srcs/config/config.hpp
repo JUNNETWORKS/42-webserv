@@ -49,6 +49,12 @@ class Config {
   //
   // 引数がポインタじゃないのはデータがスタック領域とヒープ領域に混在するのを避けるためである｡
   void AppendVirtualServerConf(const VirtualServerConf &virtual_server_conf);
+
+  // ========================================================================
+  // Operator overload
+  // ========================================================================
+
+  bool operator==(const Config &rhs) const;
 };
 
 Config ParseConfig(const char *filename);
