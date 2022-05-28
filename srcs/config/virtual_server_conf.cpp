@@ -24,11 +24,8 @@ VirtualServerConf::~VirtualServerConf() {}
 
 bool VirtualServerConf::IsValid() const {
   // port番号がセットされている
-  if (listen_port_.empty()) {
-    return false;
-  }
   // 1つ以上のlocation
-  if (locations_.empty()) {
+  if (listen_port_.empty() || locations_.empty()) {
     return false;
   }
   // locationがすべてvalid
