@@ -49,5 +49,6 @@
     "new": "cpp",
     "stdexcept": "cpp"
   },
-  "C_Cpp.clang_format_style": "{BasedOnStyle: Google, AllowShortFunctionsOnASingleLine: Empty, AllowShortIfStatementsOnASingleLine: false}"
+  "C_Cpp.clang_format_style": "{BasedOnStyle: Google, AllowShortFunctionsOnASingleLine: Empty, AllowShortIfStatementsOnASingleLine: false}",
+  "C_Cpp.default.cppStandard": "c++11"
 }

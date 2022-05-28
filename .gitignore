@@ -34,3 +34,7 @@
 
 # ANTLR
 .antlr/
+
+# Test
+/google_test/
+/tester
