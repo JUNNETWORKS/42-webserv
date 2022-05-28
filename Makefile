@@ -7,7 +7,7 @@ OBJS_DIR := objs
 OBJS := $(SRCS:%.cpp=$(OBJS_DIR)/%.o)
 DEPENDENCIES := $(OBJS:.o=.d)
 
-CXXFLAGS += -I$(SRCS_DIR)
+CXXFLAGS := -I$(SRCS_DIR)
 
 GTEST_DIR   := ./google_test
 ifneq ($(filter $(strip $(MAKECMDGOALS)),test),)
@@ -16,7 +16,7 @@ ifneq ($(filter $(strip $(MAKECMDGOALS)),test),)
 	CXXFLAGS += -g -fsanitize=address
 else
 	CXXFLAGS += --std=c++98
-	CXXFLAGS := -Wall -Wextra -Werror
+	CXXFLAGS += -Wall -Wextra -Werror
 endif
 
 .PHONY: all
