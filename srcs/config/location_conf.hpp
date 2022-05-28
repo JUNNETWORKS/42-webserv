@@ -14,16 +14,21 @@ namespace config {
 
 // serverディレクティブ内のlocationディレクティブの情報
 class LocationConf {
+ public:
+  typedef std::set<std::string> AllowedMethodsSet;
+  typedef std::vector<std::string> IndexPagesVector;
+  // errorPages[<status_code>] = <error_page_path>
+  typedef std::map<http::HttpStatus, std::string> ErrorPagesMap;
+
  private:
   std::string path_pattern_;
   bool is_backward_search_;
-  std::set<std::string> allowed_methods_;
+  AllowedMethodsSet allowed_methods_;
   int64_t client_max_body_size_;
   std::string root_dir_;
-  std::vector<std::string> index_pages_;
+  IndexPagesVector index_pages_;
   bool is_cgi_;
-  // errorPages[<status_code>] = <error_page_path>
-  std::map<http::HttpStatus, std::string> error_pages_;
+  ErrorPagesMap error_pages_;
   // ディレクトリ内ファイル一覧ページを有効にするかどうか
   bool auto_index_;
   // returnディレクティブで指定されたURL
@@ -40,9 +45,17 @@ class LocationConf {
 
   ~LocationConf();
 
+  // ========================================================================
+  // Validator
+  // ========================================================================
+
   bool IsValid() const;
 
   void Print() const;
+
+  // ========================================================================
+  // Getter and Setter
+  // ========================================================================
 
   std::string GetPathPattern() const;
 

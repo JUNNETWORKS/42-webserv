@@ -18,12 +18,13 @@ typedef std::string PortType;
 // 仮想サーバーの設定. Nginx の server ブロックに相当.
 class VirtualServerConf {
  public:
-  typedef std::vector<LocationConf> LocationConfVector;
+  typedef std::vector<LocationConf> LocationConfsVector;
+  typedef std::set<std::string> ServerNamesSet;
 
  private:
   PortType listen_port_;
-  std::set<std::string> server_names_;
-  LocationConfVector locations_;
+  ServerNamesSet server_names_;
+  LocationConfsVector locations_;
 
  public:
   VirtualServerConf();
@@ -37,6 +38,10 @@ class VirtualServerConf {
   bool IsValid() const;
 
   void Print() const;
+
+  // ========================================================================
+  // Getter and Setter
+  // ========================================================================
 
   PortType GetListenPort() const;
 

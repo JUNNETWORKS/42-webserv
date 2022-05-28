@@ -29,7 +29,7 @@ bool VirtualServerConf::IsValid() const {
     return false;
   }
   // locationがすべてvalid
-  for (LocationConfVector::const_iterator it = locations_.begin();
+  for (LocationConfsVector::const_iterator it = locations_.begin();
        it != locations_.end(); ++it) {
     if (!(it->IsValid())) {
       return false;
@@ -51,7 +51,7 @@ void VirtualServerConf::Print() const {
   }
   std::cout << ";\n";
 
-  for (LocationConfVector::const_iterator it = locations_.begin();
+  for (LocationConfsVector::const_iterator it = locations_.begin();
        it != locations_.end(); ++it) {
     it->Print();
   }
@@ -80,7 +80,7 @@ const LocationConf *VirtualServerConf::GetLocation(std::string path) const {
   // 最大文字数マッチが採用される｡
   std::string::size_type max_len = 0;
 
-  for (LocationConfVector::const_iterator it = locations_.begin();
+  for (LocationConfsVector::const_iterator it = locations_.begin();
        it != locations_.end(); ++it) {
     if (it->GetPathPattern().size() > max_len && it->IsMatchPattern(path)) {
       location_conf = &(*it);

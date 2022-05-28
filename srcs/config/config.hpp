@@ -33,6 +33,10 @@ class Config {
 
   void Print() const;
 
+  // ========================================================================
+  // Getter and Setter
+  // ========================================================================
+
   // listen_port と server_name を元に適切なバーチャルサーバを返す｡
   // 該当するバーチャルサーバがない場合はNULLを返す｡
   const VirtualServerConf *GetVirtualServerConf(
