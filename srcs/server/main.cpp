@@ -7,7 +7,13 @@
 int main(int argc, char const *argv[]) {
   config::Config config;
   if (argc >= 2) {
-    config = config::ParseConfig(argv[1]);
+    try {
+      config = config::ParseConfig(argv[1]);
+    } catch (const std::exception &err) {
+      std::cerr << "Parser Error!!\n";
+      std::cerr << "Error message: " << err.what() << std::cout;
+      exit(EXIT_FAILURE);
+    }
   } else {
     config = config::CreateSampleConfig();
   }
