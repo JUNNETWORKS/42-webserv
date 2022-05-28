@@ -52,7 +52,7 @@ void HttpRequest::ParseRequest() {
   PrintRequestInfo();
 };
 
-HttpRequest::ParsePhase HttpRequest::ParseRequestLine() {
+HttpRequest::ParsingPhase HttpRequest::ParseRequestLine() {
   while (buffer_.CompareHead(kCrlf)) {
     buffer_.EraseHead(kCrlf.size());
   }
@@ -68,7 +68,7 @@ HttpRequest::ParsePhase HttpRequest::ParseRequestLine() {
   return phase_;
 }
 
-HttpRequest::ParsePhase HttpRequest::ParseHeaderField() {
+HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
   while (1) {
     if (buffer_.CompareHead(kHeaderBoundary)) {
       //先頭が\r\n\r\nなので終了処理
@@ -90,7 +90,7 @@ HttpRequest::ParsePhase HttpRequest::ParseHeaderField() {
   }
 };
 
-HttpRequest::ParsePhase HttpRequest::ParseBody() {
+HttpRequest::ParsingPhase HttpRequest::ParseBody() {
   // TODO Content-Lengthの判定,Bodyのパース
   return kParsed;
 }

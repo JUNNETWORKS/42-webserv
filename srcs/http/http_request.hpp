@@ -24,13 +24,13 @@ const std::string kDelete = "DELETE";
 
 class HttpRequest {
  private:
-  enum ParsePhase { kRequestLine, kHeaderField, kBody, kParsed };
+  enum ParsingPhase { kRequestLine, kHeaderField, kBody, kParsed };
 
   std::string method_;
   std::string path_;
   int minor_version_;
   std::map<std::string, std::vector<std::string> > headers_;
-  ParsePhase phase_;
+  ParsingPhase phase_;
   HttpStatus parse_status_;
   utils::ByteVector body_;  // HTTP リクエストのボディ
 
@@ -48,9 +48,9 @@ class HttpRequest {
   utils::ByteVector buffer_;  // bufferはSocketInfoに移動予定
 
  private:
-  ParsePhase ParseRequestLine();
-  ParsePhase ParseHeaderField();
-  ParsePhase ParseBody();
+  ParsingPhase ParseRequestLine();
+  ParsingPhase ParseHeaderField();
+  ParsingPhase ParseBody();
   HttpStatus InterpretMethod(std::string &str);
   HttpStatus InterpretPath(std::string &str);
   HttpStatus InterpretVersion(std::string &str);
