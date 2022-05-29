@@ -4,6 +4,11 @@
 
 namespace http {
 
+namespace {
+bool IsCorrectHTTPVersion(const std::string &str);
+bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest);
+}  // namespace
+
 HttpRequest::HttpRequest()
     : method_(""),
       path_(""),
@@ -39,15 +44,15 @@ HttpRequest::~HttpRequest() {}
 
 void HttpRequest::ParseRequest() {
   if (phase_ == kRequestLine)
-    ParseRequestLine();
+    phase_ = ParseRequestLine();
   if (phase_ == kHeaderField)
-    ParseHeaderField();
+    phase_ = ParseHeaderField();
   if (phase_ == kBody)
-    ParseBody();
+    phase_ = ParseBody();
   PrintRequestInfo();
 };
 
-void HttpRequest::ParseRequestLine() {
+HttpRequest::ParsingPhase HttpRequest::ParseRequestLine() {
   while (buffer_.CompareHead(kCrlf)) {
     buffer_.EraseHead(kCrlf.size());
   }
@@ -57,18 +62,17 @@ void HttpRequest::ParseRequestLine() {
     std::string line = buffer_.CutSubstrBeforePos(it);
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
-      phase_ = kHeaderField;
+      return kHeaderField;
     }
-    return;
   }
+  return phase_;
 }
 
-void HttpRequest::ParseHeaderField() {
+HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
   while (1) {
     if (buffer_.CompareHead(kHeaderBoundary)) {
       //先頭が\r\n\r\nなので終了処理
-      phase_ = kBody;
-      return;
+      return kBody;
     }
 
     if (buffer_.CompareHead(kCrlf)) {
@@ -78,7 +82,7 @@ void HttpRequest::ParseHeaderField() {
 
     utils::ByteVector::iterator it = buffer_.FindString(kCrlf);
     if (it == buffer_.end()) {
-      return;  // crlfがbuffer内に存在しない
+      return phase_;  // crlfがbuffer内に存在しない
     } else {
       std::string line = buffer_.CutSubstrBeforePos(it);  // headerfieldの解釈
       InterpretHeaderField(line);
@@ -86,16 +90,16 @@ void HttpRequest::ParseHeaderField() {
   }
 };
 
-void HttpRequest::ParseBody() {
+HttpRequest::ParsingPhase HttpRequest::ParseBody() {
   // TODO Content-Lengthの判定,Bodyのパース
-  phase_ = kParsed;
+  return kParsed;
 }
 
 //========================================================================
 // Interpret系関数　文字列を解釈する関数　主にparse_statusで動作管理(OKじゃなくなったら次は実行されない)
 
 HttpStatus HttpRequest::InterpretMethod(std::string &str) {
-  if (utils::TryExtractBeforeWhiteSpace(str, method_) == false) {
+  if (TryCutSubstrBeforeWhiteSpace(str, method_) == false) {
     return parse_status_ = BAD_REQUEST;
   }
 
@@ -108,7 +112,7 @@ HttpStatus HttpRequest::InterpretMethod(std::string &str) {
 }
 
 HttpStatus HttpRequest::InterpretPath(std::string &str) {
-  if (utils::TryExtractBeforeWhiteSpace(str, path_) == false) {
+  if (TryCutSubstrBeforeWhiteSpace(str, path_) == false) {
     return parse_status_ = BAD_REQUEST;
   }
 
@@ -159,7 +163,8 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 //========================================================================
 // Helper関数
 
-bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
+namespace {
+bool IsCorrectHTTPVersion(const std::string &str) {
   if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
     return false;
   std::string minor_ver = str.substr(kExpectMajorVersion.size(),
@@ -177,6 +182,18 @@ bool HttpRequest::IsCorrectHTTPVersion(const std::string &str) {
   }
   return true;
 }
+
+bool TryCutSubstrBeforeWhiteSpace(std::string &buffer, std::string &res) {
+  size_t white_space_pos = buffer.find_first_of(" ");
+  if (white_space_pos == std::string::npos) {
+    return false;
+  }
+  res = buffer.substr(0, white_space_pos);
+  buffer.erase(0, white_space_pos + 1);
+  return true;
+}
+
+}  // namespace
 
 //========================================================================
 // こいつらは多分そのうち消える
