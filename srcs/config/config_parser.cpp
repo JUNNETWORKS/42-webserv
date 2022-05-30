@@ -230,7 +230,7 @@ void Parser::ParseIndexDirective(LocationConf &location) {
 
 void Parser::ParseErrorPageDirective(LocationConf &location) {
   SkipSpaces();
-  // 最後のargがエラーページのpathになってる｡
+  // 最後のargがエラーページのfilepathになってる｡
   std::vector<std::string> args;
   while (GetC() != ';') {
     UngetC();
