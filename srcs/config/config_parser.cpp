@@ -2,11 +2,11 @@
 
 #include <fcntl.h>
 #include <stdlib.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 
 #include <cstring>
+#include <fstream>
+#include <sstream>
 #include <string>
 
 #include "config/config.hpp"
@@ -16,18 +16,6 @@
 #include "utils/string.hpp"
 
 namespace config {
-
-namespace {
-
-int GetFileSize(const std::string &filepath) {
-  struct stat sbuf;
-  if (stat(filepath.c_str(), &sbuf) < 0) {
-    return -1;
-  }
-  return sbuf.st_size;
-};
-
-}  // namespace
 
 Parser::Parser() : file_content_(), buf_idx_(0) {}
 
@@ -46,20 +34,13 @@ Parser &Parser::operator=(const Parser &rhs) {
 Parser::~Parser() {}
 
 void Parser::LoadFile(const std::string &filepath) {
-  int filesize = GetFileSize(filepath);
-  if (filesize < 0) {
-    throw ParserException("Failed to get file size in LoadFile().");
+  std::ifstream ifs(filepath.c_str());
+  if (!ifs) {
+    throw ParserException("Failed to open ifstream in LoadFile().");
   }
-  int fd = open(filepath.c_str(), O_RDONLY);
-  if (fd < 0) {
-    throw ParserException("Failed open() in LoadFile().");
-  }
-  void *p = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (p == NULL) {
-    throw ParserException("Failed mmap() in LoadFile().");
-  }
-  file_content_ = std::string(static_cast<char *>(p));
-  munmap(p, filesize);
+  std::stringstream ss;
+  ss << ifs.rdbuf();
+  file_content_ = ss.str();
 }
 
 void Parser::LoadData(const std::string &data) {
