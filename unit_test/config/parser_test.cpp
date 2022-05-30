@@ -469,10 +469,74 @@ TEST(ParserTest, AutoIndexArgIsInvalid) {
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 };
 
-/*
-TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
+TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {
+  {
+    // 符号なし整数じゃない
+    Parser parser;
+    parser.LoadData(
+        "server {                                     "
+        "  listen 8080;                               "
+        "                                             "
+        "  location / {                               "
+        "    allow_method GET;                        "
+        "    root /var/www/html;                      "
+        "    index index.html;                        "
+        "    error_page hoge NotFound.html;            "
+        "  }                                          "
+        "}                                            ");
+    EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+  }
 
-TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
-    */
+  {
+    // 3桁じゃない
+    Parser parser;
+    parser.LoadData(
+        "server {                                     "
+        "  listen 8080;                               "
+        "                                             "
+        "  location / {                               "
+        "    allow_method GET;                        "
+        "    root /var/www/html;                      "
+        "    index index.html;                        "
+        "    error_page 1 NotFound.html;            "
+        "  }                                          "
+        "}                                            ");
+    EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+  }
+
+  {
+    // ステータスコードの1桁目が1~5ではない
+    Parser parser;
+    parser.LoadData(
+        "server {                                     "
+        "  listen 8080;                               "
+        "                                             "
+        "  location / {                               "
+        "    allow_method GET;                        "
+        "    root /var/www/html;                      "
+        "    index index.html;                        "
+        "    error_page 800 NotFound.html;            "
+        "  }                                          "
+        "}                                            ");
+    EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+  }
+
+  {
+    // ステータスコードの1桁目が1~5ではない
+    Parser parser;
+    parser.LoadData(
+        "server {                                     "
+        "  listen 8080;                               "
+        "                                             "
+        "  location / {                               "
+        "    allow_method GET;                        "
+        "    root /var/www/html;                      "
+        "    index index.html;                        "
+        "    error_page 000 NotFound.html;            "
+        "  }                                          "
+        "}                                            ");
+    EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+  }
+}
 
 };  // namespace config
