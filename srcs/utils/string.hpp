@@ -18,6 +18,8 @@ bool BackwardMatch(std::string str, std::string pattern);
 
 // std::string を long long に変換したものを返す｡
 // idx が非NULLだった場合､変換に使用されなかったidxが代入される｡
+// 変換がが失敗した場合は例外(std::invalid_argument, std::out_of_range)
+//   を投げる｡
 long long Stoll(const std::string &str, size_t *idx = NULL,
                 long long base = 10);
 
