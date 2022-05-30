@@ -16,6 +16,12 @@
 
 namespace http {
 
+namespace method_strs {
+const std::string kGet = "GET";
+const std::string kPost = "POST";
+const std::string kDelete = "DELETE";
+};  // namespace method_strs
+
 class HttpRequest {
  private:
   enum ParsingPhase { kRequestLine, kHeaderField, kBody, kParsed };

@@ -12,7 +12,7 @@
 #include "config/config.hpp"
 #include "config/location_conf.hpp"
 #include "config/virtual_server_conf.hpp"
-#include "http/constants.hpp"
+#include "http/http_request.hpp"
 #include "utils/string.hpp"
 
 namespace config {
@@ -404,8 +404,8 @@ bool Parser::IsDomainLabel(const std::string &label) {
 }
 
 bool Parser::IsHttpMethod(const std::string &method) {
-  if (method == http::kGet || method == http::kPost ||
-      method == http::kDelete) {
+  if (method == http::method_strs::kGet || method == http::method_strs::kPost ||
+      method == http::method_strs::kDelete) {
     return true;
   }
   return false;
