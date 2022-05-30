@@ -155,6 +155,7 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   str.erase(0, collon_pos + 1);
   std::string field = utils::TrimWhiteSpace(str);
 
+  // TODO ,区切りのsplit
   headers_[header].push_back(field);
   phase_ = kBody;
   return parse_status_ = OK;
@@ -162,6 +163,36 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 
 //========================================================================
 // Helper関数
+
+HttpStatus HttpRequest::DecideBodySize(size_t &body_size) {
+  // https://triple-underscore.github.io/RFC7230-ja.html#message.body.length
+
+  body_size_ = 0;
+
+  bool has_encoding_header =
+      headers_.find("TRANSFER-ENCODING") != headers_.end();
+  bool has_length_header = headers_.find("CONTENT-LENGTH") != headers_.end();
+
+  if (has_encoding_header && has_length_header) {
+    // TODO ステータスの検証　BAD_Requestは仮
+    return parse_status_ = BAD_REQUEST;
+  }
+
+  if (has_encoding_header) {
+    // TODO
+    // 最終転送符号法はチャンク化である
+    // 最終転送符号法はチャンク化でない
+    return parse_status_ = OK;
+  }
+
+  if (has_length_header) {
+    // ヘッダ値が相違する，複数の Content-Length ヘッダが在る†
+    //妥当でない値をとる Content - Length ヘッダが在る
+    return parse_status_ = OK;
+  }
+
+  return OK;
+}
 
 namespace {
 bool IsCorrectHTTPVersion(const std::string &str) {

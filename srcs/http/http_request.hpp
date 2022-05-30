@@ -33,6 +33,7 @@ class HttpRequest {
   ParsingPhase phase_;
   HttpStatus parse_status_;
   utils::ByteVector body_;  // HTTP リクエストのボディ
+  size_t body_size_;
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
@@ -56,6 +57,7 @@ class HttpRequest {
   HttpStatus InterpretVersion(std::string &str);
   HttpStatus InterpretHeaderField(std::string &str);
 
+  HttpStatus HttpRequest::DecideBodySize(size_t &body_size);
   void PrintRequestInfo();
 };
 
