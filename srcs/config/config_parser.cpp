@@ -163,7 +163,7 @@ void Parser::ParseLocationBlock(VirtualServerConf &vserver,
     } else if (directive == "is_cgi") {
       ParseIscgiDirective(location);
     } else if (directive == "error_page") {
-      ParseErrorPage(location);
+      ParseErrorPageDirective(location);
     } else if (directive == "return") {
       ParseReturnDirective(location);
     } else {
@@ -228,7 +228,7 @@ void Parser::ParseIndexDirective(LocationConf &location) {
   }
 }
 
-void Parser::ParseErrorPage(LocationConf &location) {
+void Parser::ParseErrorPageDirective(LocationConf &location) {
   SkipSpaces();
   // 最後のargがエラーページのpathになってる｡
   std::vector<std::string> args;

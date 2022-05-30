@@ -63,7 +63,7 @@ class Parser {
 
   void ParseAutoindexDirective(LocationConf &location);
 
-  void ParseErrorPage(LocationConf &location);
+  void ParseErrorPageDirective(LocationConf &location);
 
   void ParseIscgiDirective(LocationConf &location);
 
