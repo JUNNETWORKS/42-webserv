@@ -17,8 +17,8 @@ class Parser {
   Parser &operator=(const Parser &rhs);
   ~Parser();
 
-  // filename のファイルデータを file_content_ に載せる
-  void LoadFile(const std::string &filename);
+  // filepath のファイルデータを file_content_ に載せる
+  void LoadFile(const std::string &filepath);
 
   // data の内容を file_content_ に載せる｡テストとかで使う｡
   void LoadData(const std::string &data);

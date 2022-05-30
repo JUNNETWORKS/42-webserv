@@ -19,9 +19,9 @@ namespace config {
 
 namespace {
 
-int GetFileSize(const std::string &filename) {
+int GetFileSize(const std::string &filepath) {
   struct stat sbuf;
-  if (stat(filename.c_str(), &sbuf) < 0) {
+  if (stat(filepath.c_str(), &sbuf) < 0) {
     return -1;
   }
   return sbuf.st_size;
@@ -45,12 +45,12 @@ Parser &Parser::operator=(const Parser &rhs) {
 
 Parser::~Parser() {}
 
-void Parser::LoadFile(const std::string &filename) {
-  int filesize = GetFileSize(filename);
+void Parser::LoadFile(const std::string &filepath) {
+  int filesize = GetFileSize(filepath);
   if (filesize < 0) {
     throw ParserException("Failed to get file size in LoadFile().");
   }
-  int fd = open(filename.c_str(), O_RDONLY);
+  int fd = open(filepath.c_str(), O_RDONLY);
   if (fd < 0) {
     throw ParserException("Failed open() in LoadFile().");
   }
@@ -222,8 +222,8 @@ void Parser::ParseIndexDirective(LocationConf &location) {
   SkipSpaces();
   while (!IsReachedEOF() && GetC() != ';') {
     UngetC();
-    std::string filename = GetWord();
-    location.AppendIndexPages(filename);
+    std::string filepath = GetWord();
+    location.AppendIndexPages(filepath);
     SkipSpaces();
   }
 }
