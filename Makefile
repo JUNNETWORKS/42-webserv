@@ -51,8 +51,6 @@ TEST_DEPENDENCIES \
 
 -include $(TEST_DEPENDENCIES)
 
-
-
 .PHONY: test
 test: CXXFLAGS := -I$(SRCS_DIR) --std=c++11 -I$(GTEST_DIR) -g -fsanitize=address
 test: $(GTEST) $(TEST_OBJS)
