@@ -17,11 +17,8 @@ int main(int argc, char const *argv[]) {
   } else {
     config = config::CreateSampleConfig();
   }
-
-  // Setup configuration
   config.Print();
 
-  // listen_fd を作成
   std::vector<int> listen_fds = server::OpenLilstenFds(config);
 
   server::StartEventLoop(listen_fds, config);
