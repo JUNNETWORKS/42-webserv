@@ -56,12 +56,6 @@ class VirtualServerConf {
   const LocationConf *GetLocation(std::string path) const;
 
   void AppendLocation(LocationConf location);
-
-  // ========================================================================
-  // Operator overload
-  // ========================================================================
-
-  bool operator==(const VirtualServerConf &rhs) const;
 };
 
 };  // namespace config

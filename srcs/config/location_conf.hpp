@@ -98,12 +98,6 @@ class LocationConf {
   void SetRedirectUrl(std::string redirect_url);
 
   bool IsMatchPattern(std::string path) const;
-
-  // ========================================================================
-  // Operator overload
-  // ========================================================================
-
-  bool operator==(const LocationConf &rhs) const;
 };
 
 };  // namespace config
