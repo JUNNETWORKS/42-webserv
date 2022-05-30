@@ -298,10 +298,13 @@ TEST(ParserTest, PortNumberIsTooBig) {
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 }
 
+TEST(ParserTest, PortNumberIsNegative) {
+  Parser parser;
+  parser.LoadFile(kConfigurationDirPath + "PortNumberIsNegative.conf");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
 /*
-
-TEST(ParserTest, PortNumberIsNegative) {}
-
 TEST(ParserTest, ServerNameDomainIsTooLong) {}
 
 TEST(ParserTest, ServerNameFormatIsInvalid) {}
