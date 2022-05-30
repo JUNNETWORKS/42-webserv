@@ -5,21 +5,7 @@
 namespace config {
 
 namespace {
-LocationConf CreateLocationConf(
-    const std::string &path_pattern, bool is_backward_search,
-    LocationConf::AllowedMethodsSet allowed_methods,
-    int64_t client_max_body_size, const std::string &root_dir,
-    const LocationConf::IndexPagesVector &index_pages, bool is_cgi,
-    const LocationConf::ErrorPagesMap &error_pages, bool auto_index,
-    const std::string &reidrect_url) {
-  LocationConf location;
-
-  location.SetPathPattern(path_pattern);
-  location.SetIsBackwardSearch(is_backward_search);
-  location.AppendAllowedMethod(path_pattern);
-
-  return location;
-}
+const int64_t kDefaultClientMaxBodySize = 1024 * 1024;  // 1MB
 }  // namespace
 
 TEST(ParserTest, SimpleServer) {
@@ -40,35 +26,17 @@ TEST(ParserTest, SimpleServer) {
   EXPECT_TRUE(config.IsValid());
 
   const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
-  EXPECT_TRUE(vserver != NULL);
+  ASSERT_TRUE(vserver != NULL);
   EXPECT_TRUE(vserver->GetListenPort() == "8080");
 
   const LocationConf *location = vserver->GetLocation("/");
-  EXPECT_TRUE(location != NULL);
-  /*
-  // CreateLocationConf()
-  でlocationを作って､それを比較に使うか､それとも全てベタ書きでテストするか const
-  LocationConf expected_location = CreateLocationConf(
-      "/", false, LocationConf::AllowedMethodsSet{"GET"}, 1024 * 1024,
-      "/var/www/html", LocationConf::IndexPagesVector{"index.html"}, false,
-      LocationConf::ErrorPagesMap{
-          std::make_pair<LocationConf::ErrorPagesMap::key_type,
-                         LocationConf::ErrorPagesMap::mapped_type>(
-              static_cast<LocationConf::ErrorPagesMap::key_type>(404),
-              "NotFound.html"),
-          std::make_pair<LocationConf::ErrorPagesMap::key_type,
-                         LocationConf::ErrorPagesMap::mapped_type>(
-              static_cast<LocationConf::ErrorPagesMap::key_type>(403),
-              "NotFound.html"),
-      },
-      false, "");
-      */
+  ASSERT_TRUE(location != NULL);
   EXPECT_TRUE(location->GetPathPattern() == "/");
   EXPECT_TRUE(location->GetIsBackwardSearch() == false);
   EXPECT_TRUE(location->IsMethodAllowed("GET") == true);
   EXPECT_TRUE(location->IsMethodAllowed("POST") == false);
   EXPECT_TRUE(location->IsMethodAllowed("DELETE") == false);
-  EXPECT_TRUE(location->GetClientMaxBodySize() == 1024 * 1024);  // 1MB
+  EXPECT_TRUE(location->GetClientMaxBodySize() == kDefaultClientMaxBodySize);
   EXPECT_TRUE(location->GetRootDir() == "/var/www/html");
   EXPECT_TRUE(location->GetIndexPages() ==
               LocationConf::IndexPagesVector{"index.html"});
@@ -88,7 +56,6 @@ TEST(ParserTest, SimpleServer) {
   EXPECT_TRUE(location->GetRedirectUrl() == "");
 }
 
-/*
 TEST(ParserTest, EscapedChar) {
   Parser parser;
   parser.LoadData(
@@ -97,7 +64,7 @@ TEST(ParserTest, EscapedChar) {
 
       "location / {"
       "allow_method GET;"
-      "root /var/www/h\\/tml;"
+      "root /var/www/h\\tml;"
       "index index.\\;ht\\\\ml;"
       "error_page 404 403 Not\\ Found.html;"
       "}"
@@ -105,14 +72,31 @@ TEST(ParserTest, EscapedChar) {
   Config config = parser.ParseConfig();
   config.Print();
 
+  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  ASSERT_TRUE(vserver != NULL);
+
+  const LocationConf *location = vserver->GetLocation("/");
+  ASSERT_TRUE(location != NULL);
+  EXPECT_TRUE(location->GetPathPattern() == "/");
+  EXPECT_TRUE(location->GetRootDir() == "/var/www/html");
+  EXPECT_TRUE(location->GetIndexPages() ==
+              LocationConf::IndexPagesVector{"index.;ht\\ml"});
+  EXPECT_TRUE(location->GetRedirectUrl() == "");
+  LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{
+      std::make_pair<LocationConf::ErrorPagesMap::key_type,
+                     LocationConf::ErrorPagesMap::mapped_type>(
+          static_cast<LocationConf::ErrorPagesMap::key_type>(404),
+          "Not Found.html"),
+      std::make_pair<LocationConf::ErrorPagesMap::key_type,
+                     LocationConf::ErrorPagesMap::mapped_type>(
+          static_cast<LocationConf::ErrorPagesMap::key_type>(403),
+          "Not Found.html"),
+  };
+  EXPECT_TRUE(location->GetErrorPages() == errorpages);
   EXPECT_TRUE(config.IsValid());
-  const LocationConf &location =
-      config.GetVirtualServerConfs()[0].GetLocation("/");
-  EXPECT_TRUE(location.GetRootDir() == "/var/www/h/tml");
-  EXPECT_TRUE(location.GetIndexPages() == "index.;ht\\ml");
 }
 
-TEST(ParserTest, EscapedChar) {}
+/*
 
 TEST(ParserTest, TwoServerHaveSamePortWithDifferentServername) {}
 
@@ -136,8 +120,8 @@ TEST(ParserTest, AllowMethodIsInvalid) {}
 
 TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
 
-TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
+TEST(ParserTest, HttpStatusInErrorPagesAreInvalid){}
 
-*/
+    * /
 
 };  // namespace config
