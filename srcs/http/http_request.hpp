@@ -1,27 +1,34 @@
 #ifndef HTTP_HTTP_REQUEST_HPP_
 #define HTTP_HTTP_REQUEST_HPP_
 
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <map>
 #include <string>
 #include <vector>
 
+#include "http_constants.hpp"
+#include "http_status.hpp"
+#include "utils/ByteVector.hpp"
+#include "utils/string.hpp"
+
 namespace http {
 
 class HttpRequest {
- public:
-  typedef unsigned char Byte;
-  typedef std::vector<Byte> ByteVector;
-
  private:
+  enum ParsingPhase { kRequestLine, kHeaderField, kBody, kParsed };
+
   std::string method_;
   std::string path_;
-  std::map<std::string, std::string> headers_;
-  ByteVector body_;  // HTTP リクエストのボディ
+  int minor_version_;
+  std::map<std::string, std::vector<std::string> > headers_;
+  ParsingPhase phase_;
+  HttpStatus parse_status_;
+  utils::ByteVector body_;  // HTTP リクエストのボディ
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
-  ByteVector buffer_;
-
-  static const ByteVector::size_type reserve_size_ = 2 * 1024;  // 2KB
 
  public:
   HttpRequest();
@@ -29,8 +36,21 @@ class HttpRequest {
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
 
-  void AppendDataToBuffer(Byte *buf, size_t size);
-  void ParseOneLine();
+  void ParseRequest();
+  bool IsCorrectRequest();
+
+  utils::ByteVector buffer_;  // bufferはSocketInfoに移動予定
+
+ private:
+  ParsingPhase ParseRequestLine();
+  ParsingPhase ParseHeaderField();
+  ParsingPhase ParseBody();
+  HttpStatus InterpretMethod(std::string &str);
+  HttpStatus InterpretPath(std::string &str);
+  HttpStatus InterpretVersion(std::string &str);
+  HttpStatus InterpretHeaderField(std::string &str);
+
+  void PrintRequestInfo();
 };
 
 };  // namespace http

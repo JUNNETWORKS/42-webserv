@@ -26,6 +26,8 @@ long long Stoll(const std::string &str, size_t *idx = NULL,
 std::vector<std::string> SplitString(const std::string &str,
                                      const std::string &delim);
 
+std::string TrimWhiteSpace(std::string &str);
+
 }  // namespace utils
 
 #endif

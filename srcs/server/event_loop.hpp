@@ -17,6 +17,7 @@
 #include "config/config.hpp"
 #include "http/http_request.hpp"
 #include "http/http_response.hpp"
+#include "utils/ByteVector.hpp"
 
 namespace server {
 
@@ -30,6 +31,7 @@ struct SocketInfo {
                  // 読み込み終わったら Response
   http::HttpRequest request;
   http::HttpResponse response;
+  utils::ByteVector buffer_;
 };
 
 int StartEventLoop(const std::vector<int> &listen_fds,
