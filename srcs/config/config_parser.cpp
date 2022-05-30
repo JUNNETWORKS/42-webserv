@@ -395,6 +395,8 @@ bool Parser::IsHttpMethod(const std::string &method) {
   return false;
 }
 
+// Response Status Code's format is defined in rfc7231.
+// https://datatracker.ietf.org/doc/html/rfc7231#section-6
 bool Parser::IsValidHttpStatusCode(const std::string &code) {
   if (IsUnsignedNumber(code) && code.length() == 3 &&
       (code[0] >= '1' && code[0] <= '5')) {
