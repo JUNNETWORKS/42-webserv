@@ -277,7 +277,15 @@ TEST(ParserTest, ConfigFileIsNotFound) {
 
 TEST(ParserTest, LocationDoesntHaveRoot) {
   Parser parser;
-  parser.LoadFile(kConfigurationDirPath + "LocationDoesntHaveRoot.conf");
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  location / {                               "
+      "    allow_method GET;                        "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
   Config config = parser.ParseConfig();
   config.Print();
 
@@ -286,7 +294,15 @@ TEST(ParserTest, LocationDoesntHaveRoot) {
 
 TEST(ParserTest, ServerDoesntHaveListen) {
   Parser parser;
-  parser.LoadFile(kConfigurationDirPath + "ServerDoesntHaveListen.conf");
+  parser.LoadData(
+      "server {                                     "
+      "  location / {                               "
+      "    allow_method GET;                        "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
   Config config = parser.ParseConfig();
   config.Print();
 
@@ -295,19 +311,46 @@ TEST(ParserTest, ServerDoesntHaveListen) {
 
 TEST(ParserTest, AllowMethodIsInvalid) {
   Parser parser;
-  parser.LoadFile(kConfigurationDirPath + "AllowMethodIsInvalid.conf");
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  location / {                               "
+      "    allow_method GET INVALID;                "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 }
 
 TEST(ParserTest, PortNumberIsTooBig) {
   Parser parser;
-  parser.LoadFile(kConfigurationDirPath + "PortNumberIsTooBig.conf");
+  parser.LoadData(
+      "server {                                     "
+      "  listen 65536;                              "
+      "  location / {                               "
+      "    allow_method GET INVALID;                "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 }
 
 TEST(ParserTest, PortNumberIsNegative) {
   Parser parser;
-  parser.LoadFile(kConfigurationDirPath + "PortNumberIsNegative.conf");
+  parser.LoadData(
+      "server {                                     "
+      "  listen -1;                                 "
+      "  location / {                               "
+      "    allow_method GET INVALID;                "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 }
 
