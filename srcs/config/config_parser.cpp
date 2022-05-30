@@ -280,7 +280,7 @@ void Parser::ParseIscgiDirective(LocationConf &location) {
   SkipSpaces();
   std::string on_or_off = GetWord();
   bool is_cgi = ParseOnOff(on_or_off);
-  location.SetAutoIndex(is_cgi);
+  location.SetIsCgi(is_cgi);
   SkipSpaces();
   if (GetC() != ';') {
     throw ParserException("Can't find semicolon after is_cgi directive.");
