@@ -292,9 +292,13 @@ TEST(ParserTest, AllowMethodIsInvalid) {
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 }
 
-/*
+TEST(ParserTest, PortNumberIsTooBig) {
+  Parser parser;
+  parser.LoadFile(kConfigurationDirPath + "PortNumberIsTooBig.conf");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
 
-TEST(ParserTest, PortNumberIsTooBig) {}
+/*
 
 TEST(ParserTest, PortNumberIsNegative) {}
 
