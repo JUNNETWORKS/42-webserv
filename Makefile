@@ -52,7 +52,8 @@ GTEST       := $(GTEST_DIR)/gtest $(GTEST_DIR)/googletest-release-1.11.0
 GTEST_MAIN  := $(GTEST_DIR)/googletest-release-1.11.0/googletest/src/gtest_main.cc
 GTEST_ALL   := $(GTEST_DIR)/gtest/gtest-all.cc
 TEST_SRCS   := $(shell find unit_test -type f -name '*.cpp')
-TEST_OBJS  := $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
+# main() がかぶらないようにmain.cppのオブジェクトファイルのみ取り除く
+TEST_OBJS  := $(filter-out objs/srcs/server/main.o, $(OBJS)) $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
 TEST_DEPENDENCIES \
          := $(TEST_OBJS:%.o=%.d)
 
@@ -61,11 +62,11 @@ TEST_DEPENDENCIES \
 
 
 .PHONY: test
-test: $(GTEST) $(TEST_OBJS) $(OBJS)
+test: $(GTEST) $(TEST_OBJS)
 	# Google Test require C++11
 	$(CXX) $(CXXFLAGS) $(GTEST_MAIN) $(GTEST_ALL) \
 		-I$(GTEST_DIR) -lpthread \
-		$(filter-out objs/srcs/server/main.o, $(OBJS)) $(TEST_OBJS) \
+		$(TEST_OBJS) \
 		-o $(TESTER_NAME)
 	$(TESTER_NAME)
 
