@@ -26,7 +26,7 @@ Parser::Parser(const Parser &rhs) {
 Parser &Parser::operator=(const Parser &rhs) {
   if (&rhs != this) {
     file_content_ = rhs.file_content_;
-    buf_idx_ = buf_idx_;
+    buf_idx_ = rhs.buf_idx_;
   }
   return *this;
 }
