@@ -95,7 +95,7 @@ Config ParseConfig(const char *filename) {
 //   location /upload {
 //     allow_method GET POST DELETE;
 //
-//     client_max_body_dize 1M;
+//     client_max_body_dize 1048576;
 //
 //     root /var/www/user_uploads;
 //     autoindex on;
@@ -112,6 +112,7 @@ Config ParseConfig(const char *filename) {
 //   }
 //
 //   location_back .php {
+//     allow_method GET POST DELETE;
 //     is_cgi on;
 //     root /home/nginx/cgi_bins;
 //   }
@@ -159,6 +160,7 @@ Config CreateSampleConfig() {
   location_v1_2.AppendAllowedMethod("POST");
   location_v1_2.AppendAllowedMethod("DELETE");
   location_v1_2.SetRootDir("/var/www/user_uploads");
+  location_v1_2.SetClientMaxBodySize(1048576);
   location_v1_2.SetAutoIndex(true);
   vserver1.AppendLocation(location_v1_2);
 
@@ -179,6 +181,9 @@ Config CreateSampleConfig() {
   LocationConf location_v2_2;
   location_v2_2.SetPathPattern(".php");
   location_v2_2.SetIsBackwardSearch(true);
+  location_v1_2.AppendAllowedMethod("GET");
+  location_v1_2.AppendAllowedMethod("POST");
+  location_v1_2.AppendAllowedMethod("DELETE");
   location_v2_2.SetIsCgi(true);
   location_v2_2.SetRootDir("/home/nginx/cgi_bins");
   vserver2.AppendLocation(location_v2_2);
