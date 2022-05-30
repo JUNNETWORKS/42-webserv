@@ -42,6 +42,8 @@ class HttpRequest {
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
 
+  const std::string &getPath() const;
+
   void ParseRequest();
   bool IsCorrectRequest();
 
