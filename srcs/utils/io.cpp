@@ -12,21 +12,21 @@
 namespace utils {
 
 // TODO
-bool isFileExist(const std::string& path) {
-  std::ifstream ifs(path.c_str());
+bool isFileExist(const std::string& file_path) {
+  std::ifstream ifs(file_path.c_str());
   return ifs.is_open();
 }
 
-bool isDir(const std::string& path) {
+bool isDir(const std::string& file_path) {
   struct stat sb;
 
-  stat(path.c_str(), &sb);
+  stat(file_path.c_str(), &sb);
   return S_ISDIR(sb.st_mode);
 }
 
-bool getFileList(const std::string& path, std::vector<std::string>& vec) {
+bool getFileList(const std::string& file_path, std::vector<std::string>& vec) {
   struct dirent* dent;
-  DIR* dir = opendir(path.c_str());
+  DIR* dir = opendir(file_path.c_str());
 
   if (dir == NULL) {
     return false;
