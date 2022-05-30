@@ -451,6 +451,24 @@ TEST(ParserTest, LocationBackPathPatternIsMissing) {
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 }
 
+// autoindex の引数は 'on' || 'off' 以外はエラー
+TEST(ParserTest, AutoIndexArgIsInvalid) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "                                             "
+      "  location / {                               "
+      "    allow_method GET;                        "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "    autoindex enabled;                       "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+};
+
 /*
 TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
 
