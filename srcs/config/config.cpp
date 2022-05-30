@@ -79,7 +79,7 @@ Config ParseConfig(const char *filename) {
 }
 
 // server {
-//   listen 80;
+//   listen 8080;
 //   server_name localhost;
 //
 //   location / {
@@ -103,7 +103,7 @@ Config ParseConfig(const char *filename) {
 // }
 //
 // server {
-//   listen 80;
+//   listen 8080;
 //   server_name www.webserv.com webserv.com;
 //
 //   location / {
@@ -118,7 +118,7 @@ Config ParseConfig(const char *filename) {
 // }
 //
 // server {
-//   listen 8080;
+//   listen 8888;
 //   server_name localhost;
 //
 //   location / {
@@ -139,7 +139,7 @@ Config CreateSampleConfig() {
 
   // server 1
   VirtualServerConf vserver1;
-  vserver1.SetListenPort("80");
+  vserver1.SetListenPort("8080");
   vserver1.AppendServerName("localhost");
 
   LocationConf location_v1_1;
@@ -166,7 +166,7 @@ Config CreateSampleConfig() {
 
   // server 2
   VirtualServerConf vserver2;
-  vserver2.SetListenPort("80");
+  vserver2.SetListenPort("8080");
   vserver2.AppendServerName("www.webserv.com");
   vserver2.AppendServerName("webserv.com");
 
@@ -187,7 +187,7 @@ Config CreateSampleConfig() {
 
   // server 3
   VirtualServerConf vserver3;
-  vserver3.SetListenPort("8080");
+  vserver3.SetListenPort("8888");
   vserver3.AppendServerName("localhost");
 
   LocationConf location_v3_1;
