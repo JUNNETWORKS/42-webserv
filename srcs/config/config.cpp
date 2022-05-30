@@ -27,6 +27,9 @@ Config &Config::operator=(const Config &rhs) {
 Config::~Config() {}
 
 bool Config::IsValid() const {
+  if (servers_.empty()) {
+    return false;
+  }
   for (VirtualServerConfVector::const_iterator it = servers_.begin();
        it != servers_.end(); ++it) {
     if (!(it->IsValid())) {
