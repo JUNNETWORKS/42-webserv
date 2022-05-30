@@ -286,8 +286,13 @@ TEST(ParserTest, ServerDoesntHaveListen) {
   EXPECT_TRUE(config.IsValid() == false);
 }
 
+TEST(ParserTest, AllowMethodIsInvalid) {
+  Parser parser;
+  parser.LoadFile(kConfigurationDirPath + "AllowMethodIsInvalid.conf");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
 /*
-TEST(ParserTest, AllowMethodIsInvalid) {}
 
 TEST(ParserTest, PortNumberIsTooBig) {}
 
