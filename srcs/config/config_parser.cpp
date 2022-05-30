@@ -122,6 +122,9 @@ void Parser::ParseLocationBlock(VirtualServerConf &vserver,
   SkipSpaces();
   // Get path
   std::string path_pattern = GetWord();
+  if (path_pattern.empty()) {
+    throw ParserException("location's path pattern is empty.");
+  }
   location.SetPathPattern(path_pattern);
   SkipSpaces();
   if (GetC() != '{') {
