@@ -419,9 +419,39 @@ TEST(ParserTest, ServerNameFormatIsInvalid) {
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 }
 
-/*
-TEST(ParserTest, PathPatternIsMissing) {}
+TEST(ParserTest, LocationPathPatternIsMissing) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "                                             "
+      "  location   {                               "
+      "    allow_method GET;                        "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
 
+TEST(ParserTest, LocationBackPathPatternIsMissing) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "                                             "
+      "  location_back  {                           "
+      "    allow_method GET;                        "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+/*
 TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
 
 TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
