@@ -35,10 +35,10 @@ TEST(ParserTest, SimpleServer) {
   EXPECT_TRUE(location->IsMethodAllowed("DELETE") == false);
   EXPECT_TRUE(location->GetClientMaxBodySize() == kDefaultClientMaxBodySize);
   EXPECT_TRUE(location->GetRootDir() == "/var/www/html");
-  EXPECT_TRUE(location->GetIndexPages() ==
-              LocationConf::IndexPagesVector{"index.html"});
+  LocationConf::IndexPagesVector indexpages{"index.html"};
+  EXPECT_TRUE(location->GetIndexPages() == indexpages);
   EXPECT_TRUE(location->GetIsCgi() == false);
-  LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{
+  LocationConf::ErrorPagesMap errorpages{
       std::make_pair<LocationConf::ErrorPagesMap::key_type,
                      LocationConf::ErrorPagesMap::mapped_type>(
           static_cast<LocationConf::ErrorPagesMap::key_type>(404),
@@ -73,10 +73,10 @@ TEST(ParserTest, SimpleServerInOneLine) {
   EXPECT_TRUE(location->IsMethodAllowed("DELETE") == false);
   EXPECT_TRUE(location->GetClientMaxBodySize() == kDefaultClientMaxBodySize);
   EXPECT_TRUE(location->GetRootDir() == "/var/www/html");
+  LocationConf::IndexPagesVector indexpages{"index.html"};
   EXPECT_TRUE(location->GetIndexPages() ==
               LocationConf::IndexPagesVector{"index.html"});
-  EXPECT_TRUE(location->GetIsCgi() == false);
-  LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{
+  LocationConf::ErrorPagesMap errorpages{
       std::make_pair<LocationConf::ErrorPagesMap::key_type,
                      LocationConf::ErrorPagesMap::mapped_type>(
           static_cast<LocationConf::ErrorPagesMap::key_type>(404),
@@ -87,6 +87,7 @@ TEST(ParserTest, SimpleServerInOneLine) {
           "NotFound.html"),
   };
   EXPECT_TRUE(location->GetErrorPages() == errorpages);
+  EXPECT_TRUE(location->GetIsCgi() == false);
   EXPECT_TRUE(location->GetAutoIndex() == false);
   EXPECT_TRUE(location->GetRedirectUrl() == "");
 }
@@ -104,10 +105,10 @@ TEST(ParserTest, EscapedChar) {
   ASSERT_TRUE(location != NULL);
   EXPECT_TRUE(location->GetPathPattern() == "/");
   EXPECT_TRUE(location->GetRootDir() == "/var/www/html");
-  EXPECT_TRUE(location->GetIndexPages() ==
-              LocationConf::IndexPagesVector{"index.;ht\\ml"});
+  LocationConf::IndexPagesVector indexpages{"index.;ht\\ml"};
+  EXPECT_TRUE(location->GetIndexPages() == indexpages);
   EXPECT_TRUE(location->GetRedirectUrl() == "");
-  LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{
+  LocationConf::ErrorPagesMap errorpages{
       std::make_pair<LocationConf::ErrorPagesMap::key_type,
                      LocationConf::ErrorPagesMap::mapped_type>(
           static_cast<LocationConf::ErrorPagesMap::key_type>(404),
@@ -141,10 +142,9 @@ TEST(ParserTest, MultipleValidServers) {
       EXPECT_TRUE(location->IsMethodAllowed("POST") == false);
       EXPECT_TRUE(location->IsMethodAllowed("DELETE") == false);
       EXPECT_TRUE(location->GetRootDir() == "/var/www/html");
-      LocationConf::IndexPagesVector indexpages =
-          LocationConf::IndexPagesVector{"index.html", "index.htm"};
+      LocationConf::IndexPagesVector indexpages = {"index.html", "index.htm"};
       EXPECT_TRUE(location->GetIndexPages() == indexpages);
-      LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{
+      LocationConf::ErrorPagesMap errorpages{
           std::make_pair<LocationConf::ErrorPagesMap::key_type,
                          LocationConf::ErrorPagesMap::mapped_type>(
               static_cast<LocationConf::ErrorPagesMap::key_type>(500),
@@ -174,10 +174,9 @@ TEST(ParserTest, MultipleValidServers) {
       EXPECT_TRUE(location->IsMethodAllowed("POST") == true);
       EXPECT_TRUE(location->IsMethodAllowed("DELETE") == true);
       EXPECT_TRUE(location->GetRootDir() == "/var/www/user_uploads");
-      LocationConf::IndexPagesVector indexpages =
-          LocationConf::IndexPagesVector{};
+      LocationConf::IndexPagesVector indexpages{};
       EXPECT_TRUE(location->GetIndexPages() == indexpages);
-      LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{};
+      LocationConf::ErrorPagesMap errorpages{};
       EXPECT_TRUE(location->GetErrorPages() == errorpages);
       EXPECT_TRUE(location->GetClientMaxBodySize() == 1073741824);
       EXPECT_TRUE(location->GetRedirectUrl() == "");
@@ -201,10 +200,9 @@ TEST(ParserTest, MultipleValidServers) {
       EXPECT_TRUE(location->IsMethodAllowed("POST") == false);
       EXPECT_TRUE(location->IsMethodAllowed("DELETE") == false);
       EXPECT_TRUE(location->GetRootDir() == "/var/www/html");
-      LocationConf::IndexPagesVector indexpages =
-          LocationConf::IndexPagesVector{"index.html"};
+      LocationConf::IndexPagesVector indexpages{"index.html"};
       EXPECT_TRUE(location->GetIndexPages() == indexpages);
-      LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{};
+      LocationConf::ErrorPagesMap errorpages{};
       EXPECT_TRUE(location->GetErrorPages() == errorpages);
       EXPECT_TRUE(location->GetClientMaxBodySize() ==
                   kDefaultClientMaxBodySize);
@@ -223,10 +221,9 @@ TEST(ParserTest, MultipleValidServers) {
       EXPECT_TRUE(location->IsMethodAllowed("POST") == false);
       EXPECT_TRUE(location->IsMethodAllowed("DELETE") == false);
       EXPECT_TRUE(location->GetRootDir() == "/home/nginx/cgi_bins");
-      LocationConf::IndexPagesVector indexpages =
-          LocationConf::IndexPagesVector{};
+      LocationConf::IndexPagesVector indexpages{};
       EXPECT_TRUE(location->GetIndexPages() == indexpages);
-      LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{};
+      LocationConf::ErrorPagesMap errorpages{};
       EXPECT_TRUE(location->GetErrorPages() == errorpages);
       EXPECT_TRUE(location->GetClientMaxBodySize() ==
                   kDefaultClientMaxBodySize);
@@ -247,10 +244,9 @@ TEST(ParserTest, MultipleValidServers) {
     ASSERT_TRUE(location != NULL);
     EXPECT_TRUE(location->GetPathPattern() == "/");
     EXPECT_TRUE(location->GetRootDir() == "/var/www/html");
-    LocationConf::IndexPagesVector indexpages =
-        LocationConf::IndexPagesVector{"index.html"};
+    LocationConf::IndexPagesVector indexpages{"index.html"};
     EXPECT_TRUE(location->GetIndexPages() == indexpages);
-    LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{};
+    LocationConf::ErrorPagesMap errorpages{};
     EXPECT_TRUE(location->GetErrorPages() == errorpages);
     EXPECT_TRUE(location->GetRedirectUrl() == "");
     EXPECT_TRUE(config.IsValid());
@@ -263,10 +259,9 @@ TEST(ParserTest, MultipleValidServers) {
     ASSERT_TRUE(location != NULL);
     EXPECT_TRUE(location->GetPathPattern() == "/");
     EXPECT_TRUE(location->GetRootDir() == "");
-    LocationConf::IndexPagesVector indexpages =
-        LocationConf::IndexPagesVector{};
+    LocationConf::IndexPagesVector indexpages{};
     EXPECT_TRUE(location->GetIndexPages() == indexpages);
-    LocationConf::ErrorPagesMap errorpages = LocationConf::ErrorPagesMap{};
+    LocationConf::ErrorPagesMap errorpages{};
     EXPECT_TRUE(location->GetErrorPages() == errorpages);
     EXPECT_TRUE(location->GetRedirectUrl() == "http://localhost:8080/");
     EXPECT_TRUE(config.IsValid());
