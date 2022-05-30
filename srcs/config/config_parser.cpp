@@ -315,7 +315,7 @@ void Parser::SkipSpaces() {
 }
 
 char Parser::GetC() {
-  if (buf_idx_ >= file_content_.length()) {
+  if (IsEofReached()) {
     throw ParserException("GetC: buf_idx_ has already reached to EOF.");
   }
   return file_content_[buf_idx_++];
