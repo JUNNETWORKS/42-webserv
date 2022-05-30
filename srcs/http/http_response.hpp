@@ -11,18 +11,21 @@ namespace http {
 
 class HttpResponse {
  private:
-  typedef unsigned char Byte;
-  typedef std::vector<Byte> ByteVector;
+  // typedef unsigned char Byte;
+  // typedef std::vector<Byte> ByteVector;
 
   HttpStatus status_;
   std::map<std::string, std::string> headers_;
-  ByteVector body_;
+  std::string status_line_;
+  std::string header_;
+  std::string body_;
 
   // レスポンスとして返すバイトデータをすべて格納しておく｡
-  ByteVector buffer_;
-  Byte *buf_position_;  // buffer_ の内部配列へのポインタ｡次writeを開始する位置｡
+  // ByteVector buffer_;
+  // Byte *buf_position_;  // buffer_
+  // の内部配列へのポインタ｡次writeを開始する位置｡
 
-  static const ByteVector::size_type reserve_size_ = 2 * 1024;  // 2KB
+  // static const ByteVector::size_type reserve_size_ = 2 * 1024;  // 2KB
 
  public:
   HttpResponse();
@@ -32,6 +35,17 @@ class HttpResponse {
   HttpResponse &operator=(const HttpResponse &rhs);
 
   ~HttpResponse();
+
+  void setStatusLine(std::string status_line);
+  void setHeader(std::string header);
+  void setBody(std::string body);
+
+  const std::string &getStatusLine() const;
+  const std::string &getHeader() const;
+  const std::string &getBody() const;
+
+  void write(int fd) const;
+  bool loadfile(const std::string &path);
 };
 
 };  // namespace http
