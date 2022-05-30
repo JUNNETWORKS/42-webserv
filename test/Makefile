@@ -19,3 +19,7 @@ webserv-it:
 .PHONY: nginx-it
 nginx-it:
 	docker exec -it nginx bash
+
+.PHONY: nginx-reload
+nginx-reload:
+	docker exec -t nginx nginx -s reload
