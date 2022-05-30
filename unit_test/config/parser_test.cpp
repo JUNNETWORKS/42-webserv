@@ -280,6 +280,7 @@ TEST(ParserTest, LocationDoesntHaveRoot) {
   parser.LoadData(
       "server {                                     "
       "  listen 8080;                               "
+      "                                             "
       "  location / {                               "
       "    allow_method GET;                        "
       "    index index.html;                        "
@@ -314,6 +315,7 @@ TEST(ParserTest, AllowMethodIsInvalid) {
   parser.LoadData(
       "server {                                     "
       "  listen 8080;                               "
+      "                                             "
       "  location / {                               "
       "    allow_method GET INVALID;                "
       "    root /var/www/html;                      "
@@ -329,6 +331,7 @@ TEST(ParserTest, PortNumberIsTooBig) {
   parser.LoadData(
       "server {                                     "
       "  listen 65536;                              "
+      "                                             "
       "  location / {                               "
       "    allow_method GET INVALID;                "
       "    root /var/www/html;                      "
@@ -344,6 +347,7 @@ TEST(ParserTest, PortNumberIsNegative) {
   parser.LoadData(
       "server {                                     "
       "  listen -1;                                 "
+      "                                             "
       "  location / {                               "
       "    allow_method GET INVALID;                "
       "    root /var/www/html;                      "
@@ -354,12 +358,68 @@ TEST(ParserTest, PortNumberIsNegative) {
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 }
 
+// ドメイン名のルール: https://www.nic.ad.jp/ja/dom/system.html
+//
+// server_name の引数のドメイン名が 255 文字｡
+TEST(ParserTest, ServerNameDomainIsTooLong) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name "
+      "012345678901234567890123456789012345678901234567890123456789012."
+      "012345678901234567890123456789012345678901234567890123456789012."
+      "012345678901234567890123456789012345678901234567890123456789012."
+      "012345678901234567890123456789012345678901234567890123456789012;"
+      "                                             "
+      "  location / {                               "
+      "    allow_method GET;                        "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+// ドメインラベルが64文字
+TEST(ParserTest, ServerNameDomainLabelIsTooLong) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name "
+      "0123456789012345678901234567890123456789012345678901234567890123.com;"
+      "                                             "
+      "  location / {                               "
+      "    allow_method GET;                        "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+// ドメインラベルのフォーマットが違う
+TEST(ParserTest, ServerNameFormatIsInvalid) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name -hoge.com;                     "
+      "                                             "
+      "  location / {                               "
+      "    allow_method GET;                        "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
 /*
-
-TEST(ParserTest, ServerNameDomainIsTooLong) {}
-
-TEST(ParserTest, ServerNameFormatIsInvalid) {}
-
 TEST(ParserTest, PathPatternIsMissing) {}
 
 TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
