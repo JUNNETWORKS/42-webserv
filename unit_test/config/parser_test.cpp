@@ -277,9 +277,16 @@ TEST(ParserTest, LocationDoesntHaveRoot) {
   EXPECT_TRUE(config.IsValid() == false);
 }
 
-/*
-TEST(ParserTest, ServerDoesntHaveListen) {}
+TEST(ParserTest, ServerDoesntHaveListen) {
+  Parser parser;
+  parser.LoadFile(kConfigurationDirPath + "ServerDoesntHaveListen.conf");
+  Config config = parser.ParseConfig();
+  config.Print();
 
+  EXPECT_TRUE(config.IsValid() == false);
+}
+
+/*
 TEST(ParserTest, AllowMethodIsInvalid) {}
 
 TEST(ParserTest, PortNumberIsTooBig) {}
