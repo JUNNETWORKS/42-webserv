@@ -68,7 +68,7 @@ void Parser::LoadData(const std::string &data) {
 
 Config Parser::ParseConfig() {
   Config config;
-  while (!IsReachedEOF()) {
+  while (!IsEofReached()) {
     SkipSpaces();
     std::string directive = GetWord();
     if (directive == "server") {
@@ -123,7 +123,7 @@ void Parser::ParseListenDirective(VirtualServerConf &vserver) {
 
 void Parser::ParseServerNameDirective(VirtualServerConf &vserver) {
   SkipSpaces();
-  while (!IsReachedEOF() && GetC() != ';') {
+  while (!IsEofReached() && GetC() != ';') {
     UngetC();
     std::string domain_name = GetWord();
     if (!IsDomainName(domain_name)) {
@@ -220,7 +220,7 @@ void Parser::ParseRootDirective(LocationConf &location) {
 
 void Parser::ParseIndexDirective(LocationConf &location) {
   SkipSpaces();
-  while (!IsReachedEOF() && GetC() != ';') {
+  while (!IsEofReached() && GetC() != ';') {
     UngetC();
     std::string filepath = GetWord();
     location.AppendIndexPages(filepath);
@@ -300,16 +300,16 @@ void Parser::ParseReturnDirective(LocationConf &location) {
 // Parser utils
 
 void Parser::SkipSpaces() {
-  if (IsReachedEOF()) {
+  if (IsEofReached()) {
     return;
   }
   if (!isspace(GetC())) {
     UngetC();
     return;
   }
-  while (!IsReachedEOF() && isspace(GetC())) {
+  while (!IsEofReached() && isspace(GetC())) {
   }
-  if (!IsReachedEOF()) {
+  if (!IsEofReached()) {
     UngetC();
   }
 }
@@ -338,7 +338,7 @@ std::string Parser::GetWord() {
   // EOFに到達してない
   // 空白文字じゃないし､ディレクティブ終了の';'でもない
   // 空白文字､';' だとしてもエスケープされている
-  while (!IsReachedEOF() &&
+  while (!IsEofReached() &&
          ((!isspace(c) && !strchr(";{}", c)) ||
           (is_escaped_char && (isspace(c) || strchr(";{}", c))))) {
     if (!is_escaped_char && c == '\\') {
@@ -443,7 +443,7 @@ bool Parser::ParseOnOff(const std::string &on_or_off) {
   throw ParserException("ParseOnOff");
 }
 
-bool Parser::IsReachedEOF() {
+bool Parser::IsEofReached() {
   return buf_idx_ >= file_content_.length();
 }
 

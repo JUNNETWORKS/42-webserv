@@ -119,7 +119,7 @@ class Parser {
   bool ParseOnOff(const std::string &on_or_off);
 
   // file_content_ をすべて読み込んだか
-  bool IsReachedEOF();
+  bool IsEofReached();
 
   std::string file_content_;
   size_t buf_idx_;
