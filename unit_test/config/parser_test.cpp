@@ -268,6 +268,13 @@ TEST(ParserTest, MultipleValidServers) {
   }
 }
 
+TEST(ParserTest, ConfigFileIsNotFound) {
+  Parser parser;
+  EXPECT_THROW(
+      parser.LoadFile(kConfigurationDirPath + "ConfigFileIsNotFound.conf"),
+      Parser::ParserException);
+}
+
 TEST(ParserTest, LocationDoesntHaveRoot) {
   Parser parser;
   parser.LoadFile(kConfigurationDirPath + "LocationDoesntHaveRoot.conf");
@@ -305,18 +312,16 @@ TEST(ParserTest, PortNumberIsNegative) {
 }
 
 /*
+
 TEST(ParserTest, ServerNameDomainIsTooLong) {}
 
 TEST(ParserTest, ServerNameFormatIsInvalid) {}
 
 TEST(ParserTest, PathPatternIsMissing) {}
 
-TEST(ParserTest, AllowMethodIsInvalid) {}
-
 TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
 
-TEST(ParserTest, HttpStatusInErrorPagesAreInvalid){}
-
+TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
     */
 
 };  // namespace config
