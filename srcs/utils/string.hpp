@@ -20,7 +20,7 @@ bool BackwardMatch(std::string str, std::string pattern);
 bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
 std::string TrimWhiteSpace(std::string &str);
 
-bool readFile(const std::string &path, std::string &dest);
+bool ReadFile(const std::string &path, std::string &dest);
 
 }  // namespace utils
 

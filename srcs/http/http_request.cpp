@@ -37,7 +37,7 @@ HttpRequest::~HttpRequest() {}
 //========================================================================
 // getter
 
-const std::string &HttpRequest::getPath() const {
+const std::string &HttpRequest::GetPath() const {
   return path_;
 }
 

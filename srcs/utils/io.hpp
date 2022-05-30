@@ -9,13 +9,13 @@
 
 namespace utils {
 
-bool isFileExist(const std::string& path);
+bool IsFileExist(const std::string& path);
 
-bool isDir(const std::string& path);
+bool IsDir(const std::string& path);
 
-bool getFileList(const std::string& path, std::vector<std::string>& vec);
+bool GetFileList(const std::string& path, std::vector<std::string>& vec);
 
-bool ft_putstr_fd(const std::string str, int fd);
+bool PutStrFd(const std::string str, int fd);
 
 }  // namespace utils
 

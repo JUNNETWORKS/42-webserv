@@ -29,7 +29,7 @@ std::string TrimWhiteSpace(std::string &str) {
   return str;
 }
 
-bool readFile(const std::string &path, std::string &dest) {
+bool ReadFile(const std::string &path, std::string &dest) {
   std::ostringstream sstr;
   std::ifstream ifs(path.c_str(), std::ios::binary);
 

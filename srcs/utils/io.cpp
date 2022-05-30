@@ -12,19 +12,19 @@
 namespace utils {
 
 // TODO
-bool isFileExist(const std::string& file_path) {
+bool IsFileExist(const std::string& file_path) {
   std::ifstream ifs(file_path.c_str());
   return ifs.is_open();
 }
 
-bool isDir(const std::string& file_path) {
+bool IsDir(const std::string& file_path) {
   struct stat sb;
 
   stat(file_path.c_str(), &sb);
   return S_ISDIR(sb.st_mode);
 }
 
-bool getFileList(const std::string& file_path, std::vector<std::string>& vec) {
+bool GetFileList(const std::string& file_path, std::vector<std::string>& vec) {
   struct dirent* dent;
   DIR* dir = opendir(file_path.c_str());
 
@@ -39,7 +39,7 @@ bool getFileList(const std::string& file_path, std::vector<std::string>& vec) {
   return true;
 }
 
-bool ft_putstr_fd_base(const char* str, size_t len, int fd) {
+bool PutStrFdBase(const char* str, size_t len, int fd) {
   ssize_t write_byte;
 
   while (len > 0) {
@@ -57,8 +57,8 @@ bool ft_putstr_fd_base(const char* str, size_t len, int fd) {
   return true;
 }
 
-bool ft_putstr_fd(const std::string str, int fd) {
-  return ft_putstr_fd_base(str.c_str(), str.length(), fd);
+bool PutStrFd(const std::string str, int fd) {
+  return PutStrFdBase(str.c_str(), str.length(), fd);
 }
 
 }  // namespace utils

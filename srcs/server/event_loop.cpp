@@ -88,10 +88,10 @@ int StartEventLoop(int listen_fd) {
       if (epevarr[0].events & EPOLLOUT) {
         // TODO: Send HTTP Response to the client
         if (socket_info->request.IsCorrectRequest()) {
-          socket_info->response.setStatusLine("HTTP/1.1 200 OK");
+          socket_info->response.SetStatusLine("HTTP/1.1 200 OK");
           // socket_info->response.setHeader("Content-Type: text/plain");
-          socket_info->response.loadfile(socket_info->request.getPath());
-          socket_info->response.write(conn_fd);
+          socket_info->response.LoadFile(socket_info->request.GetPath());
+          socket_info->response.Write(conn_fd);
           close(conn_fd);
         } else {
           close(conn_fd);

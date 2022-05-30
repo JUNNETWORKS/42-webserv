@@ -36,16 +36,16 @@ class HttpResponse {
 
   ~HttpResponse();
 
-  void setStatusLine(std::string status_line);
-  void setHeader(std::string header);
-  void setBody(std::string body);
+  void SetStatusLine(std::string status_line);
+  void SetHeader(std::string header);
+  void SetBody(std::string body);
 
-  const std::string &getStatusLine() const;
-  const std::string &getHeader() const;
-  const std::string &getBody() const;
+  const std::string &GetStatusLine() const;
+  const std::string &GetHeader() const;
+  const std::string &GetBody() const;
 
-  void write(int fd) const;
-  bool loadfile(const std::string &path);
+  void Write(int fd) const;
+  bool LoadFile(const std::string &path);
 };
 
 };  // namespace http
