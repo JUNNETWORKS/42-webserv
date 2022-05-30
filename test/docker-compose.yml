@@ -6,7 +6,8 @@ services:
     ports:
       - 49200:8080
     volumes:
-       - ../:/root/workdir
+      - ../:/root/workdir
+    stop_grace_period: 1s
 
   nginx:
     image: nginx:latest
@@ -14,4 +15,4 @@ services:
     ports:
       - 49201:80
     volumes:
-       - ./public:/usr/share/nginx/html
+      - ./public:/usr/share/nginx/html

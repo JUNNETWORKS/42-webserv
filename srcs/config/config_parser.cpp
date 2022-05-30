@@ -122,6 +122,9 @@ void Parser::ParseLocationBlock(VirtualServerConf &vserver,
   SkipSpaces();
   // Get path
   std::string path_pattern = GetWord();
+  if (path_pattern.empty()) {
+    throw ParserException("location's path pattern is empty.");
+  }
   location.SetPathPattern(path_pattern);
   SkipSpaces();
   if (GetC() != '{') {
@@ -393,8 +396,8 @@ bool Parser::IsHttpMethod(const std::string &method) {
 }
 
 bool Parser::IsValidHttpStatusCode(const std::string &code) {
-  // TODO: HTTP Status Code が3桁かどうか以外の条件もありそう｡
-  if (IsUnsignedNumber(code) && code.length() == 3) {
+  if (IsUnsignedNumber(code) && code.length() == 3 &&
+      (code[0] >= '1' && code[0] <= '5')) {
     return true;
   }
   return false;
