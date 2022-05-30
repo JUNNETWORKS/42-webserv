@@ -72,9 +72,9 @@ void Config::AppendVirtualServerConf(
   servers_.push_back(virtual_server_conf);
 }
 
-Config ParseConfig(const char *filename) {
+Config ParseConfig(const char *filepath) {
   Parser parser;
-  parser.LoadFile(filename);
+  parser.LoadFile(filepath);
   return parser.ParseConfig();
 }
 

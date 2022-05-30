@@ -51,7 +51,7 @@ class Config {
   void AppendVirtualServerConf(const VirtualServerConf &virtual_server_conf);
 };
 
-Config ParseConfig(const char *filename);
+Config ParseConfig(const char *filepath);
 
 Config CreateSampleConfig();
 
