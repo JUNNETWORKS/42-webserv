@@ -11,7 +11,7 @@ int main(int argc, char const *argv[]) {
       config = config::ParseConfig(argv[1]);
     } catch (const std::exception &err) {
       std::cerr << "Parser Error!!\n";
-      std::cerr << "Error message: " << err.what() << std::cout;
+      std::cerr << "Error message: " << err.what() << std::endl;
       exit(EXIT_FAILURE);
     }
   } else {
