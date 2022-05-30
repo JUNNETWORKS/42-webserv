@@ -57,7 +57,7 @@ void LocationConf::Print() const {
     std::cout << " " << *it;
   }
   std::cout << ";\n";
-  std::cout << "client_max_body_size_kb: " << client_max_body_size_ << "\n";
+  std::cout << "client_max_body_size: " << client_max_body_size_ << "\n";
   std::cout << "root_dir: " << root_dir_ << "\n";
   std::cout << "index_pages:";
   for (std::vector<std::string>::const_iterator it = index_pages_.begin();
@@ -106,8 +106,8 @@ int64_t LocationConf::GetClientMaxBodySize() const {
   return client_max_body_size_;
 }
 
-void LocationConf::SetClientMaxBodySize(int64_t client_max_body_size_kb) {
-  client_max_body_size_ = client_max_body_size_kb;
+void LocationConf::SetClientMaxBodySize(int64_t client_max_body_size) {
+  client_max_body_size_ = client_max_body_size;
 }
 
 std::string LocationConf::GetRootDir() const {
