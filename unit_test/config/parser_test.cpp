@@ -268,10 +268,16 @@ TEST(ParserTest, MultipleValidServers) {
   }
 }
 
+TEST(ParserTest, LocationDoesntHaveRoot) {
+  Parser parser;
+  parser.LoadFile(kConfigurationDirPath + "LocationDoesntHaveRoot.conf");
+  Config config = parser.ParseConfig();
+  config.Print();
+
+  EXPECT_TRUE(config.IsValid() == false);
+}
+
 /*
-
-TEST(ParserTest, LocationDoesntHaveRoot) {}
-
 TEST(ParserTest, ServerDoesntHaveListen) {}
 
 TEST(ParserTest, AllowMethodIsInvalid) {}
@@ -292,6 +298,6 @@ TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {}
 
 TEST(ParserTest, HttpStatusInErrorPagesAreInvalid){}
 
-*/
+    */
 
 };  // namespace config
