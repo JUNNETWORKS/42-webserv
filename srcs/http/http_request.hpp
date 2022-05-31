@@ -24,12 +24,13 @@ const std::string kDelete = "DELETE";
 
 class HttpRequest {
  private:
+  typedef std::map<std::string, std::vector<std::string> > HeaderMap;
   enum ParsingPhase { kRequestLine, kHeaderField, kBody, kParsed };
 
   std::string method_;
   std::string path_;
   int minor_version_;
-  std::map<std::string, std::vector<std::string> > headers_;
+  HeaderMap headers_;
   ParsingPhase phase_;
   HttpStatus parse_status_;
   utils::ByteVector body_;  // HTTP リクエストのボディ
@@ -57,7 +58,7 @@ class HttpRequest {
   HttpStatus InterpretVersion(std::string &str);
   HttpStatus InterpretHeaderField(std::string &str);
 
-  HttpStatus HttpRequest::DecideBodySize(size_t &body_size);
+  HttpStatus DecideBodySize();
   void PrintRequestInfo();
 };
 

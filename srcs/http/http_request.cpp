@@ -164,14 +164,15 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 //========================================================================
 // Helper関数
 
-HttpStatus HttpRequest::DecideBodySize(size_t &body_size) {
+HttpStatus HttpRequest::DecideBodySize() {
   // https://triple-underscore.github.io/RFC7230-ja.html#message.body.length
 
   body_size_ = 0;
 
-  bool has_encoding_header =
-      headers_.find("TRANSFER-ENCODING") != headers_.end();
-  bool has_length_header = headers_.find("CONTENT-LENGTH") != headers_.end();
+  HeaderMap::iterator encoding_header_it = headers_.find("TRANSFER-ENCODING");
+  HeaderMap::iterator length_header_it = headers_.find("CONTENT-LENGTH");
+  bool has_encoding_header = encoding_header_it != headers_.end();
+  bool has_length_header = length_header_it != headers_.end();
 
   if (has_encoding_header && has_length_header) {
     // TODO ステータスの検証　BAD_Requestは仮
@@ -188,6 +189,10 @@ HttpStatus HttpRequest::DecideBodySize(size_t &body_size) {
   if (has_length_header) {
     // ヘッダ値が相違する，複数の Content-Length ヘッダが在る†
     //妥当でない値をとる Content - Length ヘッダが在る
+    HeaderMap::mapped_type length_header = (*length_header_it).second;
+    if (length_header.size() != 1)
+      return parse_status_ = BAD_REQUEST;
+
     return parse_status_ = OK;
   }
 
@@ -195,6 +200,7 @@ HttpStatus HttpRequest::DecideBodySize(size_t &body_size) {
 }
 
 namespace {
+
 bool IsCorrectHTTPVersion(const std::string &str) {
   if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
     return false;
