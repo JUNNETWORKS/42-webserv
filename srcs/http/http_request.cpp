@@ -17,6 +17,7 @@ HttpRequest::HttpRequest()
       phase_(kRequestLine),
       parse_status_(OK),
       body_(),
+      body_size_(0),
       buffer_() {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
@@ -33,6 +34,7 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     parse_status_ = rhs.parse_status_;
     body_ = rhs.body_;
     buffer_ = rhs.buffer_;
+    body_size_ = rhs.body_size_;
   }
   return *this;
 }
