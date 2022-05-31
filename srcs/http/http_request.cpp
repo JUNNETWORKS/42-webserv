@@ -49,6 +49,8 @@ void HttpRequest::ParseRequest() {
     phase_ = ParseRequestLine();
   if (phase_ == kHeaderField)
     phase_ = ParseHeaderField();
+  if (phase_ == kBodySize)
+    phase_ = ParseBodySize();
   if (phase_ == kBody)
     phase_ = ParseBody();
   PrintRequestInfo();
@@ -95,11 +97,14 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
     }
   }
 };
+HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
+  if (DecideBodySize() != OK)
+    return kError;
+  return kBody;
+}
 
 HttpRequest::ParsingPhase HttpRequest::ParseBody() {
   // TODO Content-Lengthの判定,Bodyのパース
-  if (DecideBodySize() != OK)
-    return kError;
   return kParsed;
 }
 

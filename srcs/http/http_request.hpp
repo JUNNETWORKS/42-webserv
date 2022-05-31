@@ -59,6 +59,7 @@ class HttpRequest {
  private:
   ParsingPhase ParseRequestLine();
   ParsingPhase ParseHeaderField();
+  ParsingPhase ParseBodySize();
   ParsingPhase ParseBody();
   HttpStatus InterpretMethod(std::string &str);
   HttpStatus InterpretPath(std::string &str);
