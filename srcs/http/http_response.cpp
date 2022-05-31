@@ -70,7 +70,7 @@ static std::string MakeAutoIndex(const std::string &path) {
   std::string head = "<html>\n<head><title>Index of " + path +
                      "/"
                      "</title></head>\n"
-                     "<body bgcolor=\"black\">\n"
+                     "<body bgcolor=\"white\">\n"
                      "<h1>Index of " +
                      path + "</h1><hr><pre>";
   std::string tail =
