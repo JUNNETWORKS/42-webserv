@@ -34,7 +34,7 @@ class HttpRequest {
   ParsingPhase phase_;
   HttpStatus parse_status_;
   utils::ByteVector body_;  // HTTP リクエストのボディ
-  size_t body_size_;
+  unsigned long body_size_;
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 

@@ -193,6 +193,13 @@ HttpStatus HttpRequest::DecideBodySize() {
     if (length_header.size() != 1)
       return parse_status_ = BAD_REQUEST;
 
+    if (utils::TryStrToUl(length_header.front(), body_size_) == false)
+      return parse_status_ = BAD_REQUEST;
+
+    const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
+    if (body_size_ > kMaxSize)
+      return parse_status_ = PAYLOAD_TOO_LARGE;
+
     return parse_status_ = OK;
   }
 
