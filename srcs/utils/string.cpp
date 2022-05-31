@@ -24,7 +24,7 @@ bool TryStrToUl(const std::string& str, unsigned long& res) {
 
   errno = 0;
   res = std::strtoul(str.c_str(), &end, 10);
-  if (errno != 0 || *end != '\0')
+  if (errno != 0 || *end != '\0' || str.length() == 0)
     return false;
   return true;
 }

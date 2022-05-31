@@ -2,6 +2,7 @@
 #define UTILS_STRING_HPP
 
 #include <cerrno>
+#include <cstdlib>
 #include <string>
 
 namespace utils {
@@ -18,6 +19,8 @@ bool BackwardMatch(std::string str, std::string pattern);
 
 std::string TrimWhiteSpace(std::string& str);
 
+//文字列をunsigned longに変換する
+//成功失敗を返り値で取り、変換結果は引数のresに入れた参照
 bool TryStrToUl(const std::string& str, unsigned long& res);
 
 }  // namespace utils
