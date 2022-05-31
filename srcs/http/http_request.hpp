@@ -25,7 +25,14 @@ const std::string kDelete = "DELETE";
 class HttpRequest {
  private:
   typedef std::map<std::string, std::vector<std::string> > HeaderMap;
-  enum ParsingPhase { kRequestLine, kHeaderField, kBody, kParsed };
+  enum ParsingPhase {
+    kRequestLine,
+    kHeaderField,
+    kBodySize,
+    kBody,
+    kParsed,
+    kError
+  };
 
   std::string method_;
   std::string path_;

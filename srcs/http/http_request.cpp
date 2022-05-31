@@ -65,9 +65,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine() {
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
       return kHeaderField;
+    } else {
+      return kError;
     }
   }
-  return phase_;
+  return kRequestLine;
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
@@ -85,10 +87,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
 
     utils::ByteVector::iterator it = buffer_.FindString(kCrlf);
     if (it == buffer_.end()) {
-      return phase_;  // crlfがbuffer内に存在しない
+      return kHeaderField;  // crlfがbuffer内に存在しない
     } else {
       std::string line = buffer_.CutSubstrBeforePos(it);  // headerfieldの解釈
-      InterpretHeaderField(line);
+      if (InterpretHeaderField(line) != OK)
+        return kError;
     }
   }
 };
@@ -96,7 +99,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
 HttpRequest::ParsingPhase HttpRequest::ParseBody() {
   // TODO Content-Lengthの判定,Bodyのパース
   if (DecideBodySize() != OK)
-    return phase_;
+    return kError;
   return kParsed;
 }
 
@@ -162,7 +165,6 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 
   // TODO ,区切りのsplit
   headers_[header].push_back(field);
-  phase_ = kBody;
   return parse_status_ = OK;
 }
 
