@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "http/http_constants.hpp"
 #include "utils/io.hpp"
 #include "utils/string.hpp"
 
@@ -52,12 +53,12 @@ const std::string &HttpResponse::GetBody() const {
 
 void HttpResponse::Write(int fd) const {
   utils::PutStrFd(status_line_, fd);
-  utils::PutStrFd("\r\n", fd);
+  utils::PutStrFd(http::kCrlf, fd);
   utils::PutStrFd(header_, fd);
-  utils::PutStrFd("\r\n", fd);
-  utils::PutStrFd("\r\n", fd);
+  utils::PutStrFd(http::kCrlf, fd);
+  utils::PutStrFd(http::kCrlf, fd);
   utils::PutStrFd(body_, fd);
-  utils::PutStrFd("\r\n", fd);
+  utils::PutStrFd(http::kCrlf, fd);
 }
 
 //========================================================================
