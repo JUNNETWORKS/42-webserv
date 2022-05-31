@@ -16,12 +16,10 @@ bool ForwardMatch(std::string str, std::string pattern);
 //      str="/static/style.css", pattern="/upload/" then return false
 bool BackwardMatch(std::string str, std::string pattern);
 
-// std::string を long long に変換したものを返す｡
-// idx が非NULLだった場合､変換に使用されなかったidxが代入される｡
+// std::string を int に変換したものを返す｡
 // 変換がが失敗した場合は例外(std::invalid_argument, std::out_of_range)
 //   を投げる｡
-long long Stoll(const std::string &str, size_t *idx = NULL,
-                long long base = 10);
+int Stoi(const std::string &str, std::size_t *idx = NULL, int base = 10);
 
 // str を delim で区切った文字列vectorを返す｡
 // e.g. SplitString("a,bc,,d", ",") return ["a", "bc", ,"", "d"]

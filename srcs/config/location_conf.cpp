@@ -102,11 +102,11 @@ void LocationConf::AppendAllowedMethod(std::string method) {
   allowed_methods_.insert(method);
 }
 
-int64_t LocationConf::GetClientMaxBodySize() const {
+int LocationConf::GetClientMaxBodySize() const {
   return client_max_body_size_;
 }
 
-void LocationConf::SetClientMaxBodySize(int64_t client_max_body_size) {
+void LocationConf::SetClientMaxBodySize(int client_max_body_size) {
   client_max_body_size_ = client_max_body_size;
 }
 

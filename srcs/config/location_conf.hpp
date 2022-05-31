@@ -24,7 +24,7 @@ class LocationConf {
   std::string path_pattern_;
   bool is_backward_search_;
   AllowedMethodsSet allowed_methods_;
-  int64_t client_max_body_size_;
+  int client_max_body_size_;
   std::string root_dir_;
   IndexPagesVector index_pages_;
   bool is_cgi_;
@@ -34,7 +34,7 @@ class LocationConf {
   // returnディレクティブで指定されたURL
   std::string redirect_url_;
 
-  static const int64_t kDefaultClientMaxBodySize = 1024 * 1024;  // 1MB
+  static const int kDefaultClientMaxBodySize = 1024 * 1024;  // 1MB
 
  public:
   LocationConf();
@@ -69,9 +69,9 @@ class LocationConf {
 
   void AppendAllowedMethod(std::string method);
 
-  int64_t GetClientMaxBodySize() const;
+  int GetClientMaxBodySize() const;
 
-  void SetClientMaxBodySize(int64_t client_max_body_size);
+  void SetClientMaxBodySize(int client_max_body_size);
 
   std::string GetRootDir() const;
 

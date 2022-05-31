@@ -2,6 +2,7 @@
 
 #include <cerrno>
 #include <cstdlib>
+#include <limits>
 #include <stdexcept>
 #include <vector>
 
@@ -14,20 +15,21 @@ bool BackwardMatch(std::string str, std::string pattern) {
   return str.rfind(pattern) == str.length() - pattern.length();
 }
 
-long long Stoll(const std::string &str, size_t *idx, long long base) {
-  const char *p = str.c_str();
+int Stoi(const std::string &str, std::size_t *idx, int base) {
   char *end;
-  long long x = strtoll(p, &end, base);
+  const char *p = str.c_str();
+  long num = std::strtol(p, &end, base);
   if (p == end) {
-    throw std::invalid_argument("stoll");
+    throw std::invalid_argument("Stoi");
   }
-  if (errno == ERANGE) {
-    throw std::out_of_range("stoll");
+  if (num < std::numeric_limits<int>::min() ||
+      num > std::numeric_limits<int>::max() || errno == ERANGE) {
+    throw std::out_of_range("Stoi");
   }
   if (idx != NULL) {
     *idx = static_cast<size_t>(end - p);
   }
-  return x;
+  return static_cast<int>(num);
 }
 
 std::vector<std::string> SplitString(const std::string &str,
