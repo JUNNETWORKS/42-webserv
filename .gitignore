@@ -35,6 +35,9 @@
 # ANTLR
 .antlr/
 
+# Editor
+.vscode/*.log
+
 # Test
 /google_test/
 /tester
