@@ -34,7 +34,9 @@ class LocationConf {
   // returnディレクティブで指定されたURL
   std::string redirect_url_;
 
-  static const int kDefaultClientMaxBodySize = 1024 * 1024;  // 1MB
+  static const int kDefaultClientMaxBodySize = 1024 * 1024;     // 1MB
+  static const int kMinClientMaxBodySize = 0;                   // 0B
+  static const int kMaxClientMaxBodySize = 1024 * 1024 * 1024;  // 1GB
 
  public:
   LocationConf();

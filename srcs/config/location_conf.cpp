@@ -45,6 +45,11 @@ bool LocationConf::IsValid() const {
   if (root_dir_.empty() && redirect_url_.empty()) {
     return false;
   }
+  // client_max_body_size の最大値は1GB
+  if (client_max_body_size_ < kMinClientMaxBodySize ||
+      client_max_body_size_ > kMaxClientMaxBodySize) {
+    return false;
+  }
   return true;
 }
 
