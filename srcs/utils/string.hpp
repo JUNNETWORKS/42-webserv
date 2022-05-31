@@ -1,6 +1,7 @@
 #ifndef UTILS_STRING_HPP
 #define UTILS_STRING_HPP
 
+#include <cerrno>
 #include <string>
 
 namespace utils {
@@ -15,7 +16,9 @@ bool ForwardMatch(std::string str, std::string pattern);
 //      str="/static/style.css", pattern="/upload/" then return false
 bool BackwardMatch(std::string str, std::string pattern);
 
-std::string TrimWhiteSpace(std::string &str);
+std::string TrimWhiteSpace(std::string& str);
+
+bool TryStrToUl(const std::string& str, unsigned long& res);
 
 }  // namespace utils
 
