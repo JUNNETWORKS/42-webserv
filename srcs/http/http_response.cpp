@@ -31,13 +31,13 @@ HttpResponse::~HttpResponse() {}
 //========================================================================
 // setter, getter
 
-void HttpResponse::SetStatusLine(std::string status_line) {
+void HttpResponse::SetStatusLine(const std::string &status_line) {
   status_line_ = status_line;
 }
-void HttpResponse::SetHeader(std::string header) {
+void HttpResponse::SetHeader(const std::string &header) {
   header_ = header;
 }
-void HttpResponse::SetBody(std::string body) {
+void HttpResponse::SetBody(const std::string &body) {
   body_ = body;
 }
 

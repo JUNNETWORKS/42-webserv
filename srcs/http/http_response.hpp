@@ -26,9 +26,9 @@ class HttpResponse {
 
   ~HttpResponse();
 
-  void SetStatusLine(std::string status_line);
-  void SetHeader(std::string header);
-  void SetBody(std::string body);
+  void SetStatusLine(const std::string &status_line);
+  void SetHeader(const std::string &header);
+  void SetBody(const std::string &body);
 
   const std::string &GetStatusLine() const;
   const std::string &GetHeader() const;
