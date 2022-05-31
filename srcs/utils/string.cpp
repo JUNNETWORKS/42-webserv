@@ -27,7 +27,23 @@ int Stoi(const std::string &str, std::size_t *idx, int base) {
     throw std::out_of_range("Stoi");
   }
   if (idx != NULL) {
-    *idx = static_cast<size_t>(end - p);
+    *idx = static_cast<std::size_t>(end - p);
+  }
+  return static_cast<int>(num);
+}
+
+int Stoul(const std::string &str, std::size_t *idx, int base) {
+  char *end;
+  const char *p = str.c_str();
+  long num = std::strtoul(p, &end, base);
+  if (p == end) {
+    throw std::invalid_argument("Stoul");
+  }
+  if (errno == ERANGE) {
+    throw std::out_of_range("Stoul");
+  }
+  if (idx != NULL) {
+    *idx = static_cast<std::size_t>(end - p);
   }
   return static_cast<int>(num);
 }
