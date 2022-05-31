@@ -71,6 +71,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine() {
 HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
   while (1) {
     if (buffer_.CompareHead(kHeaderBoundary)) {
+      buffer_.EraseHead(kHeaderBoundary.size());
       //先頭が\r\n\r\nなので終了処理
       return kBody;
     }
