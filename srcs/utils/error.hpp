@@ -6,6 +6,6 @@ namespace utils {
 // stderr に出力し､exit(1)する｡
 void ErrExit(const char *fmt, ...);
 
-};  // namespace utils
+}  // namespace utils
 
 #endif

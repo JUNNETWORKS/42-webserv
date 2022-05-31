@@ -23,5 +23,5 @@ std::vector<int> OpenLilstenFds(const config::Config &config);
 // fdsのすべての要素に対してcloseシステムコールを実行する｡
 void CloseAllFds(const std::vector<int> &fds);
 
-};  // namespace server
+}  // namespace server
 #endif

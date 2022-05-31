@@ -47,4 +47,4 @@ std::vector<int> OpenLilstenFds(const config::Config &config) {
   return fds;
 }
 
-};  // namespace server
+}  // namespace server

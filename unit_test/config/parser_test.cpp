@@ -539,4 +539,4 @@ TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {
   }
 }
 
-};  // namespace config
+}  // namespace config

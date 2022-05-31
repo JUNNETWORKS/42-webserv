@@ -34,6 +34,6 @@ class HttpResponse {
   ~HttpResponse();
 };
 
-};  // namespace http
+}  // namespace http
 
 #endif

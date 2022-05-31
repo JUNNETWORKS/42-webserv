@@ -100,6 +100,6 @@ class LocationConf {
   bool IsMatchPattern(std::string path) const;
 };
 
-};  // namespace config
+}  // namespace config
 
 #endif

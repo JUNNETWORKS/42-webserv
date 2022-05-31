@@ -134,6 +134,6 @@ class Parser {
   static const int kMaxPortNumber = 65535;
 };
 
-};  // namespace config
+}  // namespace config
 
 #endif

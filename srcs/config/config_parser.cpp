@@ -440,4 +440,4 @@ const char *Parser::ParserException::what() const throw() {
   return errmsg_;
 }
 
-};  // namespace config
+}  // namespace config

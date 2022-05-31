@@ -58,6 +58,6 @@ class VirtualServerConf {
   void AppendLocation(LocationConf location);
 };
 
-};  // namespace config
+}  // namespace config
 
 #endif

@@ -21,4 +21,4 @@ HttpResponse &HttpResponse::operator=(const HttpResponse &rhs) {
 
 HttpResponse::~HttpResponse() {}
 
-};  // namespace http
+}  // namespace http

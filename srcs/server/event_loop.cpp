@@ -118,4 +118,4 @@ int StartEventLoop(const std::vector<int> &listen_fds,
   }
 }
 
-};  // namespace server
+}  // namespace server

@@ -94,4 +94,4 @@ void VirtualServerConf::AppendLocation(LocationConf location) {
   locations_.push_back(location);
 }
 
-};  // namespace config
+}  // namespace config

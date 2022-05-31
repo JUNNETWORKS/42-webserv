@@ -55,6 +55,6 @@ Config ParseConfig(const char *filepath);
 
 Config CreateSampleConfig();
 
-};  // namespace config
+}  // namespace config
 
 #endif

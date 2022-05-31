@@ -170,4 +170,4 @@ bool LocationConf::IsMatchPattern(std::string path) const {
   }
 }
 
-};  // namespace config
+}  // namespace config
