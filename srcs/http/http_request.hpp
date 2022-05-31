@@ -57,6 +57,8 @@ class HttpRequest {
   HttpStatus InterpretPath(std::string &str);
   HttpStatus InterpretVersion(std::string &str);
   HttpStatus InterpretHeaderField(std::string &str);
+  HttpStatus InterpretContentLength(
+      const HeaderMap::mapped_type &length_header);
 
   HttpStatus DecideBodySize();
   void PrintRequestInfo();
