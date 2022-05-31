@@ -21,9 +21,6 @@ HttpResponse &HttpResponse::operator=(const HttpResponse &rhs) {
     status_line_ = rhs.status_line_;
     header_ = rhs.header_;
     body_ = rhs.body_;
-    // buffer_ = rhs.buffer_;
-    // buf_position_ = buffer_.data() + (rhs.buf_position_ -
-    // rhs.buffer_.data());
   }
   return *this;
 }
