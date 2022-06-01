@@ -61,7 +61,7 @@ void HttpRequest::ParseRequest() {
   if (phase_ == kBody)
     phase_ = ParseBody();
   PrintRequestInfo();
-};
+}
 
 HttpRequest::ParsingPhase HttpRequest::ParseRequestLine() {
   while (buffer_.CompareHead(kCrlf)) {
@@ -298,10 +298,10 @@ void HttpRequest::PrintRequestInfo() {
     printf("%s\n", reinterpret_cast<const char *>(body_.data()));
   }
   printf("=====================\n");
-};
+}
 
 bool HttpRequest::IsCorrectRequest() {
   return phase_ == kParsed && parse_status_ == OK;
-};
+}
 
 }  // namespace http

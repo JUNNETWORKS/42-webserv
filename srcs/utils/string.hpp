@@ -21,13 +21,12 @@ bool BackwardMatch(std::string str, std::string pattern);
 // std::string を int に変換したものを返す｡
 // 変換がが失敗した場合は例外(std::invalid_argument, std::out_of_range)
 //   を投げる｡
-int Stoi(const std::string &str, std::size_t *idx = NULL, int base = 10);
+int Stoi(const std::string &str, size_t *idx = NULL, int base = 10);
 
 // std::string を unsigned long に変換したものを返す｡
 // 変換がが失敗した場合は例外(std::invalid_argument, std::out_of_range)
 //   を投げる｡
-unsigned long Stoul(const std::string &str, std::size_t *idx = NULL,
-                    int base = 10);
+unsigned long Stoul(const std::string &str, size_t *idx = NULL, int base = 10);
 
 // std::string を unsigned long に変換したものを返す｡
 // 変換がが失敗した場合はdalseを返す
