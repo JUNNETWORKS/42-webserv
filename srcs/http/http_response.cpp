@@ -72,7 +72,6 @@ static std::string MakeAutoIndex(const std::string &path) {
   std::string html;
   std::vector<std::string> file_vec;
   std::string head = "<html>\n<head><title>Index of " + path +
-                     "/"
                      "</title></head>\n"
                      "<body bgcolor=\"white\">\n"
                      "<h1>Index of " +
