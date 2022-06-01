@@ -296,7 +296,9 @@ void HttpRequest::PrintRequestInfo() {
     }
 
     printf("body:\n");
+    body_.push_back('\0');
     printf("%s\n", reinterpret_cast<const char *>(body_.data()));
+    body_.pop_back();
   }
   printf("=====================\n");
 }
