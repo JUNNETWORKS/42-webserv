@@ -34,8 +34,8 @@ void AcceptNewConnection(int epfd, int listen_fd) {
   socklen_t addrlen = sizeof(struct sockaddr_storage);
   int conn_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &addrlen);
   fcntl(conn_fd, F_SETFD, O_NONBLOCK);
-  if (AppendNewSockFdIntoEpfd(epfd, conn_fd, SocketInfo::ConnSock, EPOLLIN) ==
-      -1) {
+  if (AppendNewSockFdIntoEpfd(epfd, conn_fd, SocketInfo::ConnSock,
+                              EPOLLIN | EPOLLOUT) == -1) {
     utils::ErrExit("AddSocketFdIntoEpFd");
   }
   LogConnectionInfoToStdout(client_addr);
