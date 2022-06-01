@@ -24,15 +24,11 @@ bool BackwardMatch(std::string str, std::string pattern);
 int Stoi(const std::string &str, size_t *idx = NULL, int base = 10);
 
 // std::string を unsigned long に変換したものを返す｡
-// 変換がが失敗した場合は例外(std::invalid_argument, std::out_of_range)
-//   を投げる｡
-unsigned long Stoul(const std::string &str, size_t *idx = NULL, int base = 10);
-
-// std::string を unsigned long に変換したものを返す｡
+//
 // 変換がが失敗した場合はfalseを返す
 // 全部数字の文字列以外は失敗する設計
 // e.g. "42hoge", "hoge42", "\"42\"" -> false   "42" -> true
-bool Stoul(const std::string &str, unsigned long &res) throw();
+bool Stoul(unsigned long &result, const std::string &str, int base = 10);
 
 // str を delim で区切った文字列vectorを返す｡
 // e.g. SplitString("a,bc,,d", ",") return ["a", "bc", ,"", "d"]

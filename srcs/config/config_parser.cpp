@@ -176,9 +176,7 @@ void Parser::ParseClientMaxBodySizeDirective(LocationConf &location) {
   SkipSpaces();
   std::string body_size_str = GetWord();
   unsigned long body_size;
-  try {
-    body_size = utils::Stoul(body_size_str);
-  } catch (const std::exception &e) {
+  if (utils::Stoul(body_size, body_size_str) == false) {
     throw ParserException("Invalid body size.");
   }
   location.SetClientMaxBodySize(body_size);
