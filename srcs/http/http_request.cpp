@@ -104,8 +104,18 @@ HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseBody() {
-  // TODO Content-Lengthの判定,Bodyのパース
-  return kParsed;
+  if (body_size_ == 0)
+    return kParsed;
+
+  size_t request_size = body_size_ - body_.size();
+  if (buffer_.size() <= request_size) {
+    body_.insert(body_.end(), buffer_.begin(), buffer_.end());
+    buffer_.clear();
+  } else {
+    body_.insert(body_.end(), buffer_.begin(), buffer_.begin() + request_size);
+    buffer_.erase(buffer_.begin(), buffer_.begin() + request_size);
+  }
+  return body_.size() == body_size_ ? kParsed : kBody;
 }
 
 //========================================================================
@@ -276,6 +286,9 @@ void HttpRequest::PrintRequestInfo() {
       }
       printf("\n");
     }
+
+    printf("body:\n");
+    printf("%s\n", reinterpret_cast<const char *>(body_.data()));
   }
   printf("=====================\n");
 };
