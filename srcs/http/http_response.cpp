@@ -79,7 +79,7 @@ static std::string MakeAutoIndex(const std::string &path) {
   utils::GetFileList(path, file_vec);
   std::sort(file_vec.begin(), file_vec.end());
   std::string is_dir;
-  for (std::size_t i = 0; i < file_vec.size(); i++) {
+  for (size_t i = 0; i < file_vec.size(); i++) {
     if (utils::IsDir(path + "/" + file_vec[i])) {
       is_dir = "/";
     } else {

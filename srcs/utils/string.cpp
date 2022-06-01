@@ -15,7 +15,7 @@ bool BackwardMatch(std::string str, std::string pattern) {
   return str.rfind(pattern) == str.length() - pattern.length();
 }
 
-int Stoi(const std::string &str, std::size_t *idx, int base) {
+int Stoi(const std::string &str, size_t *idx, int base) {
   char *end;
   const char *p = str.c_str();
   long num = std::strtol(p, &end, base);
@@ -27,12 +27,12 @@ int Stoi(const std::string &str, std::size_t *idx, int base) {
     throw std::out_of_range("Stoi");
   }
   if (idx != NULL) {
-    *idx = static_cast<std::size_t>(end - p);
+    *idx = static_cast<size_t>(end - p);
   }
   return static_cast<int>(num);
 }
 
-unsigned long Stoul(const std::string &str, std::size_t *idx, int base) {
+unsigned long Stoul(const std::string &str, size_t *idx, int base) {
   char *end;
   const char *p = str.c_str();
   unsigned long num = std::strtoul(p, &end, base);
@@ -43,7 +43,7 @@ unsigned long Stoul(const std::string &str, std::size_t *idx, int base) {
     throw std::out_of_range("Stoul");
   }
   if (idx != NULL) {
-    *idx = static_cast<std::size_t>(end - p);
+    *idx = static_cast<size_t>(end - p);
   }
   return num;
 }
