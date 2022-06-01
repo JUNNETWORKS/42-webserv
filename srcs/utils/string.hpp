@@ -17,7 +17,6 @@ bool ForwardMatch(std::string str, std::string pattern);
 //      str="/static/style.css", pattern="/upload/" then return false
 bool BackwardMatch(std::string str, std::string pattern);
 
-bool TryExtractBeforeWhiteSpace(std::string &src, std::string &dest);
 std::string TrimWhiteSpace(std::string &str);
 
 bool ReadFile(const std::string &path, std::string &dest);

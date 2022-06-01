@@ -1,6 +1,6 @@
 .PHONY: all
 all:
-	docker-compose -f docker-compose.yml up
+	docker-compose -f docker-compose.yml up --build
 
 .PHONY: clean
 clean:
@@ -19,3 +19,7 @@ webserv-it:
 .PHONY: nginx-it
 nginx-it:
 	docker exec -it nginx bash
+
+.PHONY: nginx-reload
+nginx-reload:
+	docker exec -t nginx nginx -s reload
