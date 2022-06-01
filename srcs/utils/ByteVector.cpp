@@ -7,6 +7,10 @@ namespace utils {
 ByteVector::ByteVector() {
   reserve(kReserveSize_);
 }
+ByteVector::ByteVector(const std::string& s) {
+  AppendDataToBuffer(reinterpret_cast<const unsigned char*>(s.data()),
+                     s.size());
+}
 ByteVector::ByteVector(ByteVector const& src) : std::vector<Byte>(src) {
   *this = src;
 }
@@ -49,7 +53,7 @@ std::string ByteVector::CutSubstrBeforePos(ByteVector::iterator pos) {
   return res;
 }
 
-void ByteVector::AppendDataToBuffer(Byte* buf, size_t size) {
+void ByteVector::AppendDataToBuffer(const Byte* buf, size_t size) {
   insert(end(), buf, buf + size);
   printf("current buf len: %lu\n", this->size());
 }
