@@ -184,9 +184,9 @@ Config CreateSampleConfig() {
   LocationConf location_v2_2;
   location_v2_2.SetPathPattern(".php");
   location_v2_2.SetIsBackwardSearch(true);
-  location_v1_2.AppendAllowedMethod("GET");
-  location_v1_2.AppendAllowedMethod("POST");
-  location_v1_2.AppendAllowedMethod("DELETE");
+  location_v2_2.AppendAllowedMethod("GET");
+  location_v2_2.AppendAllowedMethod("POST");
+  location_v2_2.AppendAllowedMethod("DELETE");
   location_v2_2.SetIsCgi(true);
   location_v2_2.SetRootDir("/home/nginx/cgi_bins");
   vserver2.AppendLocation(location_v2_2);
