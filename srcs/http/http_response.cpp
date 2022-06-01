@@ -97,7 +97,7 @@ bool HttpResponse::LoadFile(const std::string &file_path) {
   std::string file_data;
 
   if (!utils::IsFileExist(file_path)) {
-    // status_ = NOT_FOUND;
+    // status_ = NOT_FOUND;  // TODO : レスポンスステータスコードを設定する
     return false;
   }
 
@@ -108,7 +108,7 @@ bool HttpResponse::LoadFile(const std::string &file_path) {
   }
 
   if (!utils::ReadFile(file_path, file_data)) {
-    // status_ = FORBIDDEN;  // TODO
+    // status_ = FORBIDDEN;  // TODO : レスポンスステータスコードを設定する
     return false;
   }
 

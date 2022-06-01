@@ -11,7 +11,8 @@
 
 namespace utils {
 
-// TODO
+// TODO :
+// 使い方が合っているか確認、ファイルが存在していてもパーミッションがないとfalseが帰る？
 bool IsFileExist(const std::string& file_path) {
   std::ifstream ifs(file_path.c_str());
   return ifs.is_open();
