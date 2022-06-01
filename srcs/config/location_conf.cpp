@@ -46,8 +46,7 @@ bool LocationConf::IsValid() const {
     return false;
   }
   // client_max_body_size の最大値は1GB
-  if (client_max_body_size_ < kMinClientMaxBodySize ||
-      client_max_body_size_ > kMaxClientMaxBodySize) {
+  if (client_max_body_size_ > kMaxClientMaxBodySize) {
     return false;
   }
   return true;
