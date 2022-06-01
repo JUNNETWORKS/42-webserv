@@ -7,7 +7,7 @@ OBJS_DIR := objs
 OBJS := $(SRCS:%.cpp=$(OBJS_DIR)/%.o)
 DEPENDENCIES := $(OBJS:.o=.d)
 
-CXXFLAGS := -I$(SRCS_DIR) --std=c++98 -Wall -Wextra -Werror
+CXXFLAGS := -I$(SRCS_DIR) --std=c++98 -Wall -Wextra -Werror -pedantic
 
 .PHONY: all
 all: $(NAME)
