@@ -1,6 +1,8 @@
 #ifndef UTILS_STRING_HPP
 #define UTILS_STRING_HPP
 
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -32,6 +34,8 @@ std::vector<std::string> SplitString(const std::string &str,
                                      const std::string &delim);
 
 std::string TrimWhiteSpace(std::string &str);
+
+bool ReadFile(const std::string &path, std::string &dest);
 
 }  // namespace utils
 

@@ -98,10 +98,10 @@ int StartEventLoop(const std::vector<int> &listen_fds,
       if (epevarr[0].events & EPOLLOUT) {
         // TODO: Send HTTP Response to the client
         if (socket_info->request.IsCorrectRequest()) {
-          write(conn_fd, "HTTP/1.1 200 OK\r\n", 17);
-          write(conn_fd, "Content-Type: text/plain\r\n", 26);
-          write(conn_fd, "\r\n", 2);
-          write(conn_fd, "hello\r\n", 7);
+          socket_info->response.SetStatusLine("HTTP/1.1 200 OK");
+          // socket_info->response.setHeader("Content-Type: text/plain");
+          socket_info->response.LoadFile(socket_info->request.GetPath());
+          socket_info->response.Write(conn_fd);
           close(conn_fd);
         } else {
           close(conn_fd);

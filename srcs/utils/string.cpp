@@ -77,4 +77,16 @@ std::string TrimWhiteSpace(std::string &str) {
   return str;
 }
 
+bool ReadFile(const std::string &path, std::string &dest) {
+  std::ostringstream sstr;
+  std::ifstream ifs(path.c_str(), std::ios::binary);
+
+  if (!ifs) {
+    return false;
+  }
+  sstr << ifs.rdbuf();
+  dest = sstr.str();
+  return true;
+}
+
 }  // namespace utils
