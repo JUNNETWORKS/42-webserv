@@ -80,6 +80,7 @@ static std::string MakeAutoIndex(const std::string &path) {
       "</pre><hr></body>\n"
       "</html>\n";
 
+  // TODO : / が連続するパターンの考慮
   utils::GetFileList(GetRootDir() + path, file_vec);
   std::sort(file_vec.begin(), file_vec.end());
   std::string is_dir;
