@@ -55,8 +55,7 @@ void HttpResponse::Write(int fd) const {
   utils::PutStrFd(status_line_, fd);
   utils::PutStrFd(http::kCrlf, fd);
   utils::PutStrFd(header_, fd);
-  utils::PutStrFd(http::kCrlf, fd);
-  utils::PutStrFd(http::kCrlf, fd);
+  utils::PutStrFd(http::kHeaderBoundary, fd);
   utils::PutStrFd(body_, fd);
   utils::PutStrFd(http::kCrlf, fd);
 }
