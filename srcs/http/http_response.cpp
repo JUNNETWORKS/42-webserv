@@ -63,11 +63,15 @@ void HttpResponse::Write(int fd) const {
 //========================================================================
 //
 
+// TODO : configから取得するようにする
+static const std::string GetRootDir() {
+  return "/public";
+}
+
 static std::string MakeAutoIndex(const std::string &path) {
   std::string html;
   std::vector<std::string> file_vec;
   std::string head = "<html>\n<head><title>Index of " + path +
-                     "/"
                      "</title></head>\n"
                      "<body bgcolor=\"white\">\n"
                      "<h1>Index of " +
@@ -76,11 +80,12 @@ static std::string MakeAutoIndex(const std::string &path) {
       "</pre><hr></body>\n"
       "</html>\n";
 
-  utils::GetFileList(path, file_vec);
+  // TODO : / が連続するパターンの考慮
+  utils::GetFileList(GetRootDir() + path, file_vec);
   std::sort(file_vec.begin(), file_vec.end());
   std::string is_dir;
   for (size_t i = 0; i < file_vec.size(); i++) {
-    if (utils::IsDir(path + "/" + file_vec[i])) {
+    if (utils::IsDir(GetRootDir() + path + "/" + file_vec[i])) {
       is_dir = "/";
     } else {
       is_dir = "";
@@ -95,18 +100,18 @@ static std::string MakeAutoIndex(const std::string &path) {
 bool HttpResponse::LoadFile(const std::string &file_path) {
   std::string file_data;
 
-  if (!utils::IsFileExist(file_path)) {
+  if (!utils::IsFileExist(GetRootDir() + file_path)) {
     // status_ = NOT_FOUND;  // TODO : レスポンスステータスコードを設定する
     return false;
   }
 
-  if (utils::IsDir(file_path)) {
+  if (utils::IsDir(GetRootDir() + file_path)) {
     body_ = MakeAutoIndex(file_path);
     SetHeader("Content-Type: text/html");
     return true;
   }
 
-  if (!utils::ReadFile(file_path, file_data)) {
+  if (!utils::ReadFile(GetRootDir() + file_path, file_data)) {
     // status_ = FORBIDDEN;  // TODO : レスポンスステータスコードを設定する
     return false;
   }
