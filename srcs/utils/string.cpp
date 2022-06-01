@@ -18,4 +18,17 @@ std::string TrimWhiteSpace(std::string &str) {
   str.erase(str.begin() + end_pos, str.end());
   return str;
 }
+
+bool ReadFile(const std::string &path, std::string &dest) {
+  std::ostringstream sstr;
+  std::ifstream ifs(path.c_str(), std::ios::binary);
+
+  if (!ifs) {
+    return false;
+  }
+  sstr << ifs.rdbuf();
+  dest = sstr.str();
+  return true;
+}
+
 }  // namespace utils

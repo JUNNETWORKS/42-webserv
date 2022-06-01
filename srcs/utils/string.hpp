@@ -1,6 +1,8 @@
 #ifndef UTILS_STRING_HPP
 #define UTILS_STRING_HPP
 
+#include <fstream>
+#include <sstream>
 #include <string>
 
 namespace utils {
@@ -16,6 +18,8 @@ bool ForwardMatch(std::string str, std::string pattern);
 bool BackwardMatch(std::string str, std::string pattern);
 
 std::string TrimWhiteSpace(std::string &str);
+
+bool ReadFile(const std::string &path, std::string &dest);
 
 }  // namespace utils
 
