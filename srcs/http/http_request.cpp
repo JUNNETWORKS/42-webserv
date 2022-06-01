@@ -103,7 +103,8 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
         return kError;
     }
   }
-};
+}
+
 HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
   if (DecideBodySize() != OK)
     return kError;
