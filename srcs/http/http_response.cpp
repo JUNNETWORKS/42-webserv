@@ -116,4 +116,4 @@ bool HttpResponse::LoadFile(const std::string &file_path) {
   return true;
 }
 
-};  // namespace http
+}  // namespace http

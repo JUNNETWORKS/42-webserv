@@ -57,7 +57,7 @@ void HttpRequest::ParseRequest() {
   if (phase_ == kBody)
     phase_ = ParseBody();
   PrintRequestInfo();
-};
+}
 
 HttpRequest::ParsingPhase HttpRequest::ParseRequestLine() {
   while (buffer_.CompareHead(kCrlf)) {
@@ -95,7 +95,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
       InterpretHeaderField(line);
     }
   }
-};
+}
 
 HttpRequest::ParsingPhase HttpRequest::ParseBody() {
   // TODO Content-Lengthの判定,Bodyのパース
@@ -225,10 +225,10 @@ void HttpRequest::PrintRequestInfo() {
     }
   }
   printf("=====================\n");
-};
+}
 
 bool HttpRequest::IsCorrectRequest() {
   return phase_ == kParsed && parse_status_ == OK;
-};
+}
 
 }  // namespace http
