@@ -13,9 +13,11 @@
 namespace config {
 
 class Config {
+ public:
+  typedef std::vector<VirtualServerConf> VirtualServerConfVector;
+
  private:
-  int worker_num_;
-  std::vector<VirtualServerConf> servers_;
+  VirtualServerConfVector servers_;
 
  public:
   Config();
@@ -26,19 +28,33 @@ class Config {
 
   ~Config();
 
-  int32_t GetWorkerNum();
+  // configとして正しいか
+  bool IsValid() const;
 
-  void SetWorkerNum(int32_t worker_num);
+  void Print() const;
 
-  const VirtualServerConf *GetVirtualServerConf(const PortType listen_port,
-                                                const std::string &server_name);
+  // ========================================================================
+  // Getter and Setter
+  // ========================================================================
 
+  // listen_port と server_name を元に適切なバーチャルサーバを返す｡
+  // 該当するバーチャルサーバがない場合はNULLを返す｡
+  const VirtualServerConf *GetVirtualServerConf(
+      const PortType listen_port, const std::string &server_name) const;
+
+  // すべてのバーチャルサーバを保持するvectorへの参照を返す｡
+  const VirtualServerConfVector &GetVirtualServerConfs() const;
+
+  // バーチャルサーバを追加する｡
+  //
+  // 引数がポインタじゃないのはデータがスタック領域とヒープ領域に混在するのを避けるためである｡
   void AppendVirtualServerConf(const VirtualServerConf &virtual_server_conf);
 };
 
-// TODO: Parserができたら消す｡
-Config *GetSampleConfig();
+Config ParseConfig(const char *filepath);
 
-};  // namespace config
+Config CreateSampleConfig();
+
+}  // namespace config
 
 #endif

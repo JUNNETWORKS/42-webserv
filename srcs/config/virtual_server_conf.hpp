@@ -11,15 +11,20 @@
 
 namespace config {
 
-// port は仕様で 16bit の符号なし整数と決められている｡
-typedef uint16_t PortType;
+// getaddrinfo()などの標準ライブラリのインターフェースに合わせている｡
+// サービス名("http")などは受け付けず､数値での指定のみ
+typedef std::string PortType;
 
 // 仮想サーバーの設定. Nginx の server ブロックに相当.
 class VirtualServerConf {
+ public:
+  typedef std::vector<LocationConf> LocationConfsVector;
+  typedef std::set<std::string> ServerNamesSet;
+
  private:
   PortType listen_port_;
-  std::set<std::string> server_names_;
-  std::vector<LocationConf> locations_;
+  ServerNamesSet server_names_;
+  LocationConfsVector locations_;
 
  public:
   VirtualServerConf();
@@ -30,19 +35,29 @@ class VirtualServerConf {
 
   ~VirtualServerConf();
 
-  PortType GetListenPort();
+  bool IsValid() const;
+
+  void Print() const;
+
+  // ========================================================================
+  // Getter and Setter
+  // ========================================================================
+
+  PortType GetListenPort() const;
 
   void SetListenPort(PortType listen_port);
 
-  bool IsServerNameIncluded(std::string server_name);
+  bool IsServerNameIncluded(std::string server_name) const;
 
   void AppendServerName(std::string server_name);
 
-  LocationConf *GetLocation(std::string path);
+  // path を元に適切な LocationConf を返す｡
+  // path に該当する LocationConf がない場合はNULLを返す｡
+  const LocationConf *GetLocation(std::string path) const;
 
   void AppendLocation(LocationConf location);
 };
 
-};  // namespace config
+}  // namespace config
 
 #endif

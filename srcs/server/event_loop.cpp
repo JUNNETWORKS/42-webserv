@@ -9,8 +9,8 @@ namespace {
 
 const int BUF_SIZE = 1024;
 
-int AddSocketFdIntoEpfd(int epfd, int sockfd, SocketInfo::ESockType socktype,
-                        uint32_t epevents) {
+int AppendNewSockFdIntoEpfd(int epfd, int sockfd,
+                            SocketInfo::ESockType socktype, uint32_t epevents) {
   struct epoll_event *epev = new struct epoll_event;
   epev->data.ptr = new SocketInfo();
   static_cast<SocketInfo *>(epev->data.ptr)->fd = sockfd;
@@ -24,19 +24,37 @@ int AddSocketFdIntoEpfd(int epfd, int sockfd, SocketInfo::ESockType socktype,
 void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr) {
   socklen_t len = sizeof(struct sockaddr_storage);
   char addrStr[utils::IS_ADDR_STR_LEN];
-  utils::inetAddressStr((struct sockaddr *)&client_addr, len, addrStr,
+  utils::InetAddressStr((struct sockaddr *)&client_addr, len, addrStr,
                         utils::IS_ADDR_STR_LEN);
   printf("Connection from %s\n", addrStr);
 }
 
+void AcceptNewConnection(int epfd, int listen_fd) {
+  struct sockaddr_storage client_addr;
+  socklen_t addrlen = sizeof(struct sockaddr_storage);
+  int conn_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &addrlen);
+  fcntl(conn_fd, F_SETFD, O_NONBLOCK);
+  if (AppendNewSockFdIntoEpfd(epfd, conn_fd, SocketInfo::ConnSock,
+                              EPOLLIN | EPOLLOUT) == -1) {
+    utils::ErrExit("AddSocketFdIntoEpFd");
+  }
+  LogConnectionInfoToStdout(client_addr);
+}
+
 }  // namespace
 
-int StartEventLoop(int listen_fd) {
+int StartEventLoop(const std::vector<int> &listen_fds,
+                   const config::Config &config) {
+  // TODO: configを利用するようにする
+  (void)config;
   // epoll インスタンス作成
   int epfd = epoll_create1(EPOLL_CLOEXEC);
 
   // epfd に listen_fd を追加
-  AddSocketFdIntoEpfd(epfd, listen_fd, SocketInfo::ListenSock, EPOLLIN);
+  for (std::vector<int>::const_iterator it = listen_fds.begin();
+       it != listen_fds.end(); ++it) {
+    AppendNewSockFdIntoEpfd(epfd, *it, SocketInfo::ListenSock, EPOLLIN);
+  }
 
   // イベントループ
   struct epoll_event epevarr[1];
@@ -52,16 +70,8 @@ int StartEventLoop(int listen_fd) {
 
     SocketInfo *socket_info = static_cast<SocketInfo *>(epevarr[0].data.ptr);
     if (socket_info->socktype == SocketInfo::ListenSock) {
-      struct sockaddr_storage client_addr;
-      socklen_t addrlen = sizeof(struct sockaddr_storage);
-      int conn_fd =
-          accept(listen_fd, (struct sockaddr *)&client_addr, &addrlen);
-      fcntl(conn_fd, F_SETFD, O_NONBLOCK);
-      if (AddSocketFdIntoEpfd(epfd, conn_fd, SocketInfo::ConnSock,
-                              EPOLLIN | EPOLLOUT) == -1) {
-        utils::ErrExit("AddSocketFdIntoEpFd");
-      }
-      LogConnectionInfoToStdout(client_addr);
+      int listen_fd = socket_info->fd;
+      AcceptNewConnection(epfd, listen_fd);
     } else {
       int conn_fd = socket_info->fd;
 
@@ -108,4 +118,4 @@ int StartEventLoop(int listen_fd) {
   }
 }
 
-};  // namespace server
+}  // namespace server

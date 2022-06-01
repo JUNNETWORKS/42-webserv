@@ -15,7 +15,7 @@
 
 namespace utils {
 
-int inetConnect(const char *host, const char *service, int type) {
+int InetConnect(const char *host, const char *service, int type) {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
   int sfd, s;
@@ -50,8 +50,8 @@ int inetConnect(const char *host, const char *service, int type) {
   return (rp == NULL) ? -1 : sfd;
 }
 
-/* Public interfaces: inetBind() and inetListen() */
-static int inetPassiveSocket(const char *service, int type, socklen_t *addrlen,
+/* Public interfaces: InetBind() and InetListen() */
+static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
                              bool doListen, int backlog) {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
@@ -105,15 +105,15 @@ static int inetPassiveSocket(const char *service, int type, socklen_t *addrlen,
   return (rp == NULL) ? -1 : sfd;
 }
 
-int inetListen(const char *service, int backlog, socklen_t *addrlen) {
-  return inetPassiveSocket(service, SOCK_STREAM, addrlen, true, backlog);
+int InetListen(const char *service, int backlog, socklen_t *addrlen) {
+  return InetPassiveSocket(service, SOCK_STREAM, addrlen, true, backlog);
 }
 
-int inetBind(const char *service, int type, socklen_t *addrlen) {
-  return inetPassiveSocket(service, type, addrlen, false, 0);
+int InetBind(const char *service, int type, socklen_t *addrlen) {
+  return InetPassiveSocket(service, type, addrlen, false, 0);
 }
 
-char *inetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
+char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
                      char *addrStr, int addrStrLen) {
   char host[NI_MAXHOST], service[NI_MAXSERV];
 

@@ -231,4 +231,4 @@ bool HttpRequest::IsCorrectRequest() {
   return phase_ == kParsed && parse_status_ == OK;
 };
 
-};  // namespace http
+}  // namespace http

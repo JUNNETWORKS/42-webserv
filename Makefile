@@ -1,6 +1,4 @@
 CXX := c++
-CXXFLAGS := -Wall -Wextra -Werror
-CXXFLAGS += --std=c++98
 NAME := webserv
 
 SRCS_DIR := srcs
@@ -9,7 +7,7 @@ OBJS_DIR := objs
 OBJS := $(SRCS:%.cpp=$(OBJS_DIR)/%.o)
 DEPENDENCIES := $(OBJS:.o=.d)
 
-CXXFLAGS += -I$(SRCS_DIR)
+CXXFLAGS := -I$(SRCS_DIR) --std=c++98 -Wall -Wextra -Werror
 
 .PHONY: all
 all: $(NAME)
@@ -35,3 +33,38 @@ fclean: clean
 
 .PHONY: re
 re: fclean all
+
+############ GooleTest ############
+
+TESTER_NAME := ./tester
+
+GTEST_DIR   := ./google_test
+
+GTEST       := $(GTEST_DIR)/gtest $(GTEST_DIR)/googletest-release-1.11.0
+GTEST_MAIN  := $(GTEST_DIR)/googletest-release-1.11.0/googletest/src/gtest_main.cc
+GTEST_ALL   := $(GTEST_DIR)/gtest/gtest-all.cc
+TEST_SRCS   := $(shell find unit_test -type f -name '*.cpp')
+# main() がかぶらないようにmain.cppのオブジェクトファイルのみ取り除く
+TEST_OBJS  := $(filter-out objs/srcs/server/main.o, $(OBJS)) $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
+TEST_DEPENDENCIES \
+         := $(TEST_OBJS:%.o=%.d)
+
+-include $(TEST_DEPENDENCIES)
+
+.PHONY: test
+test: CXXFLAGS := -I$(SRCS_DIR) --std=c++11 -I$(GTEST_DIR) -g -fsanitize=address
+test: $(GTEST) $(TEST_OBJS)
+	# Google Test require C++11
+	$(CXX) $(CXXFLAGS) $(GTEST_MAIN) $(GTEST_ALL) \
+		-I$(GTEST_DIR) -lpthread \
+		$(TEST_OBJS) \
+		-o $(TESTER_NAME)
+	$(TESTER_NAME)
+
+$(GTEST):
+	mkdir -p $(GTEST_DIR)
+	curl -OL https://github.com/google/googletest/archive/refs/tags/release-1.11.0.tar.gz
+	tar -xvzf release-1.11.0.tar.gz googletest-release-1.11.0
+	rm -rf release-1.11.0.tar.gz
+	python googletest-release-1.11.0/googletest/scripts/fuse_gtest_files.py $(GTEST_DIR)
+	mv googletest-release-1.11.0 $(GTEST_DIR)

@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/srcs"
+                "${workspaceFolder}/srcs",
+                "${workspaceFolder}/google_test"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

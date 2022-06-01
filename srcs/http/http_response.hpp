@@ -38,6 +38,6 @@ class HttpResponse {
   bool LoadFile(const std::string &path);
 };
 
-};  // namespace http
+}  // namespace http
 
 #endif
