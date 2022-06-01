@@ -31,7 +31,7 @@ unsigned long Stoul(const std::string &str, size_t *idx = NULL, int base = 10);
 // std::string を unsigned long に変換したものを返す｡
 // 変換がが失敗した場合はdalseを返す
 // 全部数字の文字列以外は失敗する設計
-// e.g. 42hoge hoge 42 "42" -> false 42 -> true
+// e.g. "42hoge", "hoge42", "\"42\"" -> false   "42" -> true
 bool Stoul(const std::string &str, unsigned long &res) throw();
 
 // str を delim で区切った文字列vectorを返す｡
