@@ -42,6 +42,13 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
 HttpRequest::~HttpRequest() {}
 
 //========================================================================
+// getter
+
+const std::string &HttpRequest::GetPath() const {
+  return path_;
+}
+
+//========================================================================
 // Parse系関数　内部でInterpret系関数を呼び出す　主にphaseで動作管理
 
 void HttpRequest::ParseRequest() {
@@ -297,4 +304,4 @@ bool HttpRequest::IsCorrectRequest() {
   return phase_ == kParsed && parse_status_ == OK;
 };
 
-};  // namespace http
+}  // namespace http

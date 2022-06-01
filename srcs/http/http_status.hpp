@@ -28,6 +28,6 @@ enum HttpStatus {
   HTTP_VERSION_NOT_SUPPORTED = 505,
 };
 
-};  // namespace http
+}  // namespace http
 
 #endif

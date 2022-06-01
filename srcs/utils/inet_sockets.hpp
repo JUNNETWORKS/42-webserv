@@ -20,7 +20,7 @@ namespace utils {
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-int inetConnect(const char *host, const char *service, int type);
+int InetConnect(const char *host, const char *service, int type);
 
 /* ストリームソケットを作成し､serviceに指定されたTCPポートのワイルドカードアドレスへバインドし,リスニングソケットとする｡
  * TCPサーバ用の関数｡
@@ -34,7 +34,7 @@ int inetConnect(const char *host, const char *service, int type);
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-int inetListen(const char *service, int backlog, socklen_t *addrlen);
+int InetListen(const char *service, int backlog, socklen_t *addrlen);
 
 /* typeに指定されたソケットを作成し、service､typeに指定されたポートのワイルドカードアドレスへバインドする｡
  * この関数はソケットを特定のアドレスへバインドするUDPサーバ､UDPクライアント用です｡
@@ -48,7 +48,7 @@ int inetListen(const char *service, int backlog, socklen_t *addrlen);
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-int inetBind(const char *service, int type, socklen_t *addrlen);
+int InetBind(const char *service, int type, socklen_t *addrlen);
 
 /* インターネットソケットアドレスを可読形式に変換します｡
  * addrStrに"(hostname, port-number)"の形式の文字列を格納する｡
@@ -67,10 +67,10 @@ int inetBind(const char *service, int type, socklen_t *addrlen);
  * Return:
  *   addrStr をそのまま返す｡
  */
-char *inetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
+char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
                      char *addrStr, int addrStrLen);
 
-/* inetAddressStr() に指定する文字列のサイズ.
+/* InetAddressStr() に指定する文字列のサイズ.
   (NI_MAXHOST + NI_MAXSERV + 4) よりも大きくなくてはならない. */
 const int IS_ADDR_STR_LEN = 4096;
 

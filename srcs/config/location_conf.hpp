@@ -14,20 +14,31 @@ namespace config {
 
 // serverディレクティブ内のlocationディレクティブの情報
 class LocationConf {
+ public:
+  typedef std::set<std::string> AllowedMethodsSet;
+  typedef std::vector<std::string> IndexPagesVector;
+  // errorPages[<status_code>] = <error_page_path>
+  typedef std::map<http::HttpStatus, std::string> ErrorPagesMap;
+
  private:
   std::string path_pattern_;
   bool is_backward_search_;
-  std::set<std::string> allowed_methods_;
-  int64_t client_max_body_size_kb_;
+  AllowedMethodsSet allowed_methods_;
+  unsigned long client_max_body_size_;
   std::string root_dir_;
-  std::vector<std::string> index_pages_;
+  IndexPagesVector index_pages_;
   bool is_cgi_;
-  // errorPages[<status_code>] = <error_page_path>
-  std::map<http::HttpStatus, std::string> error_pages_;
+  ErrorPagesMap error_pages_;
   // ディレクトリ内ファイル一覧ページを有効にするかどうか
   bool auto_index_;
   // returnディレクティブで指定されたURL
   std::string redirect_url_;
+
+  static const unsigned long kDefaultClientMaxBodySize =
+      1024 * 1024;                                               // 1MB
+  static const unsigned long kMinClientMaxBodySize = 0;  // 0B
+  static const unsigned long kMaxClientMaxBodySize =
+      1024 * 1024 * 1024;  // 1GB
 
  public:
   LocationConf();
@@ -38,49 +49,61 @@ class LocationConf {
 
   ~LocationConf();
 
-  std::string GetPathPattern();
+  // ========================================================================
+  // Validator
+  // ========================================================================
+
+  bool IsValid() const;
+
+  void Print() const;
+
+  // ========================================================================
+  // Getter and Setter
+  // ========================================================================
+
+  std::string GetPathPattern() const;
 
   void SetPathPattern(std::string path_pattern);
 
-  bool GetIsBackwardSearch();
+  bool GetIsBackwardSearch() const;
 
   void SetIsBackwardSearch(bool is_backward_search);
 
-  bool IsMethodAllowed(std::string method);
+  bool IsMethodAllowed(std::string method) const;
 
   void AppendAllowedMethod(std::string method);
 
-  int64_t GetClientMaxBodySizeKB();
+  unsigned long GetClientMaxBodySize() const;
 
-  void SetClientMaxBodySizeKB(int64_t client_max_body_size_kb);
+  void SetClientMaxBodySize(unsigned long client_max_body_size);
 
-  std::string GetRootDir();
+  std::string GetRootDir() const;
 
   void SetRootDir(std::string root_dir);
 
-  const std::vector<std::string> &GetIndexPages();
+  const std::vector<std::string> &GetIndexPages() const;
 
   void AppendIndexPages(std::string filepath);
 
-  bool GetIsCgi();
+  bool GetIsCgi() const;
 
   void SetIsCgi(bool is_cgi);
 
-  const std::map<http::HttpStatus, std::string> &GetErrorPages();
+  const std::map<http::HttpStatus, std::string> &GetErrorPages() const;
 
   void AppendErrorPages(http::HttpStatus status, std::string filepath);
 
-  bool GetAutoIndex();
+  bool GetAutoIndex() const;
 
   void SetAutoIndex(bool auto_index_is_enabled);
 
-  std::string GetRedirectUrl();
+  std::string GetRedirectUrl() const;
 
   void SetRedirectUrl(std::string redirect_url);
 
-  bool IsMatchPattern(std::string path);
+  bool IsMatchPattern(std::string path) const;
 };
 
-};  // namespace config
+}  // namespace config
 
 #endif

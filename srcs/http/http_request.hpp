@@ -20,7 +20,7 @@ namespace method_strs {
 const std::string kGet = "GET";
 const std::string kPost = "POST";
 const std::string kDelete = "DELETE";
-};  // namespace method_strs
+}  // namespace method_strs
 
 class HttpRequest {
  private:
@@ -51,6 +51,8 @@ class HttpRequest {
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
 
+  const std::string &GetPath() const;
+
   void ParseRequest();
   bool IsCorrectRequest();
 
@@ -72,6 +74,6 @@ class HttpRequest {
   void PrintRequestInfo();
 };
 
-};  // namespace http
+}  // namespace http
 
 #endif

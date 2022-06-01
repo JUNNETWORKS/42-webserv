@@ -112,16 +112,7 @@ Syntax: `allow_method <method> [<method>...];`
 
 Syntax: `client_max_body_size <size>;`
 
-受信できるリクエストボディの最大サイズを指定する｡ 最大 `1G`
-
-`<size>` は `<digits> <unit>` で構成されている｡
-
-```bnf
-<size>   := <digits> <unit>
-<unit>   := "K" | "M" | "G"
-<digits> := <digit> | <digit> <digits>
-<digit>  := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-```
+受信できるリクエストボディの最大サイズをバイト単位で指定する｡
 
 #### root
 
@@ -192,13 +183,13 @@ server {
   server_name localhost;
 
   location / {
-    allow_method GET
+    allow_method GET;
 
     root /var/www/html;
     index index.html index.htm;
 
-    error_page 500 /server_error_page.html
-    error_page 404 403 /not_found.html
+    error_page 500 /server_error_page.html;
+    error_page 404 403 /not_found.html;
   }
 
   location /upload {
@@ -240,7 +231,7 @@ server {
   listen 9090;
 
   location / {
-    return http://localhost:8080/
+    return http://localhost:8080/;
   }
 }
 ```
