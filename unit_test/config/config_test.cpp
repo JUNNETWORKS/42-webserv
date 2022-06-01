@@ -4,34 +4,35 @@
 
 #include "config/location_conf.hpp"
 #include "config/virtual_server_conf.hpp"
+#include "create_test_config.hpp"
 
 namespace config {
 
+// ポートからバーチャルサーバを取得できる
 TEST(ConfigTest, GetVirtualServerByPort) {
-  // ポートからバーチャルサーバを取得できる
-  Config config = CreateSampleConfig();
+  Config config = CreateTestConfig();
 
   const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
   EXPECT_TRUE(vserver != NULL);
   EXPECT_TRUE(vserver->IsServerNameIncluded("localhost"));
 }
 
+// 同じポートに複数のバーチャルサーバがある場合は最初に記載されたバーチャルサーバを取得する
 TEST(
     ConfigTest,
     GetTheFirstVirtualServerListedIfThereAreMultipleVirtualServerOnTheSamePort) {
-  // 同じポートに複数のバーチャルサーバがある場合は最初に記載されたバーチャルサーバを取得する
-  Config config = CreateSampleConfig();
+  Config config = CreateTestConfig();
 
   const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
   EXPECT_TRUE(vserver != NULL);
   EXPECT_TRUE(vserver->IsServerNameIncluded("localhost"));
 }
 
+// 同じポートで複数のバーチャルサーバがあるがserver_nameはどれにも該当しない場合最初に記載されたバーチャルサーバを取得する
 TEST(
     ConfigTest,
     GetTheFirstVirtualServerListedIfThereAreMultipleVirtualServerOnTheSamePortButNoOneMatchTheServerName) {
-  // 同じポートで複数のバーチャルサーバがあるがserver_nameはどれにも該当しない場合最初に記載されたバーチャルサーバを取得する
-  Config config = CreateSampleConfig();
+  Config config = CreateTestConfig();
 
   const VirtualServerConf *vserver =
       config.GetVirtualServerConf("8080", "nothing.com");
@@ -39,9 +40,9 @@ TEST(
   EXPECT_TRUE(vserver->IsServerNameIncluded("localhost"));
 }
 
+// ポートと server_name が指定された場合は対象のバーチャルサーバを取得する
 TEST(ConfigTest, GetVirtualServerByPortAndServerName) {
-  // ポートと server_name が指定された場合は対象のバーチャルサーバを取得する
-  Config config = CreateSampleConfig();
+  Config config = CreateTestConfig();
 
   const VirtualServerConf *vserver =
       config.GetVirtualServerConf("8080", "webserv.com");
@@ -49,12 +50,11 @@ TEST(ConfigTest, GetVirtualServerByPortAndServerName) {
   EXPECT_TRUE(vserver->IsServerNameIncluded("www.webserv.com"));
 }
 
+// 該当するポート番号がない場合はNULLを返す
 TEST(ConfigTest, ReturnNullIfThereIsNoCorrespondingPortNumber) {
-  // 該当するポート番号がない場合はNULLを返す
-  Config config = CreateSampleConfig();
+  Config config = CreateTestConfig();
 
   EXPECT_TRUE(config.GetVirtualServerConf("10", "") == NULL);
 }
 
-
-};  // namespace config
+}  // namespace config
