@@ -24,15 +24,24 @@ const std::string kDelete = "DELETE";
 
 class HttpRequest {
  private:
-  enum ParsingPhase { kRequestLine, kHeaderField, kBody, kParsed };
+  typedef std::map<std::string, std::vector<std::string> > HeaderMap;
+  enum ParsingPhase {
+    kRequestLine,
+    kHeaderField,
+    kBodySize,
+    kBody,
+    kParsed,
+    kError
+  };
 
   std::string method_;
   std::string path_;
   int minor_version_;
-  std::map<std::string, std::vector<std::string> > headers_;
+  HeaderMap headers_;
   ParsingPhase phase_;
   HttpStatus parse_status_;
   utils::ByteVector body_;  // HTTP リクエストのボディ
+  unsigned long body_size_;
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
@@ -52,12 +61,16 @@ class HttpRequest {
  private:
   ParsingPhase ParseRequestLine();
   ParsingPhase ParseHeaderField();
+  ParsingPhase ParseBodySize();
   ParsingPhase ParseBody();
   HttpStatus InterpretMethod(std::string &str);
   HttpStatus InterpretPath(std::string &str);
   HttpStatus InterpretVersion(std::string &str);
   HttpStatus InterpretHeaderField(std::string &str);
+  HttpStatus InterpretContentLength(
+      const HeaderMap::mapped_type &length_header);
 
+  HttpStatus DecideBodySize();
   void PrintRequestInfo();
 };
 

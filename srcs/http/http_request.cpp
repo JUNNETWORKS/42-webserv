@@ -17,6 +17,7 @@ HttpRequest::HttpRequest()
       phase_(kRequestLine),
       parse_status_(OK),
       body_(),
+      body_size_(0),
       buffer_() {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
@@ -33,6 +34,7 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     parse_status_ = rhs.parse_status_;
     body_ = rhs.body_;
     buffer_ = rhs.buffer_;
+    body_size_ = rhs.body_size_;
   }
   return *this;
 }
@@ -54,6 +56,8 @@ void HttpRequest::ParseRequest() {
     phase_ = ParseRequestLine();
   if (phase_ == kHeaderField)
     phase_ = ParseHeaderField();
+  if (phase_ == kBodySize)
+    phase_ = ParseBodySize();
   if (phase_ == kBody)
     phase_ = ParseBody();
   PrintRequestInfo();
@@ -70,16 +74,19 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine() {
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
       return kHeaderField;
+    } else {
+      return kError;
     }
   }
-  return phase_;
+  return kRequestLine;
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
   while (1) {
     if (buffer_.CompareHead(kHeaderBoundary)) {
+      buffer_.EraseHead(kHeaderBoundary.size());
       //先頭が\r\n\r\nなので終了処理
-      return kBody;
+      return kBodySize;
     }
 
     if (buffer_.CompareHead(kCrlf)) {
@@ -89,17 +96,34 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
 
     utils::ByteVector::iterator it = buffer_.FindString(kCrlf);
     if (it == buffer_.end()) {
-      return phase_;  // crlfがbuffer内に存在しない
+      return kHeaderField;  // crlfがbuffer内に存在しない
     } else {
       std::string line = buffer_.CutSubstrBeforePos(it);  // headerfieldの解釈
-      InterpretHeaderField(line);
+      if (InterpretHeaderField(line) != OK)
+        return kError;
     }
   }
 }
 
+HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
+  if (DecideBodySize() != OK)
+    return kError;
+  return kBody;
+}
+
 HttpRequest::ParsingPhase HttpRequest::ParseBody() {
-  // TODO Content-Lengthの判定,Bodyのパース
-  return kParsed;
+  if (body_size_ == 0)
+    return kParsed;
+
+  size_t request_size = body_size_ - body_.size();
+  if (buffer_.size() <= request_size) {
+    body_.insert(body_.end(), buffer_.begin(), buffer_.end());
+    buffer_.clear();
+  } else {
+    body_.insert(body_.end(), buffer_.begin(), buffer_.begin() + request_size);
+    buffer_.erase(buffer_.begin(), buffer_.begin() + request_size);
+  }
+  return body_.size() == body_size_ ? kParsed : kBody;
 }
 
 //========================================================================
@@ -162,15 +186,61 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   str.erase(0, collon_pos + 1);
   std::string field = utils::TrimWhiteSpace(str);
 
+  // TODO ,区切りのsplit
   headers_[header].push_back(field);
-  phase_ = kBody;
+  return parse_status_ = OK;
+}
+
+HttpStatus HttpRequest::InterpretContentLength(
+    const HeaderMap::mapped_type &length_header) {
+  // ヘッダ値が相違する，複数の Content-Length ヘッダが在る†
+  //妥当でない値をとる Content - Length ヘッダが在る
+  if (length_header.size() != 1)
+    return parse_status_ = BAD_REQUEST;
+
+  if (utils::Stoul(length_header.front(), body_size_) == false)
+    return parse_status_ = BAD_REQUEST;
+
+  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
+  if (body_size_ > kMaxSize)
+    return parse_status_ = PAYLOAD_TOO_LARGE;
+
   return parse_status_ = OK;
 }
 
 //========================================================================
 // Helper関数
 
+HttpStatus HttpRequest::DecideBodySize() {
+  // https://triple-underscore.github.io/RFC7230-ja.html#message.body.length
+
+  body_size_ = 0;
+
+  HeaderMap::iterator encoding_header_it = headers_.find("TRANSFER-ENCODING");
+  HeaderMap::iterator length_header_it = headers_.find("CONTENT-LENGTH");
+  bool has_encoding_header = encoding_header_it != headers_.end();
+  bool has_length_header = length_header_it != headers_.end();
+
+  if (has_encoding_header && has_length_header) {
+    // TODO ステータスの検証　BAD_Requestは仮
+    return parse_status_ = BAD_REQUEST;
+  }
+
+  if (has_encoding_header) {
+    // TODO
+    // 最終転送符号法はチャンク化である
+    // 最終転送符号法はチャンク化でない
+    return parse_status_ = OK;
+  }
+
+  if (has_length_header)
+    return InterpretContentLength((*length_header_it).second);
+
+  return OK;
+}
+
 namespace {
+
 bool IsCorrectHTTPVersion(const std::string &str) {
   if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
     return false;
@@ -213,6 +283,7 @@ void HttpRequest::PrintRequestInfo() {
     printf("method_: %s\n", method_.c_str());
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
+    printf("body_size: %ld\n", body_size_);
     for (std::map<std::string, std::vector<std::string> >::iterator it =
              headers_.begin();
          it != headers_.end(); it++) {
@@ -223,6 +294,11 @@ void HttpRequest::PrintRequestInfo() {
       }
       printf("\n");
     }
+
+    printf("body:\n");
+    body_.push_back('\0');
+    printf("%s\n", reinterpret_cast<const char *>(body_.data()));
+    body_.pop_back();
   }
   printf("=====================\n");
 }

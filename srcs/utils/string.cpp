@@ -48,6 +48,18 @@ unsigned long Stoul(const std::string &str, size_t *idx, int base) {
   return num;
 }
 
+bool Stoul(const std::string &str, unsigned long &res) throw() {
+  try {
+    std::size_t idx = 0;
+    res = Stoul(str, &idx, 10);
+    if (str.size() == idx)
+      return true;
+    return false;
+  } catch (const std::exception &e) {
+    return false;
+  }
+}
+
 std::vector<std::string> SplitString(const std::string &str,
                                      const std::string &delim) {
   std::vector<std::string> strs;
