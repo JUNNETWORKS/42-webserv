@@ -52,6 +52,7 @@ const std::string &HttpRequest::GetPath() const {
 // Parse系関数　内部でInterpret系関数を呼び出す　主にphaseで動作管理
 
 void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
+  LoadCurrentBuffer(buffer);
   if (phase_ == kRequestLine)
     phase_ = ParseRequestLine(buffer);
   if (phase_ == kHeaderField)
@@ -60,6 +61,8 @@ void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
     phase_ = ParseBodySize();
   if (phase_ == kBody)
     phase_ = ParseBody(buffer);
+  if (phase_ != kParsed && phase_ != kError)
+    SaveCurrentBuffer(buffer);
   PrintRequestInfo();
 }
 
@@ -71,7 +74,6 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
 
   utils::ByteVector::iterator it = buffer.FindString(kCrlf);
   if (it != buffer.end()) {
-    LoadCurrentBuffer(buffer);
     std::string line = buffer.CutSubstrBeforePos(it);
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
@@ -79,8 +81,6 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
     } else {
       return kError;
     }
-  } else {
-    SaveCurrentBuffer(buffer);
   }
   return kRequestLine;
 }
