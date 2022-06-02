@@ -53,16 +53,16 @@ class HttpRequest {
 
   const std::string &GetPath() const;
 
-  void ParseRequest();
+  void ParseRequest(utils::ByteVector &buffer);
   bool IsCorrectRequest();
 
   utils::ByteVector buffer_;  // bufferはSocketInfoに移動予定
 
  private:
-  ParsingPhase ParseRequestLine();
-  ParsingPhase ParseHeaderField();
+  ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
+  ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
   ParsingPhase ParseBodySize();
-  ParsingPhase ParseBody();
+  ParsingPhase ParseBody(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(std::string &str);
   HttpStatus InterpretPath(std::string &str);
   HttpStatus InterpretVersion(std::string &str);

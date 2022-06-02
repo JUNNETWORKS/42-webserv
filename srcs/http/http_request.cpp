@@ -51,26 +51,27 @@ const std::string &HttpRequest::GetPath() const {
 //========================================================================
 // Parse系関数　内部でInterpret系関数を呼び出す　主にphaseで動作管理
 
-void HttpRequest::ParseRequest() {
+void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
   if (phase_ == kRequestLine)
-    phase_ = ParseRequestLine();
+    phase_ = ParseRequestLine(buffer);
   if (phase_ == kHeaderField)
-    phase_ = ParseHeaderField();
+    phase_ = ParseHeaderField(buffer);
   if (phase_ == kBodySize)
     phase_ = ParseBodySize();
   if (phase_ == kBody)
-    phase_ = ParseBody();
+    phase_ = ParseBody(buffer);
   PrintRequestInfo();
 }
 
-HttpRequest::ParsingPhase HttpRequest::ParseRequestLine() {
-  while (buffer_.CompareHead(kCrlf)) {
-    buffer_.EraseHead(kCrlf.size());
+HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
+    utils::ByteVector &buffer) {
+  while (buffer.CompareHead(kCrlf)) {
+    buffer.EraseHead(kCrlf.size());
   }
 
-  utils::ByteVector::iterator it = buffer_.FindString(kCrlf);
-  if (it != buffer_.end()) {
-    std::string line = buffer_.CutSubstrBeforePos(it);
+  utils::ByteVector::iterator it = buffer.FindString(kCrlf);
+  if (it != buffer.end()) {
+    std::string line = buffer.CutSubstrBeforePos(it);
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
       return kHeaderField;
@@ -81,21 +82,22 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine() {
   return kRequestLine;
 }
 
-HttpRequest::ParsingPhase HttpRequest::ParseHeaderField() {
+HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
+    utils::ByteVector &buffer) {
   while (1) {
-    if (buffer_.CompareHead(kHeaderBoundary)) {
-      buffer_.EraseHead(kHeaderBoundary.size());
+    if (buffer.CompareHead(kHeaderBoundary)) {
+      buffer.EraseHead(kHeaderBoundary.size());
       //先頭が\r\n\r\nなので終了処理
       return kBodySize;
     }
 
-    if (buffer_.CompareHead(kCrlf)) {
+    if (buffer.CompareHead(kCrlf)) {
       // HeaderBoundary判定用に残しておいたcrlfを削除
-      buffer_.EraseHead(kCrlf.size());
+      buffer.EraseHead(kCrlf.size());
     }
 
-    utils::ByteVector::iterator it = buffer_.FindString(kCrlf);
-    if (it == buffer_.end()) {
+    utils::ByteVector::iterator it = buffer.FindString(kCrlf);
+    if (it == buffer.end()) {
       return kHeaderField;  // crlfがbuffer内に存在しない
     } else {
       std::string line = buffer_.CutSubstrBeforePos(it);  // headerfieldの解釈
@@ -111,17 +113,17 @@ HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
   return kBody;
 }
 
-HttpRequest::ParsingPhase HttpRequest::ParseBody() {
+HttpRequest::ParsingPhase HttpRequest::ParseBody(utils::ByteVector &buffer) {
   if (body_size_ == 0)
     return kParsed;
 
   size_t request_size = body_size_ - body_.size();
-  if (buffer_.size() <= request_size) {
-    body_.insert(body_.end(), buffer_.begin(), buffer_.end());
-    buffer_.clear();
+  if (buffer.size() <= request_size) {
+    body_.insert(body_.end(), buffer.begin(), buffer.end());
+    buffer.clear();
   } else {
-    body_.insert(body_.end(), buffer_.begin(), buffer_.begin() + request_size);
-    buffer_.erase(buffer_.begin(), buffer_.begin() + request_size);
+    body_.insert(body_.end(), buffer.begin(), buffer.begin() + request_size);
+    buffer.erase(buffer.begin(), buffer.begin() + request_size);
   }
   return body_.size() == body_size_ ? kParsed : kBody;
 }
