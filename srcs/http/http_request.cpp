@@ -88,6 +88,10 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
 
 HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     utils::ByteVector &buffer) {
+  if (buffer.FindString(kHeaderBoundary) == buffer.end()) {
+    return kHeaderField;
+  }
+
   while (1) {
     if (buffer.CompareHead(kHeaderBoundary)) {
       buffer.EraseHead(kHeaderBoundary.size());
