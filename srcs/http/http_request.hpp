@@ -60,7 +60,7 @@ class HttpRequest {
   bool IsParsed();
 
  private:
-  void SaveBuffer(utils::ByteVector &buffer);
+  void SaveCurrentBuffer(utils::ByteVector &buffer);
   void LoadCurrentBuffer(utils::ByteVector &buffer);
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);

@@ -80,7 +80,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
       return kError;
     }
   } else {
-    SaveBuffer(buffer);
+    SaveCurrentBuffer(buffer);
   }
   return kRequestLine;
 }
@@ -253,7 +253,7 @@ HttpStatus HttpRequest::DecideBodySize() {
   return OK;
 }
 
-void HttpRequest::SaveBuffer(utils::ByteVector &buffer) {
+void HttpRequest::SaveCurrentBuffer(utils::ByteVector &buffer) {
   current_buffer_.insert(current_buffer_.begin(), buffer.begin(), buffer.end());
   buffer.clear();
 }
