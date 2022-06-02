@@ -17,7 +17,8 @@ HttpRequest::HttpRequest()
       phase_(kRequestLine),
       parse_status_(OK),
       body_(),
-      body_size_(0) {}
+      body_size_(0),
+      current_buffer_() {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
   *this = rhs;
@@ -33,6 +34,7 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     parse_status_ = rhs.parse_status_;
     body_ = rhs.body_;
     body_size_ = rhs.body_size_;
+    current_buffer_ = rhs.current_buffer_;
   }
   return *this;
 }
@@ -69,6 +71,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
 
   utils::ByteVector::iterator it = buffer.FindString(kCrlf);
   if (it != buffer.end()) {
+    LoadCurrentBuffer(buffer);
     std::string line = buffer.CutSubstrBeforePos(it);
     if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
         InterpretVersion(line) == OK) {
@@ -76,6 +79,8 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
     } else {
       return kError;
     }
+  } else {
+    SaveBuffer(buffer);
   }
   return kRequestLine;
 }
@@ -246,6 +251,15 @@ HttpStatus HttpRequest::DecideBodySize() {
     return InterpretContentLength((*length_header_it).second);
 
   return OK;
+}
+
+void HttpRequest::SaveBuffer(utils::ByteVector &buffer) {
+  current_buffer_.insert(current_buffer_.begin(), buffer.begin(), buffer.end());
+  buffer.clear();
+}
+
+void HttpRequest::LoadCurrentBuffer(utils::ByteVector &buffer) {
+  buffer.insert(buffer.begin(), current_buffer_.begin(), current_buffer_.end());
 }
 
 namespace {

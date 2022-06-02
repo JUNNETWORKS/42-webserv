@@ -42,6 +42,7 @@ class HttpRequest {
   HttpStatus parse_status_;
   utils::ByteVector body_;  // HTTP リクエストのボディ
   unsigned long body_size_;
+  utils::ByteVector current_buffer_;  // HTTP リクエストのボディ
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
@@ -59,6 +60,8 @@ class HttpRequest {
   bool IsParsed();
 
  private:
+  void SaveBuffer(utils::ByteVector &buffer);
+  void LoadCurrentBuffer(utils::ByteVector &buffer);
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
   ParsingPhase ParseBodySize();
