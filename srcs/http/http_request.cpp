@@ -259,7 +259,7 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 void HttpRequest::SaveCurrentBuffer(utils::ByteVector &buffer) {
-  current_buffer_.insert(current_buffer_.begin(), buffer.begin(), buffer.end());
+  std::swap(buffer, current_buffer_);
   buffer.clear();
 }
 
