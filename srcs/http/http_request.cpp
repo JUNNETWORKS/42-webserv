@@ -53,6 +53,7 @@ const std::string &HttpRequest::GetPath() const {
 
 void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
   LoadCurrentBuffer(buffer);
+  // TODO 長すぎるbufferは捨ててエラーにする
   if (phase_ == kRequestLine)
     phase_ = ParseRequestLine(buffer);
   if (phase_ == kHeaderField)
