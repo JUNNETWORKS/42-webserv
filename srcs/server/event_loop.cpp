@@ -41,6 +41,10 @@ void AcceptNewConnection(int epfd, int listen_fd) {
   LogConnectionInfoToStdout(client_addr);
 }
 
+void ProcessRequest(SocketInfo *socket_info) {
+  socket_info->request.ParseRequest(socket_info->buffer_);
+}
+
 }  // namespace
 
 int StartEventLoop(const std::vector<int> &listen_fds,
@@ -88,7 +92,7 @@ int StartEventLoop(const std::vector<int> &listen_fds,
           epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
         } else {
           socket_info->buffer_.AppendDataToBuffer(buf, n);
-          socket_info->request.ParseRequest(socket_info->buffer_);
+          ProcessRequest(socket_info);
         }
       }
 
