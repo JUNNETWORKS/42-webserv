@@ -41,7 +41,7 @@ void AcceptNewConnection(int epfd, int listen_fd) {
   LogConnectionInfoToStdout(client_addr);
 }
 
-void ProcessRequest(int conn_fd, int epfd, SocketInfo *socket_info) {
+void ProcessRequest(int conn_fd, int epfd, SocketInfo *info) {
   unsigned char buf[BUF_SIZE];
   int n = read(conn_fd, buf, sizeof(buf) - 1);
   if (n <= 0) {  // EOF(Connection end) or Error
@@ -50,16 +50,15 @@ void ProcessRequest(int conn_fd, int epfd, SocketInfo *socket_info) {
     close(conn_fd);
     epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
   } else {
-    socket_info->buffer_.AppendDataToBuffer(buf, n);
+    info->buffer_.AppendDataToBuffer(buf, n);
 
-    while (socket_info->buffer_.size() != 0) {
-      if (socket_info->requests.empty() ||
-          socket_info->requests.back().IsParsed()) {
-        socket_info->requests.push_back(http::HttpRequest());
+    while (info->buffer_.size() != 0) {
+      if (info->requests.empty() || info->requests.back().IsParsed()) {
+        info->requests.push_back(http::HttpRequest());
       }
-      socket_info->requests.back().ParseRequest(socket_info->buffer_);
-      if (socket_info->requests.back().IsCorrectStatus() == false) {
-        socket_info->buffer_.clear();
+      info->requests.back().ParseRequest(info->buffer_);
+      if (info->requests.back().IsCorrectStatus() == false) {
+        info->buffer_.clear();
       }
     }
   }
