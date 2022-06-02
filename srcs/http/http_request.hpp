@@ -55,6 +55,7 @@ class HttpRequest {
 
   void ParseRequest(utils::ByteVector &buffer);
   bool IsCorrectRequest();
+  bool IsParsed();
 
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);

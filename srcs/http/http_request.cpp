@@ -209,6 +209,12 @@ HttpStatus HttpRequest::InterpretContentLength(
 }
 
 //========================================================================
+// Is系関数　外部から状態取得
+bool HttpRequest::IsParsed() {
+  return phase_ == kParsed;
+}
+
+//========================================================================
 // Helper関数
 
 HttpStatus HttpRequest::DecideBodySize() {
