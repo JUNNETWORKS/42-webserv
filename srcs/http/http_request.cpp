@@ -213,6 +213,9 @@ HttpStatus HttpRequest::InterpretContentLength(
 bool HttpRequest::IsParsed() {
   return phase_ == kParsed;
 }
+bool HttpRequest::IsCorrectStatus() {
+  return parse_status_ == OK;
+}
 
 //========================================================================
 // Helper関数
