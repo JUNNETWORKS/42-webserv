@@ -56,8 +56,6 @@ class HttpRequest {
   void ParseRequest(utils::ByteVector &buffer);
   bool IsCorrectRequest();
 
-  utils::ByteVector buffer_;  // bufferはSocketInfoに移動予定
-
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);

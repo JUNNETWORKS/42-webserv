@@ -17,8 +17,7 @@ HttpRequest::HttpRequest()
       phase_(kRequestLine),
       parse_status_(OK),
       body_(),
-      body_size_(0),
-      buffer_() {}
+      body_size_(0) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
   *this = rhs;
@@ -33,7 +32,6 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     phase_ = rhs.phase_;
     parse_status_ = rhs.parse_status_;
     body_ = rhs.body_;
-    buffer_ = rhs.buffer_;
     body_size_ = rhs.body_size_;
   }
   return *this;
@@ -100,7 +98,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     if (it == buffer.end()) {
       return kHeaderField;  // crlfがbuffer内に存在しない
     } else {
-      std::string line = buffer_.CutSubstrBeforePos(it);  // headerfieldの解釈
+      std::string line = buffer.CutSubstrBeforePos(it);  // headerfieldの解釈
       if (InterpretHeaderField(line) != OK)
         return kError;
     }

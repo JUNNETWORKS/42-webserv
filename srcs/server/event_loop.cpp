@@ -87,10 +87,8 @@ int StartEventLoop(const std::vector<int> &listen_fds,
           close(conn_fd);
           epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
         } else {
-          //   socket_info->request.buffer_.AppendDataToBuffer();
-          socket_info->request.buffer_.AppendDataToBuffer(buf, n);
-          socket_info->request.ParseRequest(socket_info->request.buffer_);
-          // printf("----- Received data -----\n%s", buf);
+          socket_info->buffer_.AppendDataToBuffer(buf, n);
+          socket_info->request.ParseRequest(socket_info->buffer_);
         }
       }
 
