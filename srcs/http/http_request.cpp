@@ -259,7 +259,10 @@ void HttpRequest::SaveCurrentBuffer(utils::ByteVector &buffer) {
 }
 
 void HttpRequest::LoadCurrentBuffer(utils::ByteVector &buffer) {
+  if (current_buffer_.size() == 0)
+    return;
   buffer.insert(buffer.begin(), current_buffer_.begin(), current_buffer_.end());
+  current_buffer_.clear();
 }
 
 namespace {
