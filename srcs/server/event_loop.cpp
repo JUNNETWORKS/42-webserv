@@ -51,7 +51,11 @@ void ProcessRequest(int conn_fd, int epfd, SocketInfo *socket_info) {
     epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
   } else {
     socket_info->buffer_.AppendDataToBuffer(buf, n);
-    socket_info->request.ParseRequest(socket_info->buffer_);
+
+    if (socket_info->requests.empty()) {
+      socket_info->requests.push_back(http::HttpRequest());
+    }
+    socket_info->requests.back().ParseRequest(socket_info->buffer_);
   }
 }
 
@@ -99,10 +103,11 @@ int StartEventLoop(const std::vector<int> &listen_fds,
       // if space in write buffer, read
       if (epevarr[0].events & EPOLLOUT) {
         // TODO: Send HTTP Response to the client
-        if (socket_info->request.IsCorrectRequest()) {
+        if (socket_info->requests.front().IsCorrectRequest()) {
           socket_info->response.SetStatusLine("HTTP/1.1 200 OK");
           // socket_info->response.setHeader("Content-Type: text/plain");
-          socket_info->response.LoadFile(socket_info->request.GetPath());
+          socket_info->response.LoadFile(
+              socket_info->requests.front().GetPath());
           socket_info->response.Write(conn_fd);
           close(conn_fd);
         } else {
