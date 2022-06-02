@@ -41,8 +41,18 @@ void AcceptNewConnection(int epfd, int listen_fd) {
   LogConnectionInfoToStdout(client_addr);
 }
 
-void ProcessRequest(SocketInfo *socket_info) {
-  socket_info->request.ParseRequest(socket_info->buffer_);
+void ProcessRequest(int conn_fd, int epfd, SocketInfo *socket_info) {
+  unsigned char buf[BUF_SIZE];
+  int n = read(conn_fd, buf, sizeof(buf) - 1);
+  if (n <= 0) {  // EOF(Connection end) or Error
+                 // TODO ここいらないかも？
+    printf("Connection end\n");
+    close(conn_fd);
+    epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
+  } else {
+    socket_info->buffer_.AppendDataToBuffer(buf, n);
+    socket_info->request.ParseRequest(socket_info->buffer_);
+  }
 }
 
 }  // namespace
@@ -84,18 +94,8 @@ int StartEventLoop(const std::vector<int> &listen_fds,
 
       // if data in read buffer, read
       if (epevarr[0].events & EPOLLIN) {
-        unsigned char buf[BUF_SIZE];
-        int n = read(conn_fd, buf, sizeof(buf) - 1);
-        if (n <= 0) {  // EOF(Connection end) or Error
-          printf("Connection end\n");
-          close(conn_fd);
-          epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
-        } else {
-          socket_info->buffer_.AppendDataToBuffer(buf, n);
-          ProcessRequest(socket_info);
-        }
+        ProcessRequest(conn_fd, epfd, socket_info);
       }
-
       // if space in write buffer, read
       if (epevarr[0].events & EPOLLOUT) {
         // TODO: Send HTTP Response to the client
