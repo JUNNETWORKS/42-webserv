@@ -332,18 +332,6 @@ std::string Parser::GetWord() {
   return word;
 }
 
-bool Parser::IsUnsignedNumber(const std::string &str) {
-  if (str.empty()) {
-    return false;
-  }
-  for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
-    if (*it < '0' || *it > '9') {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool Parser::IsDomainName(const std::string &domain_name) {
   if (domain_name.empty() || domain_name.size() > kMaxDomainLength) {
     return false;
@@ -393,7 +381,7 @@ bool Parser::IsHttpMethod(const std::string &method) {
 // Response Status Code's format is defined in rfc7231.
 // https://datatracker.ietf.org/doc/html/rfc7231#section-6
 bool Parser::IsValidHttpStatusCode(const std::string &code) {
-  if (IsUnsignedNumber(code) && code.length() == 3 &&
+  if (utils::IsDigits(code) && code.length() == 3 &&
       (code[0] >= '1' && code[0] <= '5')) {
     return true;
   }
@@ -401,7 +389,7 @@ bool Parser::IsValidHttpStatusCode(const std::string &code) {
 }
 
 bool Parser::IsValidPort(const std::string port) {
-  if (!IsUnsignedNumber(port)) {
+  if (!utils::IsDigits(port)) {
     return false;
   }
 
