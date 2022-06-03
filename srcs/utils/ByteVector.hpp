@@ -14,6 +14,7 @@ class ByteVector : public std::vector<Byte> {
  public:
   ByteVector();
   ByteVector(ByteVector const& src);
+  ByteVector(const std::string& s);
   ~ByteVector();
 
   ByteVector& operator=(ByteVector const& rhs);
@@ -23,7 +24,7 @@ class ByteVector : public std::vector<Byte> {
   iterator FindString(const std::string& str);
   std::string CutSubstrBeforePos(iterator pos);
 
-  void AppendDataToBuffer(Byte* buf, size_t size);
+  void AppendDataToBuffer(const Byte* buf, size_t size);
 
  private:
   static const size_type kReserveSize_ = 2 * 1024;  // 2KB

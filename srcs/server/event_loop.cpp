@@ -41,6 +41,32 @@ void AcceptNewConnection(int epfd, int listen_fd) {
   LogConnectionInfoToStdout(client_addr);
 }
 
+void ProcessRequest(int conn_fd, int epfd, SocketInfo *info) {
+  unsigned char buf[BUF_SIZE];
+  int n = read(conn_fd, buf, sizeof(buf) - 1);
+  if (n <= 0) {  // EOF(Connection end) or Error
+                 // TODO ここいらないかも？
+    printf("Connection end\n");
+    close(conn_fd);
+    epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
+  } else {
+    info->buffer_.AppendDataToBuffer(buf, n);
+
+    while (1) {
+      if (info->requests.empty() || info->requests.back().IsParsed()) {
+        info->requests.push_back(http::HttpRequest());
+      }
+      info->requests.back().ParseRequest(info->buffer_);
+      if (info->requests.back().IsCorrectStatus() == false) {
+        info->buffer_.clear();
+      }
+      if (info->buffer_.empty() || info->requests.back().IsParsed() == false) {
+        break;
+      }
+    }
+  }
+}
+
 }  // namespace
 
 int StartEventLoop(const std::vector<int> &listen_fds,
@@ -80,27 +106,16 @@ int StartEventLoop(const std::vector<int> &listen_fds,
 
       // if data in read buffer, read
       if (epevarr[0].events & EPOLLIN) {
-        unsigned char buf[BUF_SIZE];
-        int n = read(conn_fd, buf, sizeof(buf) - 1);
-        if (n <= 0) {  // EOF(Connection end) or Error
-          printf("Connection end\n");
-          close(conn_fd);
-          epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
-        } else {
-          //   socket_info->request.buffer_.AppendDataToBuffer();
-          socket_info->request.buffer_.AppendDataToBuffer(buf, n);
-          socket_info->request.ParseRequest();
-          // printf("----- Received data -----\n%s", buf);
-        }
+        ProcessRequest(conn_fd, epfd, socket_info);
       }
-
       // if space in write buffer, read
       if (epevarr[0].events & EPOLLOUT) {
         // TODO: Send HTTP Response to the client
-        if (socket_info->request.IsCorrectRequest()) {
+        if (socket_info->requests.front().IsCorrectRequest()) {
           socket_info->response.SetStatusLine("HTTP/1.1 200 OK");
           // socket_info->response.setHeader("Content-Type: text/plain");
-          socket_info->response.LoadFile(socket_info->request.GetPath());
+          socket_info->response.LoadFile(
+              socket_info->requests.front().GetPath());
           socket_info->response.Write(conn_fd);
           close(conn_fd);
         } else {

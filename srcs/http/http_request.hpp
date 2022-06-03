@@ -43,6 +43,9 @@ class HttpRequest {
   utils::ByteVector body_;  // HTTP リクエストのボディ
   unsigned long body_size_;
 
+  // buffer内の文字列で処理を完了できない時、current_bufferに文字列を保持して処理を中断
+  // 次のbufferが来るのを待つ
+
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
  public:
@@ -53,16 +56,16 @@ class HttpRequest {
 
   const std::string &GetPath() const;
 
-  void ParseRequest();
+  void ParseRequest(utils::ByteVector &buffer);
   bool IsCorrectRequest();
-
-  utils::ByteVector buffer_;  // bufferはSocketInfoに移動予定
+  bool IsCorrectStatus();
+  bool IsParsed();
 
  private:
-  ParsingPhase ParseRequestLine();
-  ParsingPhase ParseHeaderField();
+  ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
+  ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
   ParsingPhase ParseBodySize();
-  ParsingPhase ParseBody();
+  ParsingPhase ParseBody(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(std::string &str);
   HttpStatus InterpretPath(std::string &str);
   HttpStatus InterpretVersion(std::string &str);

@@ -32,32 +32,22 @@ int Stoi(const std::string &str, size_t *idx, int base) {
   return static_cast<int>(num);
 }
 
-unsigned long Stoul(const std::string &str, size_t *idx, int base) {
+bool Stoul(unsigned long &result, const std::string &str, int base) {
   char *end;
   const char *p = str.c_str();
   unsigned long num = std::strtoul(p, &end, base);
-  if (p == end) {
-    throw std::invalid_argument("Stoul");
-  }
-  if (errno == ERANGE) {
-    throw std::out_of_range("Stoul");
-  }
-  if (idx != NULL) {
-    *idx = static_cast<size_t>(end - p);
-  }
-  return num;
-}
+  size_t used_char_count = end - p;
 
-bool Stoul(const std::string &str, unsigned long &res) throw() {
-  try {
-    std::size_t idx = 0;
-    res = Stoul(str, &idx, 10);
-    if (str.size() == idx)
-      return true;
-    return false;
-  } catch (const std::exception &e) {
+  // エラーと判断するもの
+  //
+  // 先頭に数字や符号がない
+  // unsigned long の範囲超えてる
+  // すべての文字が数字として認識されなかった
+  if (p == end || errno == ERANGE || str.size() != used_char_count) {
     return false;
   }
+  result = num;
+  return true;
 }
 
 std::vector<std::string> SplitString(const std::string &str,
