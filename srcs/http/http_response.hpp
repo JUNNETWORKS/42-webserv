@@ -11,10 +11,11 @@ namespace http {
 
 class HttpResponse {
  private:
+  typedef std::map<std::string, std::vector<std::string> > HeadersType;
+
   HttpStatus status_;
-  std::map<std::string, std::string> headers_;
+  HeadersType headers_;
   std::string status_line_;
-  std::string header_;
   std::string body_;
 
  public:
@@ -27,15 +28,19 @@ class HttpResponse {
   ~HttpResponse();
 
   void SetStatusLine(const std::string &status_line);
-  void SetHeader(const std::string &header);
+  void AppendHeader(const std::string &header, const std::string &value);
   void SetBody(const std::string &body);
 
   const std::string &GetStatusLine() const;
-  const std::string &GetHeader() const;
   const std::string &GetBody() const;
 
   void Write(int fd) const;
   bool LoadFile(const std::string &path);
+
+ private:
+  void WriteStatusLine(int fd) const;
+  void WriteHeaders(int fd) const;
+  void WriteBody(int fd) const;
 };
 
 }  // namespace http
