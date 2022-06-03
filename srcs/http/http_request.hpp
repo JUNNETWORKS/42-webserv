@@ -42,7 +42,10 @@ class HttpRequest {
   HttpStatus parse_status_;
   utils::ByteVector body_;  // HTTP リクエストのボディ
   unsigned long body_size_;
-  utils::ByteVector current_buffer_;  // HTTP リクエストのボディ
+
+  // buffer内の文字列で処理を完了できない時、current_bufferに文字列を保持して処理を中断
+  // 次のbufferが来るのを待つ
+  utils::ByteVector current_buffer_;
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
