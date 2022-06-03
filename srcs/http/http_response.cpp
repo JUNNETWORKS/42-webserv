@@ -61,9 +61,9 @@ void HttpResponse::WriteStatusLine(int fd) const {
 }
 
 void HttpResponse::WriteHeaders(int fd) const {
-  for (HeadersType::const_iterator headers_it = headers_.begin();
+  for (HeaderMap::const_iterator headers_it = headers_.begin();
        headers_it != headers_.end(); ++headers_it) {
-    typedef HeadersType::mapped_type HeaderValuesType;
+    typedef HeaderMap::mapped_type HeaderValuesType;
     HeaderValuesType header_values = headers_it->second;
     for (HeaderValuesType::const_iterator value_it = header_values.begin();
          value_it != header_values.end(); ++value_it) {

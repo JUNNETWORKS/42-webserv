@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "http/types.hpp"
 #include "http_constants.hpp"
 #include "http_status.hpp"
 #include "utils/ByteVector.hpp"
@@ -24,7 +25,6 @@ const std::string kDelete = "DELETE";
 
 class HttpRequest {
  private:
-  typedef std::map<std::string, std::vector<std::string> > HeaderMap;
   enum ParsingPhase {
     kRequestLine,
     kHeaderField,

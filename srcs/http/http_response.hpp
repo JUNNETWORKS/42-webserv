@@ -6,15 +6,14 @@
 #include <vector>
 
 #include "http/http_status.hpp"
+#include "http/types.hpp"
 
 namespace http {
 
 class HttpResponse {
  private:
-  typedef std::map<std::string, std::vector<std::string> > HeadersType;
-
   HttpStatus status_;
-  HeadersType headers_;
+  HeaderMap headers_;
   std::string status_line_;
   std::string body_;
 
