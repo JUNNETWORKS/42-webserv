@@ -29,7 +29,7 @@ struct SocketInfo {
   ESockType socktype;
   EPhase phase;  // リクエストが読み込み終わってないときは Request,
                  // 読み込み終わったら Response
-  http::HttpRequest request;
+  std::vector<http::HttpRequest> requests;
   http::HttpResponse response;
   utils::ByteVector buffer_;
 };
