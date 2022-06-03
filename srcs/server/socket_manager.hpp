@@ -33,8 +33,6 @@ class SocketManager {
   // epfd で利用可能なイベントを1つ取得する.
   struct epoll_event WaitEvent();
 
-  // タイムアウトしたソケットを削除する
-
   // ========================================================================
   // Getter and Setter
 
