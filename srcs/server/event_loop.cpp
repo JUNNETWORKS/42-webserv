@@ -52,13 +52,16 @@ void ProcessRequest(int conn_fd, int epfd, SocketInfo *info) {
   } else {
     info->buffer_.AppendDataToBuffer(buf, n);
 
-    while (info->buffer_.size() != 0) {
+    while (1) {
       if (info->requests.empty() || info->requests.back().IsParsed()) {
         info->requests.push_back(http::HttpRequest());
       }
       info->requests.back().ParseRequest(info->buffer_);
       if (info->requests.back().IsCorrectStatus() == false) {
         info->buffer_.clear();
+      }
+      if (info->buffer_.empty()) {
+        break;
       }
     }
   }
