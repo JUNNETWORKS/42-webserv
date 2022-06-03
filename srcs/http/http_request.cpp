@@ -17,8 +17,7 @@ HttpRequest::HttpRequest()
       phase_(kRequestLine),
       parse_status_(OK),
       body_(),
-      body_size_(0),
-      current_buffer_() {}
+      body_size_(0) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
   *this = rhs;
@@ -34,7 +33,6 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     parse_status_ = rhs.parse_status_;
     body_ = rhs.body_;
     body_size_ = rhs.body_size_;
-    current_buffer_ = rhs.current_buffer_;
   }
   return *this;
 }
@@ -253,18 +251,6 @@ HttpStatus HttpRequest::DecideBodySize() {
     return InterpretContentLength((*length_header_it).second);
 
   return OK;
-}
-
-void HttpRequest::SaveCurrentBuffer(utils::ByteVector &buffer) {
-  std::swap(buffer, current_buffer_);
-  buffer.clear();
-}
-
-void HttpRequest::LoadCurrentBuffer(utils::ByteVector &buffer) {
-  if (current_buffer_.size() == 0)
-    return;
-  buffer.insert(buffer.begin(), current_buffer_.begin(), current_buffer_.end());
-  current_buffer_.clear();
 }
 
 namespace {

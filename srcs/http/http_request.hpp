@@ -45,7 +45,6 @@ class HttpRequest {
 
   // buffer内の文字列で処理を完了できない時、current_bufferに文字列を保持して処理を中断
   // 次のbufferが来るのを待つ
-  utils::ByteVector current_buffer_;
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
@@ -63,8 +62,6 @@ class HttpRequest {
   bool IsParsed();
 
  private:
-  void SaveCurrentBuffer(utils::ByteVector &buffer);
-  void LoadCurrentBuffer(utils::ByteVector &buffer);
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
   ParsingPhase ParseBodySize();
