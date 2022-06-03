@@ -1,6 +1,7 @@
 #include "server/event_loop.hpp"
 
 #include "config/config.hpp"
+#include "server/event_manager.hpp"
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 
@@ -8,38 +9,6 @@ namespace server {
 namespace {
 
 const int BUF_SIZE = 1024;
-
-int AppendNewSockFdIntoEpfd(int epfd, int sockfd,
-                            SocketInfo::ESockType socktype, uint32_t epevents) {
-  struct epoll_event *epev = new struct epoll_event;
-  epev->data.ptr = new SocketInfo();
-  static_cast<SocketInfo *>(epev->data.ptr)->fd = sockfd;
-  static_cast<SocketInfo *>(epev->data.ptr)->socktype = socktype;
-  static_cast<SocketInfo *>(epev->data.ptr)->phase =
-      SocketInfo::Request;  // 新規接続は皆Requestから始まる
-  epev->events = epevents;
-  return epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, epev);
-}
-
-void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr) {
-  socklen_t len = sizeof(struct sockaddr_storage);
-  char addrStr[utils::IS_ADDR_STR_LEN];
-  utils::InetAddressStr((struct sockaddr *)&client_addr, len, addrStr,
-                        utils::IS_ADDR_STR_LEN);
-  printf("Connection from %s\n", addrStr);
-}
-
-void AcceptNewConnection(int epfd, int listen_fd) {
-  struct sockaddr_storage client_addr;
-  socklen_t addrlen = sizeof(struct sockaddr_storage);
-  int conn_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &addrlen);
-  fcntl(conn_fd, F_SETFD, O_NONBLOCK);
-  if (AppendNewSockFdIntoEpfd(epfd, conn_fd, SocketInfo::ConnSock,
-                              EPOLLIN | EPOLLOUT) == -1) {
-    utils::ErrExit("AddSocketFdIntoEpFd");
-  }
-  LogConnectionInfoToStdout(client_addr);
-}
 
 void ProcessRequest(int conn_fd, int epfd, SocketInfo *info) {
   unsigned char buf[BUF_SIZE];
@@ -73,43 +42,29 @@ int StartEventLoop(const std::vector<int> &listen_fds,
                    const config::Config &config) {
   // TODO: configを利用するようにする
   (void)config;
-  // epoll インスタンス作成
-  int epfd = epoll_create1(EPOLL_CLOEXEC);
 
-  // epfd に listen_fd を追加
-  for (std::vector<int>::const_iterator it = listen_fds.begin();
-       it != listen_fds.end(); ++it) {
-    AppendNewSockFdIntoEpfd(epfd, *it, SocketInfo::ListenSock, EPOLLIN);
-  }
+  // epoll インスタンス作成
+  EventManager event_manager;
+
+  event_manager.AppendListenFd(listen_fds);
 
   // イベントループ
-  struct epoll_event epevarr[1];
-  std::cout << "start worker" << std::endl;
   while (1) {
-    // epfd で利用可能なイベントを1つ取得する
-    if (epoll_wait(epfd, epevarr, 1, -1) == -1) {
-      if (errno == EINTR)
-        continue;  // wait epoll again if interrupted by signal
-      else
-        exit(EXIT_FAILURE);
-    }
+    struct epoll_event epev = event_manager.WaitEvent();
+    SocketInfo *socket_info = static_cast<SocketInfo *>(epev.data.ptr);
 
-    SocketInfo *socket_info = static_cast<SocketInfo *>(epevarr[0].data.ptr);
     if (socket_info->socktype == SocketInfo::ListenSock) {
-      int listen_fd = socket_info->fd;
-      AcceptNewConnection(epfd, listen_fd);
+      if (!event_manager.AcceptNewConnection(socket_info->fd)) {
+        utils::ErrExit("AddSocketFdIntoEpFd");
+      }
     } else {
       int conn_fd = socket_info->fd;
-
-      // TODO: Phase によって処理を切り替える
-      // TODO: 文字ごと､または行ごとに
-
       // if data in read buffer, read
-      if (epevarr[0].events & EPOLLIN) {
-        ProcessRequest(conn_fd, epfd, socket_info);
+      if (epev.events & EPOLLIN) {
+        ProcessRequest(conn_fd, event_manager.GetEpollFd(), socket_info);
       }
       // if space in write buffer, read
-      if (epevarr[0].events & EPOLLOUT) {
+      if (epev.events & EPOLLOUT) {
         // TODO: Send HTTP Response to the client
         if (socket_info->requests.front().IsCorrectRequest()) {
           socket_info->response.SetStatusLine("HTTP/1.1 200 OK");
@@ -124,10 +79,10 @@ int StartEventLoop(const std::vector<int> &listen_fds,
       }
 
       // error or timeout? close conn_fd and remove from epfd
-      if (epevarr[0].events & (EPOLLERR | EPOLLHUP)) {
+      if (epev.events & (EPOLLERR | EPOLLHUP)) {
         printf("Connection error\n");
         close(conn_fd);
-        epoll_ctl(epfd, EPOLL_CTL_DEL, conn_fd, NULL);  // 明示的に消してる
+        event_manager.RemoveFd(conn_fd);  // 明示的に消してる
       }
     }
   }
