@@ -1,4 +1,4 @@
-#include "event_manager.hpp"
+#include "socket_manager.hpp"
 
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -9,30 +9,30 @@
 
 namespace server {
 
-EventManager::EventManager() {
+SocketManager::SocketManager() {
   epfd_ = epoll_create(1);
 }
 
-EventManager::EventManager(const EventManager &rhs) {
+SocketManager::SocketManager(const SocketManager &rhs) {
   *this = rhs;
 }
 
-EventManager &EventManager::operator=(const EventManager &rhs) {
+SocketManager &SocketManager::operator=(const SocketManager &rhs) {
   if (this != &rhs) {
     epfd_ = rhs.epfd_;
   }
   return *this;
 }
 
-EventManager::~EventManager() {
+SocketManager::~SocketManager() {
   close(epfd_);
 }
 
-bool EventManager::AppendListenFd(int fd) {
+bool SocketManager::AppendListenFd(int fd) {
   return AppendNewSockFdIntoEpfd(fd, SocketInfo::ListenSock, EPOLLIN);
 }
 
-bool EventManager::AppendListenFd(const std::vector<int> &fd_vec) {
+bool SocketManager::AppendListenFd(const std::vector<int> &fd_vec) {
   for (std::vector<int>::const_iterator it = fd_vec.begin(); it != fd_vec.end();
        ++it) {
     if (!AppendListenFd(*it)) {
@@ -42,7 +42,7 @@ bool EventManager::AppendListenFd(const std::vector<int> &fd_vec) {
   return true;
 }
 
-bool EventManager::AcceptNewConnection(int listen_fd) {
+bool SocketManager::AcceptNewConnection(int listen_fd) {
   struct sockaddr_storage client_addr;
   socklen_t addrlen = sizeof(struct sockaddr_storage);
   int conn_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &addrlen);
@@ -55,11 +55,12 @@ bool EventManager::AcceptNewConnection(int listen_fd) {
   return true;
 }
 
-bool EventManager::RemoveFd(int fd) {
+bool SocketManager::CloseConnFd(int fd) {
+  close(fd);
   return epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == 0;
 }
 
-struct epoll_event EventManager::WaitEvent() {
+struct epoll_event SocketManager::WaitEvent() {
   struct epoll_event epevarr[1];
   while (epoll_wait(epfd_, epevarr, 1, -1) == -1) {
     if (errno == EINTR)
@@ -70,13 +71,13 @@ struct epoll_event EventManager::WaitEvent() {
   return epevarr[0];
 }
 
-int EventManager::GetEpollFd() const {
+int SocketManager::GetEpollFd() const {
   return epfd_;
 }
 
-bool EventManager::AppendNewSockFdIntoEpfd(int sockfd,
-                                           SocketInfo::ESockType socktype,
-                                           uint32_t epevents) {
+bool SocketManager::AppendNewSockFdIntoEpfd(int sockfd,
+                                            SocketInfo::ESockType socktype,
+                                            uint32_t epevents) {
   struct epoll_event *epev = new struct epoll_event;
   epev->data.ptr = new SocketInfo();
   static_cast<SocketInfo *>(epev->data.ptr)->fd = sockfd;

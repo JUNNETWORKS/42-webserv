@@ -1,23 +1,24 @@
-#ifndef SERVER_EVENT_MANAGER_HPP
-#define SERVER_EVENT_MANAGER_HPP
+#ifndef SERVER_SOCKET_MANAGER_HPP
+#define SERVER_SOCKET_MANAGER_HPP
+#include <ctime>
 #include <vector>
 
 #include "server/event_loop.hpp"
 
 namespace server {
 
-class EventManager {
+class SocketManager {
  private:
   int epfd_;
 
  public:
-  EventManager();
+  SocketManager();
 
-  EventManager(const EventManager &rhs);
+  SocketManager(const SocketManager &rhs);
 
-  EventManager &operator=(const EventManager &rhs);
+  SocketManager &operator=(const SocketManager &rhs);
 
-  ~EventManager();
+  ~SocketManager();
 
   bool AppendListenFd(int fd);
 
@@ -26,12 +27,13 @@ class EventManager {
   // listen_fd に来た新しい接続要求を受理し､epollに追加する｡
   bool AcceptNewConnection(int listen_fd);
 
-  // epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) を行う｡
-  // close(fd) を行わないことに注意｡
-  bool RemoveFd(int fd);
+  // close(fd) を行い､ epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) を行う｡
+  bool CloseConnFd(int fd);
 
   // epfd で利用可能なイベントを1つ取得する.
   struct epoll_event WaitEvent();
+
+  // タイムアウトしたソケットを削除する
 
   // ========================================================================
   // Getter and Setter
