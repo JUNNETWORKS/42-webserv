@@ -32,9 +32,26 @@ int Stoi(const std::string &str, size_t *idx, int base) {
   return static_cast<int>(num);
 }
 
-bool Stoul(unsigned long &result, const std::string &str, int base) {
+bool IsDigits(const std::string &str) {
+  if (str.empty()) {
+    return false;
+  }
+  for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+    if (*it < '0' || *it > '9') {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Stoul(unsigned long &result, const std::string &str) {
+  if (!IsDigits(str)) {
+    return false;
+  }
+
   char *end;
   const char *p = str.c_str();
+  int base = 10;
   unsigned long num = std::strtoul(p, &end, base);
   size_t used_char_count = end - p;
 

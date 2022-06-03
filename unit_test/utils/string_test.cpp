@@ -18,8 +18,7 @@ TEST(StoulTest, Maximumvalue) {
 
 TEST(StoulTest, MaximumvalueWithPlusSign) {
   unsigned long num;
-  EXPECT_TRUE(Stoul(num, "+18446744073709551615"));
-  EXPECT_EQ(num, 18446744073709551615ul);
+  EXPECT_FALSE(Stoul(num, "+18446744073709551615"));
 }
 
 TEST(StoulTest, MaximumvaluePlusOne) {
@@ -44,8 +43,7 @@ TEST(StoulTest, MinusSigns) {
 
 TEST(StoulTest, PlusZero) {
   unsigned long num;
-  EXPECT_TRUE(Stoul(num, "+0"));
-  EXPECT_EQ(num, 0);
+  EXPECT_FALSE(Stoul(num, "+0"));
 }
 
 TEST(StoulTest, MinusZero) {

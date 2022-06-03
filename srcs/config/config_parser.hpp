@@ -89,7 +89,7 @@ class Parser {
   std::string GetWord();
 
   // 符号なし整数かどうか
-  bool IsUnsignedNumber(const std::string &str);
+  bool IsDigits(const std::string &str);
 
   // ドメイン名の条件に合っているか
   // https://www.nic.ad.jp/ja/dom/system.html
