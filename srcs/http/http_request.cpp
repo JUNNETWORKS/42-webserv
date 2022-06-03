@@ -52,7 +52,6 @@ const std::string &HttpRequest::GetPath() const {
 // Parse系関数　内部でInterpret系関数を呼び出す　主にphaseで動作管理
 
 void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
-  LoadCurrentBuffer(buffer);
   // TODO 長すぎるbufferは捨ててエラーにする
   if (phase_ == kRequestLine)
     phase_ = ParseRequestLine(buffer);
@@ -62,8 +61,6 @@ void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
     phase_ = ParseBodySize();
   if (phase_ == kBody)
     phase_ = ParseBody(buffer);
-  if (phase_ != kParsed && phase_ != kError)
-    SaveCurrentBuffer(buffer);
   PrintRequestInfo();
 }
 

@@ -60,7 +60,7 @@ void ProcessRequest(int conn_fd, int epfd, SocketInfo *info) {
       if (info->requests.back().IsCorrectStatus() == false) {
         info->buffer_.clear();
       }
-      if (info->buffer_.empty()) {
+      if (info->buffer_.empty() || info->requests.back().IsParsed() == false) {
         break;
       }
     }
