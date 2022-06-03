@@ -72,7 +72,7 @@ void HttpResponse::WriteHeaders(int fd) const {
       utils::PutStrFd(http::kCrlf, fd);
     }
   }
-  utils::PutStrFd(http::kHeaderBoundary, fd);
+  utils::PutStrFd(http::kCrlf, fd);
 }
 
 void HttpResponse::WriteBody(int fd) const {
