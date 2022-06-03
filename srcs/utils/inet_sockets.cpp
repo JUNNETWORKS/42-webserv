@@ -125,4 +125,12 @@ char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
   return addrStr;
 }
 
+void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr) {
+  socklen_t len = sizeof(struct sockaddr_storage);
+  char addrStr[utils::IS_ADDR_STR_LEN];
+  InetAddressStr((struct sockaddr *)&client_addr, len, addrStr,
+                 utils::IS_ADDR_STR_LEN);
+  printf("Connection from %s\n", addrStr);
+}
+
 }  // namespace utils

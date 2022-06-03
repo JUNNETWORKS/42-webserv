@@ -70,6 +70,10 @@ int InetBind(const char *service, int type, socklen_t *addrlen);
 char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
                      char *addrStr, int addrStrLen);
 
+/* client_addrを元に "Connection from (<address>, <port>)\n"
+ * のメッセージを標準出力に出力する｡ */
+void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr);
+
 /* InetAddressStr() に指定する文字列のサイズ.
   (NI_MAXHOST + NI_MAXSERV + 4) よりも大きくなくてはならない. */
 const int IS_ADDR_STR_LEN = 4096;
