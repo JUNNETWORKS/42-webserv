@@ -41,7 +41,6 @@ void ProcessResponse(SocketManager &socket_manager, SocketInfo *info) {
   int conn_fd = info->fd;
   if (info->requests.front().IsCorrectRequest()) {
     info->response.SetStatusLine("HTTP/1.1 200 OK");
-    // socket_info->response.setHeader("Content-Type: text/plain");
     info->response.LoadFile(info->requests.front().GetPath());
     info->response.Write(conn_fd);
     socket_manager.CloseConnFd(conn_fd);
