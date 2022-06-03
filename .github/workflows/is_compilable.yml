@@ -5,8 +5,8 @@ on: [pull_request, workflow_dispatch]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # テストを実行
-  test:
+  # make でコンパイルできるかチェックする
+  compile:
     runs-on: ubuntu-latest
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
