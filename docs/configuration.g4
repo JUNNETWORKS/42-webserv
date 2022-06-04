@@ -10,7 +10,7 @@ server_directive:
 
 listen_directive: 'listen' WHITESPACE NUMBER END_DIRECTIVE;
 servername_directive:
-	'server_name' WHITESPACE DOMAIN_NAME+ END_DIRECTIVE;
+	'server_name' WHITESPACE ((DOMAIN_NAME | IP_ADDR) WHITESPACE)+ END_DIRECTIVE;
 location_directive:
 	'location' PATH '{' directive_in_location+ '}';
 location_back_directive:
@@ -41,6 +41,7 @@ METHOD: 'GET' | 'POST' | 'DELETE';
 PATH: (.*? '/')? (.+?);
 URL: ('http' | 'https') '://' DOMAIN_NAME ('/');
 DOMAIN_NAME: DOMAIN_LABEL ('.' DOMAIN_LABEL)*;
+IP_ADDR: NUMBER+ '.' NUMBER+ '.' NUMBER+ '.' NUMBER+;
 DOMAIN_LABEL: (ALPHABET | NUMBER)+
 	| (ALPHABET | NUMBER)+ (ALPHABET | NUMBER | HYPHEN)* (
 		ALPHABET

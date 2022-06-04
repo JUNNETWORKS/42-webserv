@@ -539,4 +539,22 @@ TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {
   }
 }
 
+TEST(ParserTest, ValidIpv4AddrInServername) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost 198.0.255.1;         "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "  }                                          "
+      "}                                            ");
+  Config config = parser.ParseConfig();
+  EXPECT_TRUE(
+      config.GetVirtualServerConfs()[0].IsServerNameIncluded("198.0.255.1"));
+  EXPECT_TRUE(config.GetVirtualServerConf("8080", "198.0.255.1") != NULL);
+}
+
 }  // namespace config
