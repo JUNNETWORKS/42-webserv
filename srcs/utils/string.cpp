@@ -52,6 +52,7 @@ bool Stoul(unsigned long &result, const std::string &str) {
   char *end;
   const char *p = str.c_str();
   int base = 10;
+  errno = 0;
   unsigned long num = std::strtoul(p, &end, base);
   size_t used_char_count = end - p;
 
