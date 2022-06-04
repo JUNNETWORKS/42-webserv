@@ -9,14 +9,10 @@ namespace server {
 
 class SocketManager {
  private:
-  int epfd_;
+  const int epfd_;
 
  public:
   SocketManager();
-
-  SocketManager(const SocketManager &rhs);
-
-  SocketManager &operator=(const SocketManager &rhs);
 
   ~SocketManager();
 
@@ -39,6 +35,10 @@ class SocketManager {
   int GetEpollFd() const;
 
  private:
+  // epoll instance がcloseされるのを防ぐためコピー操作は禁止
+  SocketManager(const SocketManager &rhs);
+  SocketManager &operator=(const SocketManager &rhs);
+
   bool AppendNewSockFdIntoEpfd(int sockfd, SocketInfo::ESockType socktype,
                                uint32_t epevents);
 };

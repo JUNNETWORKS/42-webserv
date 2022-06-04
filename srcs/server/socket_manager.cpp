@@ -9,20 +9,7 @@
 
 namespace server {
 
-SocketManager::SocketManager() {
-  epfd_ = epoll_create(1);
-}
-
-SocketManager::SocketManager(const SocketManager &rhs) {
-  *this = rhs;
-}
-
-SocketManager &SocketManager::operator=(const SocketManager &rhs) {
-  if (this != &rhs) {
-    epfd_ = rhs.epfd_;
-  }
-  return *this;
-}
+SocketManager::SocketManager() : epfd_(epoll_create(1)) {}
 
 SocketManager::~SocketManager() {
   close(epfd_);
