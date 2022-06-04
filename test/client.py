@@ -61,19 +61,6 @@ def check_status_line(webserv_res_head, nginx_res_head):
 
 
 # 複数のレスポンスの時に対応する必要あり
-def check_result(webserv_res, nginx_res):
-    webserv_res_head, webserv_res_body = separate_head_body(webserv_res)
-    nginx_res_head, nginx_res_body = separate_head_body(nginx_res)
-
-    is_status_line_ok = check_status_line(webserv_res_head, nginx_res_head)
-    is_message_body_ok = check_body(webserv_res_body, nginx_res_body)
-
-    print("STATUS LINE  :", is_status_line_ok)
-    print("MESSAGE BODY :", is_message_body_ok)
-
-    return is_status_line_ok and is_message_body_ok
-
-
 def lst_replace(s, replace_lst):
     for set in replace_lst:
         s = s.replace(set[0], set[1])
@@ -81,15 +68,29 @@ def lst_replace(s, replace_lst):
 
 
 def run_test(test_file_path, replace_lst=[]):
+    # ファイルの読み込みおよびreplace
     send_data = get_file_data(test_file_path)
     send_data = lst_replace(send_data, replace_lst)
 
-    print("TEST FILE    :", test_file_path, replace_lst)
+    # webserv と nginxに request を送信
     webserv_res = send_request(send_data, WEBSERV_PORT)
     nginx_res = send_request(send_data, NGINX_PORT)
 
-    check_result(webserv_res, nginx_res)
+    # 複数レスポンスに対応する必要あり
+    # レスポンスをheadとbodyに分割
+    webserv_res_head, webserv_res_body = separate_head_body(webserv_res)
+    nginx_res_head, nginx_res_body = separate_head_body(nginx_res)
+
+    # headとbodyの結果確認
+    is_status_line_ok = check_status_line(webserv_res_head, nginx_res_head)
+    is_message_body_ok = check_body(webserv_res_body, nginx_res_body)
+
+    print("TEST FILE    :", test_file_path, replace_lst)
+    print("STATUS LINE  :", is_status_line_ok)
+    print("MESSAGE BODY :", is_message_body_ok)
     print()
+
+    return is_status_line_ok and is_message_body_ok
 
 
 def path_test():
