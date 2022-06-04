@@ -7,7 +7,7 @@ OBJS_DIR := objs
 OBJS := $(SRCS:%.cpp=$(OBJS_DIR)/%.o)
 DEPENDENCIES := $(OBJS:.o=.d)
 
-CXXFLAGS := -I$(SRCS_DIR) --std=c++98 -Wall -Wextra -Werror -pedantic
+CXXFLAGS := -I$(SRCS_DIR) --std=c++98 -Wall -Wextra -Werror -pedantic -g3 -fsanitize=address
 
 .PHONY: all
 all: $(NAME)
@@ -52,7 +52,7 @@ TEST_DEPENDENCIES \
 -include $(TEST_DEPENDENCIES)
 
 .PHONY: test
-test: CXXFLAGS := -I$(SRCS_DIR) --std=c++11 -I$(GTEST_DIR) -g -fsanitize=address
+test: CXXFLAGS := -I$(SRCS_DIR) --std=c++11 -I$(GTEST_DIR) -g3 -fsanitize=address
 test: $(GTEST) $(TEST_OBJS)
 	# Google Test require C++11
 	$(CXX) $(CXXFLAGS) $(GTEST_MAIN) $(GTEST_ALL) \
