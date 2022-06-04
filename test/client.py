@@ -104,8 +104,18 @@ def run_test(test_file_path, replace_lst=[]):
 
 def path_test():
     test_file_path = "req/tpl-get-path-test.txt"
+    run_test(test_file_path, [["{PATH}", "/"]])
+    run_test(test_file_path, [["{PATH}", "/hoge"]])
+    run_test(test_file_path, [["{PATH}", "/hoge/"]])
     run_test(test_file_path, [["{PATH}", "/hoge/hoge.html"]])
     run_test(test_file_path, [["{PATH}", "/hoge/fuga.html"]])
+    run_test(test_file_path, [["{PATH}", "///"]])
+    run_test(test_file_path, [["{PATH}", "./"]])
+    run_test(test_file_path, [["{PATH}", "/././."]])
+    run_test(test_file_path, [["{PATH}", "/NotExist/"]])
+    run_test(test_file_path, [["{PATH}", "/NotExist/.."]])
+    run_test(test_file_path, [["{PATH}", "/NotExist/NotExist/../.."]])
+    run_test(test_file_path, [["{PATH}", "/NotExist/../.."]])
 
 
 def main():
