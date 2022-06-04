@@ -388,19 +388,9 @@ bool Parser::IsValidHttpStatusCode(const std::string &code) {
   return false;
 }
 
-bool Parser::IsValidPort(const std::string port) {
-  if (!utils::IsDigits(port)) {
-    return false;
-  }
-
-  int num;
-  try {
-    num = utils::Stoi(port);
-  } catch (...) {
-    return false;
-  }
-
-  return num >= kMinPortNumber && num <= kMaxPortNumber;
+bool Parser::IsValidPort(const std::string &port) {
+  unsigned long num;
+  return utils::Stoul(num, port) && num <= kMaxPortNumber;
 }
 
 bool Parser::ParseOnOff(const std::string &on_or_off) {

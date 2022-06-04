@@ -113,7 +113,7 @@ class Parser {
   bool IsValidHttpStatusCode(const std::string &code);
 
   // portが符号なし整数であり､ポート番号の範囲に収まっているかチェックする
-  bool IsValidPort(const std::string port);
+  bool IsValidPort(const std::string &port);
 
   // "on" なら true, "off" なら false を返す｡
   bool ParseOnOff(const std::string &on_or_off);
@@ -128,10 +128,8 @@ class Parser {
   static const int kMaxDomainLength = 253;
   // ドメインの各ラベル(ピリオド区切りの文字列)の最大長
   static const int kMaxDomainLabelLength = 63;
-  // ポート番号の最小値
-  static const int kMinPortNumber = 0;
   // ポート番号の最大値
-  static const int kMaxPortNumber = 65535;
+  static const unsigned long kMaxPortNumber = 65535;
 };
 
 }  // namespace config
