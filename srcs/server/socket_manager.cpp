@@ -53,7 +53,7 @@ struct epoll_event SocketManager::WaitEvent() {
     if (errno == EINTR)
       continue;  // wait epoll again if interrupted by signal
     else
-      exit(EXIT_FAILURE);
+      utils::ErrExit("SocketManager::WaitEvent()");
   }
   return epevarr[0];
 }
