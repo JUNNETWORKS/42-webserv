@@ -8,12 +8,16 @@ NGINX_PORT = 49201
 
 
 def send_request(send_data, port):
-    s = socket.socket(socket.AF_INET)
-    s.connect(("localhost", port))
-    s.send(send_data.encode("utf-8"))
-    time.sleep(0.1)
-
-    return s.recv(10000).decode("utf-8")
+    timeout = 5
+    try:
+        s = socket.socket(socket.AF_INET)
+        s.settimeout(timeout)
+        s.connect(("localhost", port))
+        s.send(send_data.encode("utf-8"))
+        time.sleep(0.1)
+        return s.recv(10000).decode("utf-8")
+    except socket.timeout:
+        return "TIMEOUT"
 
 
 def print_response_status_code(res):
