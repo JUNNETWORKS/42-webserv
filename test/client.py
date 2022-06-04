@@ -17,6 +17,7 @@ def send_request(send_data, port):
         time.sleep(0.1)
         return s.recv(10000).decode("utf-8")
     except socket.timeout:
+        print("TIMEOUT", file=sys.stderr)
         return "TIMEOUT"
 
 
