@@ -80,8 +80,14 @@ def run_test(test_file_path, replace_lst=[]):
     send_data = lst_replace(send_data, replace_lst)
 
     # webserv と nginxに request を送信
-    webserv_res = send_request(send_data, WEBSERV_PORT)
-    nginx_res = send_request(send_data, NGINX_PORT)
+    try:
+        webserv_res = send_request(send_data, WEBSERV_PORT)
+        nginx_res = send_request(send_data, NGINX_PORT)
+    except ConnectionRefusedError:
+        print("----- ConnectionRefusedError -----", file=sys.stderr)
+        print("TEST FILE    :", test_file_path, replace_lst, file=sys.stderr)
+        print("\n", send_data, "\n", file=sys.stderr)
+        exit(1)
 
     # 複数レスポンスに対応する必要あり
     # レスポンスをheadとbodyに分割
