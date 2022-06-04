@@ -20,7 +20,6 @@ HttpResponse &HttpResponse::operator=(const HttpResponse &rhs) {
     status_ = rhs.status_;
     headers_ = rhs.headers_;
     status_line_ = rhs.status_line_;
-    header_ = rhs.header_;
     body_ = rhs.body_;
   }
   return *this;
@@ -28,14 +27,16 @@ HttpResponse &HttpResponse::operator=(const HttpResponse &rhs) {
 
 HttpResponse::~HttpResponse() {}
 
+void HttpResponse::AppendHeader(const std::string &header,
+                                const std::string &value) {
+  headers_[header].push_back(value);
+}
+
 //========================================================================
 // setter, getter
 
 void HttpResponse::SetStatusLine(const std::string &status_line) {
   status_line_ = status_line;
-}
-void HttpResponse::SetHeader(const std::string &header) {
-  header_ = header;
 }
 void HttpResponse::SetBody(const std::string &body) {
   body_ = body;
@@ -44,18 +45,37 @@ void HttpResponse::SetBody(const std::string &body) {
 const std::string &HttpResponse::GetStatusLine() const {
   return status_line_;
 }
-const std::string &HttpResponse::GetHeader() const {
-  return header_;
-}
 const std::string &HttpResponse::GetBody() const {
   return body_;
 }
 
 void HttpResponse::Write(int fd) const {
+  WriteStatusLine(fd);
+  WriteHeaders(fd);
+  WriteBody(fd);
+}
+
+void HttpResponse::WriteStatusLine(int fd) const {
   utils::PutStrFd(status_line_, fd);
   utils::PutStrFd(http::kCrlf, fd);
-  utils::PutStrFd(header_, fd);
-  utils::PutStrFd(http::kHeaderBoundary, fd);
+}
+
+void HttpResponse::WriteHeaders(int fd) const {
+  for (HeaderMap::const_iterator headers_it = headers_.begin();
+       headers_it != headers_.end(); ++headers_it) {
+    typedef HeaderMap::mapped_type HeaderValuesType;
+    HeaderValuesType header_values = headers_it->second;
+    for (HeaderValuesType::const_iterator value_it = header_values.begin();
+         value_it != header_values.end(); ++value_it) {
+      const std::string header = headers_it->first + ": " + *value_it;
+      utils::PutStrFd(header, fd);
+      utils::PutStrFd(http::kCrlf, fd);
+    }
+  }
+  utils::PutStrFd(http::kCrlf, fd);
+}
+
+void HttpResponse::WriteBody(int fd) const {
   utils::PutStrFd(body_, fd);
   utils::PutStrFd(http::kCrlf, fd);
 }
@@ -107,7 +127,7 @@ bool HttpResponse::LoadFile(const std::string &file_path) {
 
   if (utils::IsDir(GetRootDir() + file_path)) {
     body_ = MakeAutoIndex(file_path);
-    SetHeader("Content-Type: text/html");
+    AppendHeader("Content-Type", "text/html");
     return true;
   }
 
@@ -117,7 +137,7 @@ bool HttpResponse::LoadFile(const std::string &file_path) {
   }
 
   SetBody(file_data);
-  SetHeader("Content-Type: text/plain");
+  AppendHeader("Content-Type", "text/plain");
   return true;
 }
 
