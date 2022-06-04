@@ -35,19 +35,9 @@ def get_file_data(file_path):
     return file_data
 
 
-def main():
-    if len(sys.argv) == 2:
-        test_file = sys.argv[1]
-    else:
-        test_file = "req/req.txt"
-
-    print("TEST FILE :", test_file, file=sys.stderr)
-    print()
-
-    file_data = get_file_data(test_file)
-
-    webserv_res = send_request(file_data, WEBSERV_PORT)
-    nginx_res = send_request(file_data, NGINX_PORT)
+def run_test(send_data):
+    webserv_res = send_request(send_data, WEBSERV_PORT)
+    nginx_res = send_request(send_data, NGINX_PORT)
 
     print("--- WEBSERV RES ---")
     # print(webserv_res)
@@ -56,6 +46,20 @@ def main():
     print("--- NGINX ---")
     # print(nginx_res)
     print_response_status_code(nginx_res)
+
+
+def main():
+    if len(sys.argv) == 2:
+        test_file = sys.argv[1]
+    else:
+        test_file = "req/req1.txt"
+
+    print("TEST FILE :", test_file, file=sys.stderr)
+    print()
+
+    file_data = get_file_data(test_file)
+
+    run_test(file_data)
 
 
 if __name__ == "__main__":
