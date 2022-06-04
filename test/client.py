@@ -2,6 +2,7 @@ import socket
 import io
 import time
 import sys
+import difflib
 
 WEBSERV_PORT = 49200
 NGINX_PORT = 49201
@@ -67,6 +68,12 @@ def lst_replace(s, replace_lst):
     return s
 
 
+def make_diff_html(s1, s2):
+    df = difflib.HtmlDiff()
+    diff_html = df.make_file(s1.split("\n"), s2.split("\n"))
+    return diff_html
+
+
 def run_test(test_file_path, replace_lst=[]):
     # ファイルの読み込みおよびreplace
     send_data = get_file_data(test_file_path)
@@ -90,6 +97,15 @@ def run_test(test_file_path, replace_lst=[]):
     print("MESSAGE BODY :", is_message_body_ok)
     print()
 
+    if (is_status_line_ok and is_message_body_ok) == False:
+        global diff_html
+        diff_html += make_diff_html("", send_data)
+        diff_html += make_diff_html(webserv_res, nginx_res)
+        if len(diff_html) > 10 * 1000 * 1000:
+            print(len(diff_html))
+            print("diff_html too long", file=sys.stderr)
+            exit(1)
+
     return is_status_line_ok and is_message_body_ok
 
 
@@ -109,6 +125,9 @@ def path_test():
     run_test(test_file_path, [["{PATH}", "/NotExist/../.."]])
 
 
+diff_html = ""
+
+
 def main():
     if len(sys.argv) == 2:
         test_file = sys.argv[1]
@@ -116,6 +135,10 @@ def main():
     else:
         test_file = "req/req1.txt"
         path_test()
+
+    # diff.htmlの作成
+    with open("diff.html", "w") as file:
+        file.write(diff_html)
 
 
 if __name__ == "__main__":
