@@ -39,7 +39,7 @@ def main():
     if len(sys.argv) == 2:
         test_file = sys.argv[1]
     else:
-        test_file = "./req.txt"
+        test_file = "req/req.txt"
 
     print("TEST FILE :", test_file, file=sys.stderr)
     print()
