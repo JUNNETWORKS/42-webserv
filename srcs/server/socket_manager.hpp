@@ -35,7 +35,7 @@ class SocketManager {
   int GetEpollFd() const;
 
  private:
-  // epoll instance がcloseされるのを防ぐためコピー操作は禁止
+  // epoll instance が片方のみでcloseされるのを防ぐためコピー操作は禁止
   SocketManager(const SocketManager &rhs);
   SocketManager &operator=(const SocketManager &rhs);
 
