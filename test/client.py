@@ -21,12 +21,13 @@ def send_request(send_data, port):
         return "TIMEOUT"
 
 
-def print_response_status_code(res):
+def get_status_line(res):
+    status_line = ""
     splited = res.split("\n")
     for line in splited:
         if "HTTP" in line:
-            print(line)
-    print()
+            status_line += line + "\n"
+    return status_line
 
 
 def get_file_data(file_path):
@@ -53,18 +54,7 @@ def check_body(webserv_res_body, nginx_res_body):
 
 # ステータスラインのみチェック
 def check_status_line(webserv_res_head, nginx_res_head):
-    webserv_res_status_line = ""
-    nginx_res_status_line = ""
-
-    for line in webserv_res_head.split("\n"):
-        if "HTTP" in line:
-            webserv_res_status_line += line + "\n"
-
-    for line in nginx_res_head.split("\n"):
-        if "HTTP" in line:
-            nginx_res_status_line += line + "\n"
-
-    if webserv_res_status_line == nginx_res_status_line:
+    if get_status_line(webserv_res_head) == get_status_line(nginx_res_head):
         return True
     else:
         return False
