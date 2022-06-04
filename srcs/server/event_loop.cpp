@@ -39,12 +39,10 @@ void ProcessRequest(SocketManager &socket_manager, SocketInfo *info) {
 void ProcessResponse(SocketManager &socket_manager, SocketInfo *info) {
   // TODO: Send HTTP Response to the client
   int conn_fd = info->fd;
-  if (info->requests.front().IsCorrectRequest()) {
+  if (!info->requests.empty() && info->requests.front().IsCorrectRequest()) {
     info->response.SetStatusLine("HTTP/1.1 200 OK");
     info->response.LoadFile(info->requests.front().GetPath());
     info->response.Write(conn_fd);
-    socket_manager.CloseConnFd(conn_fd);
-  } else {
     socket_manager.CloseConnFd(conn_fd);
   }
 }
