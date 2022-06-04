@@ -9,7 +9,11 @@
 
 namespace server {
 
-SocketManager::SocketManager() : epfd_(epoll_create(1)) {}
+SocketManager::SocketManager() : epfd_(epoll_create(1)) {
+  if (epfd_ < 0) {
+    utils::ErrExit("SocketManager::SocketManager()");
+  }
+}
 
 SocketManager::~SocketManager() {
   close(epfd_);
