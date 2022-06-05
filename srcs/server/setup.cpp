@@ -16,16 +16,16 @@ const char *ServerException::what() const throw() {
   return errmsg_;
 }
 
-void CloseAllFds(const std::vector<int> &fds) {
-  for (std::vector<int>::const_iterator it = fds.begin(); it != fds.end();
+void CloseAllFds(const ListenFdPortMap &fds) {
+  for (ListenFdPortMap::const_iterator it = fds.begin(); it != fds.end();
        ++it) {
-    close(*it);
+    close(it->first);
   }
 }
 
-std::vector<int> OpenLilstenFds(const config::Config &config) {
+ListenFdPortMap OpenLilstenFds(const config::Config &config) {
   std::set<config::PortType> used_ports;
-  std::vector<int> fds;
+  ListenFdPortMap listen_fd_port_map;
 
   const config::Config::VirtualServerConfVector &virtual_servers =
       config.GetVirtualServerConfs();
@@ -38,13 +38,13 @@ std::vector<int> OpenLilstenFds(const config::Config &config) {
     }
     int fd = utils::InetListen(it->GetListenPort().c_str(), SOMAXCONN, NULL);
     if (fd == -1) {
-      CloseAllFds(fds);
+      CloseAllFds(listen_fd_port_map);
       throw ServerException("OpenListenFds: failed to create socket.");
     }
-    fds.push_back(fd);
+    listen_fd_port_map[fd] = it->GetListenPort();
     used_ports.insert(it->GetListenPort());
   }
-  return fds;
+  return listen_fd_port_map;
 }
 
 }  // namespace server
