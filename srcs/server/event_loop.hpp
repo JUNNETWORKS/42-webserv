@@ -22,19 +22,6 @@
 
 namespace server {
 
-struct SocketInfo {
-  enum ESockType { ListenSock, ConnSock };
-  enum EPhase { Request, Response };
-
-  int fd;
-  ESockType socktype;
-  EPhase phase;  // リクエストが読み込み終わってないときは Request,
-                 // 読み込み終わったら Response
-  std::vector<http::HttpRequest> requests;
-  http::HttpResponse response;
-  utils::ByteVector buffer_;
-};
-
 int StartEventLoop(SocketManager &socket_manager, const config::Config &config);
 
 }  // namespace server
