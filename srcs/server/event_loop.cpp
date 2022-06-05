@@ -49,15 +49,10 @@ void ProcessResponse(SocketManager &socket_manager, SocketInfo *info) {
 
 }  // namespace
 
-int StartEventLoop(const std::vector<int> &listen_fds,
+int StartEventLoop(SocketManager &socket_manager,
                    const config::Config &config) {
   // TODO: configを利用するようにする
   (void)config;
-
-  // epoll インスタンス作成
-  SocketManager socket_manager;
-
-  socket_manager.AppendListenFd(listen_fds);
 
   // イベントループ
   while (1) {

@@ -1,6 +1,7 @@
 #include "config/config.hpp"
 #include "server/event_loop.hpp"
 #include "server/setup.hpp"
+#include "server/socket_manager.hpp"
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 

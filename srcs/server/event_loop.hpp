@@ -17,6 +17,7 @@
 #include "config/config.hpp"
 #include "http/http_request.hpp"
 #include "http/http_response.hpp"
+#include "server/socket_manager.hpp"
 #include "utils/ByteVector.hpp"
 
 namespace server {
@@ -34,8 +35,7 @@ struct SocketInfo {
   utils::ByteVector buffer_;
 };
 
-int StartEventLoop(const std::vector<int> &listen_fds,
-                   const config::Config &config);
+int StartEventLoop(SocketManager &socket_manager, const config::Config &config);
 
 }  // namespace server
 
