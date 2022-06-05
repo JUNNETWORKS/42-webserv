@@ -2,10 +2,12 @@
 #include "server/event_loop.hpp"
 #include "server/setup.hpp"
 #include "server/socket_manager.hpp"
+#include "server/types.hpp"
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 
 int main(int argc, char const *argv[]) {
+  setbuf(stdout, NULL);
   config::Config config;
   if (argc >= 2) {
     try {
@@ -20,9 +22,13 @@ int main(int argc, char const *argv[]) {
   }
   config.Print();
 
-  std::vector<int> listen_fds = server::OpenLilstenFds(config);
+  server::ListenFdPortMap listen_fd_port_map = server::OpenLilstenFds(config);
 
-  server::StartEventLoop(listen_fds, config);
+  // epoll インスタンス作成
+  server::SocketManager socket_manager;
+  socket_manager.AppendListenFd(listen_fd_port_map);
+
+  server::StartEventLoop(socket_manager, config);
 
   return 0;
 }
