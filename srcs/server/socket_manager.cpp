@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "server/event_loop.hpp"
+#include "server/types.hpp"
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 
@@ -19,14 +20,18 @@ SocketManager::~SocketManager() {
   close(epfd_);
 }
 
-bool SocketManager::AppendListenFd(int fd) {
+bool SocketManager::AppendListenFd(int fd, const std::string &port) {
+  if (listen_fd_port_map_.find(fd) != listen_fd_port_map_.end()) {
+    return false;
+  }
+  listen_fd_port_map_[fd] = port;
   return AppendNewSockFdIntoEpfd(fd, SocketInfo::ListenSock, EPOLLIN);
 }
 
-bool SocketManager::AppendListenFd(const std::vector<int> &fd_vec) {
-  for (std::vector<int>::const_iterator it = fd_vec.begin(); it != fd_vec.end();
-       ++it) {
-    if (!AppendListenFd(*it)) {
+bool SocketManager::AppendListenFd(const ListenFdPortMap &listen_fd_port_map) {
+  for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
+       it != listen_fd_port_map.end(); ++it) {
+    if (!AppendListenFd(it->first, it->second)) {
       return false;
     }
   }
@@ -47,6 +52,7 @@ bool SocketManager::AcceptNewConnection(int listen_fd) {
 }
 
 bool SocketManager::CloseConnFd(int fd) {
+  listen_fd_port_map_.erase(fd);
   close(fd);
   return epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == 0;
 }
@@ -68,7 +74,7 @@ int SocketManager::GetEpollFd() const {
 
 bool SocketManager::AppendNewSockFdIntoEpfd(int sockfd,
                                             SocketInfo::ESockType socktype,
-                                            uint32_t epevents) {
+                                            unsigned int epevents) {
   struct epoll_event *epev = new struct epoll_event;
   epev->data.ptr = new SocketInfo();
   static_cast<SocketInfo *>(epev->data.ptr)->fd = sockfd;
