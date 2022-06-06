@@ -12,6 +12,10 @@ fclean: clean
 .PHONY: re
 re: fclean all
 
+.PHONY: test
+test:
+	python3 test.py
+
 .PHONY: webserv-it
 webserv-it:
 	docker exec -it webserv bash
