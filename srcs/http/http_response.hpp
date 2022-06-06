@@ -35,10 +35,10 @@ class HttpResponse {
   const std::string &GetStatusLine() const;
   const std::string &GetBody() const;
 
-  void MakeResponse(const config::VirtualServerConf *vserver,
-                    const HttpRequest *request);
+  void MakeResponse(const config::VirtualServerConf &vserver,
+                    const HttpRequest &request);
   bool MakeErrorResponse(const config::LocationConf *location,
-                         const HttpRequest *request, HttpStatus status);
+                         const HttpRequest &request, HttpStatus status);
 
   void Write(int fd) const;
 
@@ -48,12 +48,12 @@ class HttpResponse {
   void WriteBody(int fd) const;
 
   // Making response
-  bool MakeFileResponse(const config::LocationConf *location,
-                        const HttpRequest *request);
-  bool MakeRedirectResponse(const config::LocationConf *location,
-                            const HttpRequest *request);
-  bool MakeCgiReponse(const config::LocationConf *location,
-                      const HttpRequest *request);
+  bool MakeFileResponse(const config::LocationConf &location,
+                        const HttpRequest &request);
+  bool MakeRedirectResponse(const config::LocationConf &location,
+                            const HttpRequest &request);
+  bool MakeCgiReponse(const config::LocationConf &location,
+                      const HttpRequest &request);
 };
 
 }  // namespace http

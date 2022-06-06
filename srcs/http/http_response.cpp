@@ -116,11 +116,10 @@ static std::string MakeAutoIndex(const std::string &root_path,
   return head + html + tail;
 }
 
-void HttpResponse::MakeResponse(const config::VirtualServerConf *vserver,
-                                const HttpRequest *request) {
+void HttpResponse::MakeResponse(const config::VirtualServerConf &vserver,
+                                const HttpRequest &request) {
   // path から LocationConf を取得
-  const config::LocationConf *location =
-      vserver->GetLocation(request->GetPath());
+  const config::LocationConf *location = vserver.GetLocation(request.GetPath());
   if (!location) {
     MakeErrorResponse(NULL, request, NOT_FOUND);
     return;
@@ -129,16 +128,16 @@ void HttpResponse::MakeResponse(const config::VirtualServerConf *vserver,
   location->Print();
 
   if (location->GetIsCgi()) {
-    MakeCgiReponse(location, request);
+    MakeCgiReponse(*location, request);
   } else if (!location->GetRedirectUrl().empty()) {
-    MakeRedirectResponse(location, request);
+    MakeRedirectResponse(*location, request);
   } else {
-    MakeFileResponse(location, request);
+    MakeFileResponse(*location, request);
   }
 }
 
 bool HttpResponse::MakeErrorResponse(const config::LocationConf *location,
-                                     const HttpRequest *request,
+                                     const HttpRequest &request,
                                      HttpStatus status) {
   // TODO: 実装する
   (void)location;
@@ -149,26 +148,25 @@ bool HttpResponse::MakeErrorResponse(const config::LocationConf *location,
   return true;
 }
 
-bool HttpResponse::MakeFileResponse(const config::LocationConf *location,
-                                    const HttpRequest *request) {
+bool HttpResponse::MakeFileResponse(const config::LocationConf &location,
+                                    const HttpRequest &request) {
   std::string file_data;
 
-  const std::string &abs_file_path =
-      location->GetRootDir() + request->GetPath();
+  const std::string &abs_file_path = location.GetRootDir() + request.GetPath();
   if (!utils::IsFileExist(abs_file_path)) {
-    MakeErrorResponse(location, request, NOT_FOUND);
+    MakeErrorResponse(&location, request, NOT_FOUND);
     return false;
   }
 
   if (utils::IsDir(abs_file_path)) {
-    SetBody(MakeAutoIndex(location->GetRootDir(), request->GetPath()));
+    SetBody(MakeAutoIndex(location.GetRootDir(), request.GetPath()));
     SetStatusLine("HTTP/1.1 200 OK");
     AppendHeader("Content-Type", "text/html");
     return true;
   }
 
   if (!utils::ReadFile(abs_file_path, file_data)) {
-    MakeErrorResponse(location, request, FORBIDDEN);
+    MakeErrorResponse(&location, request, FORBIDDEN);
     return false;
   }
 
@@ -178,16 +176,16 @@ bool HttpResponse::MakeFileResponse(const config::LocationConf *location,
   return true;
 }
 
-bool HttpResponse::MakeRedirectResponse(const config::LocationConf *location,
-                                        const HttpRequest *request) {
+bool HttpResponse::MakeRedirectResponse(const config::LocationConf &location,
+                                        const HttpRequest &request) {
   // TODO: 実装する
   (void)location;
   (void)request;
   return true;
 }
 
-bool HttpResponse::MakeCgiReponse(const config::LocationConf *location,
-                                  const HttpRequest *request) {
+bool HttpResponse::MakeCgiReponse(const config::LocationConf &location,
+                                  const HttpRequest &request) {
   // TODO: 実装する
   (void)location;
   (void)request;

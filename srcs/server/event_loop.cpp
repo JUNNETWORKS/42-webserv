@@ -51,7 +51,7 @@ void ProcessResponse(SocketManager &socket_manager, SocketInfo *info,
         config.GetVirtualServerConf(port, host);
     if (!vserver) {
       // 404 Not Found を返す
-      info->response.MakeErrorResponse(NULL, &request, http::NOT_FOUND);
+      info->response.MakeErrorResponse(NULL, request, http::NOT_FOUND);
       info->response.Write(conn_fd);
       socket_manager.CloseConnFd(conn_fd);
       return;
@@ -59,7 +59,7 @@ void ProcessResponse(SocketManager &socket_manager, SocketInfo *info,
     printf("===== Virtual Server =====\n");
     vserver->Print();
 
-    info->response.MakeResponse(vserver, &request);
+    info->response.MakeResponse(*vserver, request);
     info->response.Write(conn_fd);
     socket_manager.CloseConnFd(conn_fd);
   }
