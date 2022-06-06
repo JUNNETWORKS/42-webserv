@@ -22,7 +22,10 @@ int main(int argc, char const *argv[]) {
   }
   config.Print();
 
-  server::ListenFdPortMap listen_fd_port_map = server::OpenLilstenFds(config);
+  server::ListenFdPortMap listen_fd_port_map;
+  if (!server::OpenLilstenFds(listen_fd_port_map, config)) {
+    utils::ErrExit("OpenListenFds()");
+  }
 
   // epoll インスタンス作成
   server::SocketManager socket_manager;
