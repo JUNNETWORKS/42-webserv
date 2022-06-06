@@ -56,7 +56,7 @@ const VirtualServerConf *Config::GetVirtualServerConf(
     if (it->GetListenPort() == listen_port) {
       if (virtual_server_conf == NULL) {
         virtual_server_conf = &(*it);
-      } else if (!(virtual_server_conf->IsServerNameIncluded(server_name)) &&
+      } else if (!virtual_server_conf->IsServerNameIncluded(server_name) &&
                  it->IsServerNameIncluded(server_name)) {
         virtual_server_conf = &(*it);
       }
