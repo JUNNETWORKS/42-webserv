@@ -9,6 +9,7 @@ services:
       - ../:/root/workdir
       - ./public:/public
     stop_grace_period: 1s
+    command: [ "/root/configurations/sample.conf" ]
 
   nginx:
     image: nginx:latest
