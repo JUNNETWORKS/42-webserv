@@ -14,6 +14,7 @@ struct SocketInfo {
   enum EPhase { Request, Response };
 
   int fd;
+  std::string port;
   ESockType socktype;
   EPhase phase;  // リクエストが読み込み終わってないときは Request,
                  // 読み込み終わったら Response
