@@ -27,3 +27,7 @@ nginx-it:
 .PHONY: nginx-reload
 nginx-reload:
 	docker exec -t nginx nginx -s reload
+
+.PHONY: apache-it
+apache-it:
+	docker exec -it apache bash
