@@ -18,8 +18,6 @@ class SocketManager {
   // map[<listen_fd>] = <port_number>
   ListenFdPortMap listen_fd_port_map_;
 
-  EpollManager *epoll_manager_;
-
  public:
   SocketManager();
 
