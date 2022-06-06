@@ -52,7 +52,6 @@ bool SocketManager::AcceptNewConnection(int listen_fd) {
 }
 
 bool SocketManager::CloseConnFd(int fd) {
-  listen_fd_port_map_.erase(fd);
   close(fd);
   return epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == 0;
 }
