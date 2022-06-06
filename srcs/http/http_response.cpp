@@ -84,24 +84,27 @@ void HttpResponse::WriteBody(int fd) const {
 //========================================================================
 //
 
-static std::string MakeAutoIndex(const std::string &dir_path) {
+//
+static std::string MakeAutoIndex(const std::string &root_path,
+                                 const std::string &relative_path) {
   std::string html;
   std::vector<std::string> file_vec;
-  std::string head = "<html>\n<head><title>Index of " + dir_path +
+  std::string head = "<html>\n<head><title>Index of " + relative_path +
                      "</title></head>\n"
                      "<body bgcolor=\"white\">\n"
                      "<h1>Index of " +
-                     dir_path + "</h1><hr><pre>";
+                     relative_path + "</h1><hr><pre>";
   std::string tail =
       "</pre><hr></body>\n"
       "</html>\n";
 
+  const std::string abs_dir_path = root_path + relative_path;
   // TODO : / が連続するパターンの考慮
-  utils::GetFileList(dir_path, file_vec);
+  utils::GetFileList(abs_dir_path, file_vec);
   std::sort(file_vec.begin(), file_vec.end());
   std::string is_dir;
   for (size_t i = 0; i < file_vec.size(); i++) {
-    if (utils::IsDir(dir_path + "/" + file_vec[i])) {
+    if (utils::IsDir(abs_dir_path + "/" + file_vec[i])) {
       is_dir = "/";
     } else {
       is_dir = "";
@@ -150,20 +153,21 @@ bool HttpResponse::MakeFileResponse(const config::LocationConf *location,
                                     const HttpRequest *request) {
   std::string file_data;
 
-  const std::string &file_path = location->GetRootDir() + request->GetPath();
-  if (!utils::IsFileExist(file_path)) {
+  const std::string &abs_file_path =
+      location->GetRootDir() + request->GetPath();
+  if (!utils::IsFileExist(abs_file_path)) {
     MakeErrorResponse(location, request, NOT_FOUND);
     return false;
   }
 
-  if (utils::IsDir(file_path)) {
-    SetBody(MakeAutoIndex(file_path));
+  if (utils::IsDir(abs_file_path)) {
+    SetBody(MakeAutoIndex(location->GetRootDir(), request->GetPath()));
     SetStatusLine("HTTP/1.1 200 OK");
     AppendHeader("Content-Type", "text/html");
     return true;
   }
 
-  if (!utils::ReadFile(file_path, file_data)) {
+  if (!utils::ReadFile(abs_file_path, file_data)) {
     MakeErrorResponse(location, request, FORBIDDEN);
     return false;
   }
