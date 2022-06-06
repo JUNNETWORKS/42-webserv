@@ -5,6 +5,7 @@ import sys
 
 WEBSERV_PORT = 49200
 NGINX_PORT = 49201
+APACHE_PORT = 49202
 
 
 def send_request(test_file, port):
@@ -38,6 +39,7 @@ def main():
 
     webserv_res = send_request(test_file, WEBSERV_PORT)
     nginx_res = send_request(test_file, NGINX_PORT)
+    apache_res = send_request(test_file, APACHE_PORT)
 
     print("--- WEBSERV RES ---")
     # print(webserv_res)
@@ -46,6 +48,10 @@ def main():
     print("--- NGINX ---")
     # print(nginx_res)
     print_response_status_code(nginx_res)
+
+    print("--- APACHE ---")
+    # print(apache_res)
+    print_response_status_code(apache_res)
 
 
 if __name__ == "__main__":
