@@ -1,6 +1,7 @@
 #include "server/event_loop.hpp"
 
 #include "config/config.hpp"
+#include "server/socket_info.hpp"
 #include "server/socket_manager.hpp"
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
@@ -36,12 +37,29 @@ void ProcessRequest(SocketManager &socket_manager, SocketInfo *info) {
   }
 }
 
-void ProcessResponse(SocketManager &socket_manager, SocketInfo *info) {
-  // TODO: Send HTTP Response to the client
+void ProcessResponse(SocketManager &socket_manager, SocketInfo *info,
+                     const config::Config &config) {
   int conn_fd = info->fd;
-  if (!info->requests.empty() && info->requests.front().IsCorrectRequest()) {
-    info->response.SetStatusLine("HTTP/1.1 200 OK");
-    info->response.LoadFile(info->requests.front().GetPath());
+  http::HttpRequest &request = info->requests.front();
+  if (!info->requests.empty() && request.IsCorrectRequest()) {
+    const std::string &host =
+        request.GetHeader("Host").empty() ? "" : request.GetHeader("Host")[0];
+    const std::string &port = info->port;
+
+    // ポートとHostヘッダーから VirtualServerConf を取得
+    const config::VirtualServerConf *vserver =
+        config.GetVirtualServerConf(port, host);
+    if (!vserver) {
+      // 404 Not Found を返す
+      info->response.MakeErrorResponse(NULL, request, http::NOT_FOUND);
+      info->response.Write(conn_fd);
+      socket_manager.CloseConnFd(conn_fd);
+      return;
+    }
+    printf("===== Virtual Server =====\n");
+    vserver->Print();
+
+    info->response.MakeResponse(*vserver, request);
     info->response.Write(conn_fd);
     socket_manager.CloseConnFd(conn_fd);
   }
@@ -49,16 +67,8 @@ void ProcessResponse(SocketManager &socket_manager, SocketInfo *info) {
 
 }  // namespace
 
-int StartEventLoop(const std::vector<int> &listen_fds,
+int StartEventLoop(SocketManager &socket_manager,
                    const config::Config &config) {
-  // TODO: configを利用するようにする
-  (void)config;
-
-  // epoll インスタンス作成
-  SocketManager socket_manager;
-
-  socket_manager.AppendListenFd(listen_fds);
-
   // イベントループ
   while (1) {
     struct epoll_event epev = socket_manager.WaitEvent();
@@ -76,7 +86,7 @@ int StartEventLoop(const std::vector<int> &listen_fds,
       }
       // if space in write buffer, read
       if (epev.events & EPOLLOUT) {
-        ProcessResponse(socket_manager, socket_info);
+        ProcessResponse(socket_manager, socket_info, config);
       }
 
       // error or timeout? close conn_fd and remove from epfd

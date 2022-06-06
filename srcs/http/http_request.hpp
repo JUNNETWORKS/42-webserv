@@ -61,6 +61,10 @@ class HttpRequest {
   bool IsCorrectStatus();
   bool IsParsed();
 
+  // ========================================================================
+  // Getter and Setter
+  const std::vector<std::string> &GetHeader(const std::string header);
+
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);

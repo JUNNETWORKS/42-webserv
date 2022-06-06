@@ -17,25 +17,12 @@
 #include "config/config.hpp"
 #include "http/http_request.hpp"
 #include "http/http_response.hpp"
+#include "server/socket_manager.hpp"
 #include "utils/ByteVector.hpp"
 
 namespace server {
 
-struct SocketInfo {
-  enum ESockType { ListenSock, ConnSock };
-  enum EPhase { Request, Response };
-
-  int fd;
-  ESockType socktype;
-  EPhase phase;  // リクエストが読み込み終わってないときは Request,
-                 // 読み込み終わったら Response
-  std::vector<http::HttpRequest> requests;
-  http::HttpResponse response;
-  utils::ByteVector buffer_;
-};
-
-int StartEventLoop(const std::vector<int> &listen_fds,
-                   const config::Config &config);
+int StartEventLoop(SocketManager &socket_manager, const config::Config &config);
 
 }  // namespace server
 

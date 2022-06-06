@@ -222,6 +222,13 @@ bool HttpRequest::IsCorrectStatus() {
   return parse_status_ == OK;
 }
 
+// ========================================================================
+// Getter and Setter
+const std::vector<std::string> &HttpRequest::GetHeader(
+    const std::string header) {
+  return headers_[header];
+}
+
 //========================================================================
 // Helper関数
 
