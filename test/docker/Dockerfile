@@ -30,6 +30,4 @@ WORKDIR		/root/workdir
 COPY ./docker-entrypoint.sh /root/docker-entrypoint.sh
 RUN chmod +x /root/docker-entrypoint.sh
 
-COPY ./configurations /root/configurations
-
 ENTRYPOINT 			["/root/docker-entrypoint.sh"]

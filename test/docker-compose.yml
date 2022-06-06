@@ -8,6 +8,7 @@ services:
     volumes:
       - ../:/root/workdir
       - ./public:/public
+      - ./webserv_configurations:/root/configurations
     stop_grace_period: 1s
     command: [ "/root/configurations/sample.conf" ]
 
