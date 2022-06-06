@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "http/http_constants.hpp"
+#include "http/http_request.hpp"
 #include "utils/io.hpp"
 #include "utils/string.hpp"
 
@@ -83,29 +84,24 @@ void HttpResponse::WriteBody(int fd) const {
 //========================================================================
 //
 
-// TODO : configから取得するようにする
-static const std::string GetRootDir() {
-  return "/public";
-}
-
-static std::string MakeAutoIndex(const std::string &path) {
+static std::string MakeAutoIndex(const std::string &dir_path) {
   std::string html;
   std::vector<std::string> file_vec;
-  std::string head = "<html>\n<head><title>Index of " + path +
+  std::string head = "<html>\n<head><title>Index of " + dir_path +
                      "</title></head>\n"
                      "<body bgcolor=\"white\">\n"
                      "<h1>Index of " +
-                     path + "</h1><hr><pre>";
+                     dir_path + "</h1><hr><pre>";
   std::string tail =
       "</pre><hr></body>\n"
       "</html>\n";
 
   // TODO : / が連続するパターンの考慮
-  utils::GetFileList(GetRootDir() + path, file_vec);
+  utils::GetFileList(dir_path, file_vec);
   std::sort(file_vec.begin(), file_vec.end());
   std::string is_dir;
   for (size_t i = 0; i < file_vec.size(); i++) {
-    if (utils::IsDir(GetRootDir() + path + "/" + file_vec[i])) {
+    if (utils::IsDir(dir_path + "/" + file_vec[i])) {
       is_dir = "/";
     } else {
       is_dir = "";
@@ -117,27 +113,80 @@ static std::string MakeAutoIndex(const std::string &path) {
   return head + html + tail;
 }
 
-bool HttpResponse::LoadFile(const std::string &file_path) {
+void HttpResponse::MakeResponse(const config::VirtualServerConf *vserver,
+                                const HttpRequest *request) {
+  // path から LocationConf を取得
+  const config::LocationConf *location =
+      vserver->GetLocation(request->GetPath());
+  if (!location) {
+    MakeErrorResponse(NULL, request, NOT_FOUND);
+    return;
+  }
+  printf("===== Location =====\n");
+  location->Print();
+
+  if (location->GetIsCgi()) {
+    MakeCgiReponse(location, request);
+  } else if (!location->GetRedirectUrl().empty()) {
+    MakeRedirectResponse(location, request);
+  } else {
+    MakeFileResponse(location, request);
+  }
+}
+
+bool HttpResponse::MakeErrorResponse(const config::LocationConf *location,
+                                     const HttpRequest *request,
+                                     HttpStatus status) {
+  // TODO: 実装する
+  (void)location;
+  (void)request;
+  (void)status;
+  SetStatusLine("HTTP/1.1 404 Not Found");
+  // TODO: location にエラーページが設定されていればそれをBodyにセットする
+  return true;
+}
+
+bool HttpResponse::MakeFileResponse(const config::LocationConf *location,
+                                    const HttpRequest *request) {
   std::string file_data;
 
-  if (!utils::IsFileExist(GetRootDir() + file_path)) {
-    // status_ = NOT_FOUND;  // TODO : レスポンスステータスコードを設定する
+  const std::string &file_path = location->GetRootDir() + request->GetPath();
+  if (!utils::IsFileExist(file_path)) {
+    MakeErrorResponse(location, request, NOT_FOUND);
     return false;
   }
 
-  if (utils::IsDir(GetRootDir() + file_path)) {
-    body_ = MakeAutoIndex(file_path);
+  if (utils::IsDir(file_path)) {
+    SetBody(MakeAutoIndex(file_path));
+    SetStatusLine("HTTP/1.1 200 OK");
     AppendHeader("Content-Type", "text/html");
     return true;
   }
 
-  if (!utils::ReadFile(GetRootDir() + file_path, file_data)) {
-    // status_ = FORBIDDEN;  // TODO : レスポンスステータスコードを設定する
+  if (!utils::ReadFile(file_path, file_data)) {
+    MakeErrorResponse(location, request, FORBIDDEN);
     return false;
   }
 
+  SetStatusLine("HTTP/1.1 200 OK");
   SetBody(file_data);
   AppendHeader("Content-Type", "text/plain");
+  return true;
+}
+
+bool HttpResponse::MakeRedirectResponse(const config::LocationConf *location,
+                                        const HttpRequest *request) {
+  // TODO: 実装する
+  (void)location;
+  (void)request;
+  return true;
+}
+
+bool HttpResponse::MakeCgiReponse(const config::LocationConf *location,
+                                  const HttpRequest *request) {
+  // TODO: 実装する
+  (void)location;
+  (void)request;
   return true;
 }
 

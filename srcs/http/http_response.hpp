@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "config/virtual_server_conf.hpp"
+#include "http/http_request.hpp"
 #include "http/http_status.hpp"
 #include "http/types.hpp"
 
@@ -33,13 +35,25 @@ class HttpResponse {
   const std::string &GetStatusLine() const;
   const std::string &GetBody() const;
 
+  void MakeResponse(const config::VirtualServerConf *vserver,
+                    const HttpRequest *request);
+  bool MakeErrorResponse(const config::LocationConf *location,
+                         const HttpRequest *request, HttpStatus status);
+
   void Write(int fd) const;
-  bool LoadFile(const std::string &path);
 
  private:
   void WriteStatusLine(int fd) const;
   void WriteHeaders(int fd) const;
   void WriteBody(int fd) const;
+
+  // Making response
+  bool MakeFileResponse(const config::LocationConf *location,
+                        const HttpRequest *request);
+  bool MakeRedirectResponse(const config::LocationConf *location,
+                            const HttpRequest *request);
+  bool MakeCgiReponse(const config::LocationConf *location,
+                      const HttpRequest *request);
 };
 
 }  // namespace http
