@@ -25,7 +25,7 @@ bool SocketManager::AppendListenFd(int fd, const std::string &port) {
     return false;
   }
   listen_fd_port_map_[fd] = port;
-  return AppendNewSockFdIntoEpfd(fd, SocketInfo::ListenSock, EPOLLIN);
+  return AppendNewSockFdIntoEpfd(fd, port, SocketInfo::ListenSock, EPOLLIN);
 }
 
 bool SocketManager::AppendListenFd(const ListenFdPortMap &listen_fd_port_map) {
@@ -43,8 +43,8 @@ bool SocketManager::AcceptNewConnection(int listen_fd) {
   socklen_t addrlen = sizeof(struct sockaddr_storage);
   int conn_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &addrlen);
   fcntl(conn_fd, F_SETFD, O_NONBLOCK);
-  if (!AppendNewSockFdIntoEpfd(conn_fd, SocketInfo::ConnSock,
-                               EPOLLIN | EPOLLOUT)) {
+  if (!AppendNewSockFdIntoEpfd(conn_fd, listen_fd_port_map_[listen_fd],
+                               SocketInfo::ConnSock, EPOLLIN | EPOLLOUT)) {
     return false;
   }
   utils::LogConnectionInfoToStdout(client_addr);
@@ -72,17 +72,18 @@ int SocketManager::GetEpollFd() const {
   return epfd_;
 }
 
-bool SocketManager::AppendNewSockFdIntoEpfd(int sockfd,
+bool SocketManager::AppendNewSockFdIntoEpfd(int sockfd, const std::string &port,
                                             SocketInfo::ESockType socktype,
                                             unsigned int epevents) {
-  struct epoll_event *epev = new struct epoll_event;
-  epev->data.ptr = new SocketInfo();
-  static_cast<SocketInfo *>(epev->data.ptr)->fd = sockfd;
-  static_cast<SocketInfo *>(epev->data.ptr)->socktype = socktype;
-  static_cast<SocketInfo *>(epev->data.ptr)->phase =
-      SocketInfo::Request;  // 新規接続は皆Requestから始まる
-  epev->events = epevents;
-  return epoll_ctl(epfd_, EPOLL_CTL_ADD, sockfd, epev) == 0;
+  struct epoll_event epev;
+  SocketInfo *socket_info = new SocketInfo();
+  socket_info->fd = sockfd;
+  socket_info->port = port;
+  socket_info->socktype = socktype;
+  socket_info->phase = SocketInfo::Request;  // 新規接続は皆Requestから始まる
+  epev.data.ptr = socket_info;
+  epev.events = epevents;
+  return epoll_ctl(epfd_, EPOLL_CTL_ADD, sockfd, &epev) == 0;
 }
 
 }  // namespace server

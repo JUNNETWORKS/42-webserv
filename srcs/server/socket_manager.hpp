@@ -18,6 +18,8 @@ class SocketManager {
   // map[<listen_fd>] = <port_number>
   ListenFdPortMap listen_fd_port_map_;
 
+  EpollManager *epoll_manager_;
+
  public:
   SocketManager();
 
@@ -46,7 +48,8 @@ class SocketManager {
   SocketManager(const SocketManager &rhs);
   SocketManager &operator=(const SocketManager &rhs);
 
-  bool AppendNewSockFdIntoEpfd(int sockfd, SocketInfo::ESockType socktype,
+  bool AppendNewSockFdIntoEpfd(int sockfd, const std::string &port,
+                               SocketInfo::ESockType socktype,
                                unsigned int epevents);
 };
 
