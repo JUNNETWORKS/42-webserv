@@ -19,7 +19,7 @@ Epoll::~Epoll() {
   close(epfd_);
 }
 
-bool Epoll::AddFd(int fd, unsigned long events, void *ptr) {
+bool Epoll::AddFd(int fd, unsigned int events, void *ptr) {
   struct epoll_event epev;
   epev.events = events;
   if (ptr) {
@@ -43,7 +43,7 @@ bool Epoll::RemoveFd(int fd) {
   return is_success;
 }
 
-bool Epoll::ModifyFd(int fd, unsigned long events, void *ptr) {
+bool Epoll::ModifyFd(int fd, unsigned int events, void *ptr) {
   struct epoll_event epev;
   epev.events = events;
   if (ptr) {

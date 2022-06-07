@@ -20,7 +20,7 @@ class Epoll {
   // 購読するファイルディスクリプタを追加
   // ptr が NULL だった場合は epoll_data.fd に fd がセットされる
   // ptr が 非NULL だった場合は epoll_data.ptr に ptr がセットされる
-  bool AddFd(int fd, unsigned long events, void *ptr);
+  bool AddFd(int fd, unsigned int events, void *ptr);
 
   // 購読しているファイルディスクリプタを削除
   bool RemoveFd(int fd);
@@ -28,7 +28,7 @@ class Epoll {
   // 購読しているファイルディスクリプタの購読情報を変更
   // ptr が NULL だった場合は epoll_data.fd に fd がセットされる
   // ptr が 非NULL だった場合は epoll_data.ptr に ptr がセットされる
-  bool ModifyFd(int fd, unsigned long events, void *ptr);
+  bool ModifyFd(int fd, unsigned int events, void *ptr);
 
   // 利用可能なイベントをepoll_waitで取得し､eventsの末尾に挿入する｡
   //
