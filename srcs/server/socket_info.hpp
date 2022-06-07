@@ -16,8 +16,6 @@ struct SocketInfo {
   int fd;
   std::string port;
   ESockType socktype;
-  EPhase phase;  // リクエストが読み込み終わってないときは Request,
-                 // 読み込み終わったら Response
   std::vector<http::HttpRequest> requests;
   http::HttpResponse response;
   utils::ByteVector buffer_;
