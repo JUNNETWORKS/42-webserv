@@ -10,22 +10,15 @@
 
 namespace server {
 
-SocketManager::SocketManager() : epfd_(epoll_create(1)) {
-  if (epfd_ < 0) {
-    utils::ErrExit("SocketManager::SocketManager()");
-  }
-}
+SocketManager::SocketManager() : epoll_() {}
 
-SocketManager::~SocketManager() {
-  close(epfd_);
-}
+SocketManager::~SocketManager() {}
 
 bool SocketManager::AppendListenFd(int fd, const std::string &port) {
-  if (listen_fd_port_map_.find(fd) != listen_fd_port_map_.end()) {
+  if (socket_fd_map_.find(fd) != socket_fd_map_.end()) {
     return false;
   }
-  listen_fd_port_map_[fd] = port;
-  return AppendNewSockFdIntoEpfd(fd, port, SocketInfo::ListenSock, EPOLLIN);
+  return AppendSocketIntoEpoll(fd, port, SocketInfo::ListenSock, EPOLLIN);
 }
 
 bool SocketManager::AppendListenFd(const ListenFdPortMap &listen_fd_port_map) {
@@ -39,50 +32,68 @@ bool SocketManager::AppendListenFd(const ListenFdPortMap &listen_fd_port_map) {
 }
 
 bool SocketManager::AcceptNewConnection(int listen_fd) {
+  if (socket_fd_map_.find(listen_fd) == socket_fd_map_.end() ||
+      socket_fd_map_.find(listen_fd)->second.socktype !=
+          SocketInfo::ListenSock) {
+    return false;
+  }
+  SocketInfo &listen_socket_info = socket_fd_map_.find(listen_fd)->second;
+
   struct sockaddr_storage client_addr;
   socklen_t addrlen = sizeof(struct sockaddr_storage);
   int conn_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &addrlen);
   fcntl(conn_fd, F_SETFD, O_NONBLOCK);
-  if (!AppendNewSockFdIntoEpfd(conn_fd, listen_fd_port_map_[listen_fd],
-                               SocketInfo::ConnSock, EPOLLIN | EPOLLOUT)) {
+
+  std::string listen_fd_port = socket_fd_map_[listen_fd].port;
+
+  if (!AppendSocketIntoEpoll(conn_fd, listen_socket_info.port,
+                             SocketInfo::ConnSock, EPOLLIN | EPOLLOUT)) {
     return false;
   }
   utils::LogConnectionInfoToStdout(client_addr);
   return true;
 }
 
-bool SocketManager::CloseConnFd(int fd) {
+void SocketManager::CloseConnFd(int fd) {
   close(fd);
-  return epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == 0;
+  epoll_.RemoveFd(fd);
+  socket_fd_map_.erase(fd);
 }
 
-struct epoll_event SocketManager::WaitEvent() {
-  struct epoll_event epevarr[1];
-  while (epoll_wait(epfd_, epevarr, 1, -1) == -1) {
-    if (errno == EINTR)
-      continue;  // wait epoll again if interrupted by signal
-    else
-      utils::ErrExit("SocketManager::WaitEvent()");
-  }
-  return epevarr[0];
+SocketInfo *SocketManager::GetSocketInfo(int fd) {
+  return &socket_fd_map_[fd];
 }
 
-int SocketManager::GetEpollFd() const {
-  return epfd_;
+bool SocketManager::IsListenFd(int fd) {
+  std::map<int, SocketInfo>::const_iterator socket_fd_it =
+      socket_fd_map_.find(fd);
+  return socket_fd_it != socket_fd_map_.end() &&
+         socket_fd_it->second.socktype == SocketInfo::ListenSock;
 }
 
-bool SocketManager::AppendNewSockFdIntoEpfd(int sockfd, const std::string &port,
-                                            SocketInfo::ESockType socktype,
-                                            unsigned int epevents) {
-  struct epoll_event epev;
-  SocketInfo *socket_info = new SocketInfo();
-  socket_info->fd = sockfd;
-  socket_info->port = port;
-  socket_info->socktype = socktype;
-  socket_info->phase = SocketInfo::Request;  // 新規接続は皆Requestから始まる
-  epev.data.ptr = socket_info;
-  epev.events = epevents;
-  return epoll_ctl(epfd_, EPOLL_CTL_ADD, sockfd, &epev) == 0;
+bool SocketManager::IsConnFd(int fd) {
+  std::map<int, SocketInfo>::const_iterator socket_fd_it =
+      socket_fd_map_.find(fd);
+  return socket_fd_it != socket_fd_map_.end() &&
+         socket_fd_it->second.socktype == SocketInfo::ConnSock;
+}
+
+Epoll &SocketManager::GetEpoll() {
+  return epoll_;
+}
+
+bool SocketManager::WaitEvents(std::vector<struct epoll_event> &events) {
+  return epoll_.WaitEvents(events);
+}
+
+bool SocketManager::AppendSocketIntoEpoll(int sockfd, const std::string &port,
+                                          SocketInfo::ESockType socktype,
+                                          unsigned int epevents) {
+  socket_fd_map_[sockfd].fd = sockfd;
+  socket_fd_map_[sockfd].port = port;
+  socket_fd_map_[sockfd].socktype = socktype;
+
+  return epoll_.AddFd(sockfd, epevents, NULL);
 }
 
 }  // namespace server
