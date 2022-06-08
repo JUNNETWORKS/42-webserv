@@ -87,9 +87,9 @@ std::vector<std::string> SplitString(const std::string &str,
   return strs;
 }
 
-std::string TrimWhiteSpace(std::string &str) {
-  size_t start_pos = str.find_first_not_of(" ");
-  size_t end_pos = str.find_last_not_of(" ");
+std::string TrimString(std::string &str, const std::string &charset) {
+  size_t start_pos = str.find_first_not_of(charset);
+  size_t end_pos = str.find_last_not_of(charset);
   if (start_pos == std::string::npos)
     str.erase(str.begin(), str.end());
   str.erase(str.begin(), str.begin() + start_pos);
