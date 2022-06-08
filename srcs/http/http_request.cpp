@@ -189,7 +189,7 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   std::string header = str.substr(0, collon_pos);
   std::transform(header.begin(), header.end(), header.begin(), toupper);
   str.erase(0, collon_pos + 1);
-  std::string field = utils::TrimString(str, " ");
+  std::string field = utils::TrimString(str, kOWS);
 
   // TODO ,区切りのsplit
   headers_[header].push_back(field);
