@@ -5,6 +5,7 @@
 #include <cassert>
 #include <vector>
 
+#include "server/file_descriptor.hpp"
 #include "utils/error.hpp"
 
 namespace server {
@@ -19,46 +20,36 @@ Epoll::~Epoll() {
   close(epfd_);
 }
 
-bool Epoll::AddFd(int fd, unsigned int events, void *ptr) {
+bool Epoll::AddFd(const FileDescriptor &file_descriptor, unsigned int events) {
   struct epoll_event epev;
   epev.events = events;
-  if (ptr) {
-    epev.data.ptr = ptr;
-  } else {
-    epev.data.fd = fd;
-  }
-  bool is_success = (epoll_ctl(epfd_, EPOLL_CTL_ADD, fd, &epev) == 0);
+  epev.data.fd = file_descriptor.fd;
+  bool is_success =
+      (epoll_ctl(epfd_, EPOLL_CTL_ADD, file_descriptor.fd, &epev) == 0);
   if (is_success) {
-    registered_fd_count_++;
+    registered_fds_[file_descriptor.fd] = file_descriptor;
   }
   return is_success;
 }
 
 bool Epoll::RemoveFd(int fd) {
-  bool is_success = (epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == 0);
-  if (is_success) {
-    registered_fd_count_--;
-    assert(registered_fd_count_ >= 0);
-  }
-  return is_success;
+  registered_fds_.erase(fd);
+  return epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) == 0;
 }
 
-bool Epoll::ModifyFd(int fd, unsigned int events, void *ptr) {
+bool Epoll::ModifyFd(const FileDescriptor &file_descriptor,
+                     unsigned int events) {
   struct epoll_event epev;
   epev.events = events;
-  if (ptr) {
-    epev.data.ptr = ptr;
-  } else {
-    epev.data.fd = fd;
-  }
-  return epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &epev) == 0;
+  epev.data.fd = file_descriptor.fd;
+  return epoll_ctl(epfd_, EPOLL_CTL_MOD, file_descriptor.fd, &epev) == 0;
 }
 
-bool Epoll::WaitEvents(std::vector<struct epoll_event> &events,
-                       int timeout_ms) {
-  struct epoll_event *event_arr = new struct epoll_event[registered_fd_count_];
-  int event_num =
-      epoll_wait(epfd_, event_arr, registered_fd_count_, timeout_ms);
+bool Epoll::WaitEvents(std::vector<const FileDescriptor &> &events,
+                       int timeout_ms = -1) {
+  int maxevents = registered_fds_.size();
+  struct epoll_event *event_arr = new struct epoll_event[maxevents];
+  int event_num = epoll_wait(epfd_, event_arr, maxevents, timeout_ms);
   if (event_num > 0) {
     events.insert(events.end(), event_arr, event_arr + event_num);
   }

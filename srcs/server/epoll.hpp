@@ -3,7 +3,10 @@
 
 #include <sys/epoll.h>
 
+#include <map>
 #include <vector>
+
+#include "server/file_descriptor.hpp"
 
 namespace server {
 
@@ -11,24 +14,23 @@ class Epoll {
  private:
   const int epfd_;
 
-  int registered_fd_count_;
+  std::map<int, FileDescriptor> registered_fds_;
 
  public:
   Epoll();
   ~Epoll();
 
   // 購読するファイルディスクリプタを追加
-  // ptr が NULL だった場合は epoll_data.fd に fd がセットされる
-  // ptr が 非NULL だった場合は epoll_data.ptr に ptr がセットされる
-  bool AddFd(int fd, unsigned int events, void *ptr);
+  // file_descriptor は Epoll クラス内で保持される｡
+  bool AddFd(const FileDescriptor &file_descriptor, unsigned int events);
 
   // 購読しているファイルディスクリプタを削除
   bool RemoveFd(int fd);
 
   // 購読しているファイルディスクリプタの購読情報を変更
-  // ptr が NULL だった場合は epoll_data.fd に fd がセットされる
-  // ptr が 非NULL だった場合は epoll_data.ptr に ptr がセットされる
-  bool ModifyFd(int fd, unsigned int events, void *ptr);
+  // file_descriptor は Epoll クラス内で保持される｡
+  // fd が Epoll に存在しない場合やエラーの場合は false を返す｡
+  bool ModifyFd(const FileDescriptor &file_descriptor, unsigned int events);
 
   // 利用可能なイベントをepoll_waitで取得し､eventsの末尾に挿入する｡
   //
@@ -37,7 +39,8 @@ class Epoll {
   //
   // イベントが1つ以上 events に追加されたら true を返す｡
   // タイムアウトやエラーの場合は false を返す｡
-  bool WaitEvents(std::vector<struct epoll_event> &events, int timeout_ms = -1);
+  bool WaitEvents(std::vector<const FileDescriptor &> &events,
+                  int timeout_ms = -1);
 
  private:
   // epoll instance が片方のみでcloseされるのを防ぐためコピー操作は禁止
