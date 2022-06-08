@@ -7,6 +7,7 @@ namespace http {
 namespace {
 bool IsCorrectHTTPVersion(const std::string &str);
 bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest);
+void ParseHeaderFieldValue(std::string &str, std::vector<std::string> &vec);
 }  // namespace
 
 HttpRequest::HttpRequest()
@@ -191,8 +192,7 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   str.erase(0, collon_pos + 1);
   std::string field = utils::TrimString(str, kOWS);
 
-  // TODO ,区切りのsplit
-  headers_[header].push_back(field);
+  ParseHeaderFieldValue(str, headers_[header]);
   return parse_status_ = OK;
 }
 
@@ -261,6 +261,58 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 namespace {
+
+// RFC7230から読み解ける仕様をできるかぎり実装
+// DQUOTEで囲まれている文字列の内部でのみエスケープが効く
+//　エスケープされてないDQUOTEは取り除く
+// DQUOTEで囲まれていないカンマまでをreturnする。カンマはstrに残る
+// ペアの存在しないDQUOTEは文字扱いでのこる。
+std::string CutSubstrHeaderValue(std::string &str) {
+  bool is_quoting = false;
+  std::string result;
+  std::string::iterator it = str.begin();
+  std::string::iterator quote_pos;
+  for (; it != str.end(); it++) {
+    if (is_quoting) {
+      if (*it == '"') {
+        is_quoting = false;
+      } else if (*it == '\\' && it + 1 != str.end()) {
+        it++;
+        result += *it;
+      } else {
+        result += *it;
+      }
+    } else {
+      if (*it == '"') {
+        quote_pos = it;
+        is_quoting = true;
+      } else if (*it == ',') {
+        break;
+      } else {
+        result += *it;
+      }
+    }
+  }
+  if (is_quoting) {
+    size_t quote_insert_pos = std::distance(str.begin(), quote_pos);
+    result.insert(result.begin() + quote_insert_pos, '"');
+  }
+  str.erase(str.begin(), it);
+  return result;
+}
+
+// strにヘッダの:以降を受け取り、splitしてvecにつめる
+//  e.g. str = If-Match: "strong", W/"weak", "oops, a \"comma\""
+//  returnは 'strong', 'W/weak'  'oops, a "comma"'
+void ParseHeaderFieldValue(std::string &str, std::vector<std::string> &vec) {
+  while (!str.empty()) {
+    utils::TrimString(str, kOWS);
+    vec.push_back(CutSubstrHeaderValue(str));
+    if (!str.empty() && str[0] == ',') {
+      str.erase(str.begin());
+    }
+  }
+}
 
 bool IsCorrectHTTPVersion(const std::string &str) {
   if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
