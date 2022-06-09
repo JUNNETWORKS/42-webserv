@@ -6,6 +6,8 @@ Error::Error(bool is_err) : is_err_(is_err) {}
 
 Error::Error(const std::string &err_msg) : is_err_(true), err_msg_(err_msg) {}
 
+Error::Error(const char *err_msg) : is_err_(true), err_msg_(err_msg) {}
+
 Error::Error(const Error &other) {
   *this = other;
 }

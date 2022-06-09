@@ -12,11 +12,15 @@ class Error {
   std::string err_msg_;
 
  public:
-  Error(bool is_err = true);
+  explicit Error(bool is_err = true);
 
   // エラーメッセージを設定する｡
   // is_err は true に設定される｡
   Error(const std::string &err_msg);
+
+  // エラーメッセージを設定する｡
+  // is_err は true に設定される｡
+  Error(const char *err_msg);
 
   Error(const Error &other);
 
@@ -33,7 +37,7 @@ class Error {
 //
 // ===== Usage =====
 // Result<int> succeed() {  // 成功
-//   return Result<int>(10);
+//   return 10;
 // }
 //
 // Result<void> succeedVoid() {  // 成功 (返り値がvoid)
@@ -41,7 +45,7 @@ class Error {
 // }
 //
 // Result<void> fail() {  // エラー
-//   return Result<void>(Error("This is error!"));
+//   return Error("This is error!");
 // }
 //
 // int main(){
