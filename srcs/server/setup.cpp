@@ -10,12 +10,6 @@
 
 namespace server {
 
-ServerException::ServerException(const char *errmsg) : errmsg_(errmsg) {}
-
-const char *ServerException::what() const throw() {
-  return errmsg_;
-}
-
 void CloseAllFds(const ListenFdPortMap &listen_fd_port_map) {
   for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
        it != listen_fd_port_map.end(); ++it) {
