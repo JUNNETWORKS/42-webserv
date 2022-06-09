@@ -87,5 +87,17 @@ TEST(ResultTest, ReturnNoConstructorObject) {
   EXPECT_FALSE(result.IsErr());
 }
 
+Result<NoConstructorClass> ReturnNoConstructorObjectAndError() {
+  // デフォルトコンストラクタが利用できない場合は明示的にResultインスタンスを作成する必要がある｡
+  return Result<NoConstructorClass>(
+      NoConstructorClass(0), Error("Error ReturnNoConstructorObjectAndError"));
+}
+TEST(ResultTest, ReturnNoConstructorObjectAndError) {
+  Result<NoConstructorClass> result = ReturnNoConstructorObjectAndError();
+  EXPECT_FALSE(result.IsOk());
+  EXPECT_TRUE(result.IsErr());
+  EXPECT_EQ(result.Err().Print(), "Error ReturnNoConstructorObjectAndError");
+}
+
 }  // namespace
 }  // namespace utils
