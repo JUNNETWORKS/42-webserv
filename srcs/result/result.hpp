@@ -1,6 +1,7 @@
 #ifndef UTILS_RESULT_HPP_
 #define UTILS_RESULT_HPP_
 
+#include <cassert>
 #include <string>
 
 namespace result {
@@ -76,12 +77,14 @@ class Result {
     return !err_.IsErr();
   }
   T Ok() {
+    assert(IsOk());
     return val_;
   }
   bool IsErr() {
     return err_.IsErr();
   }
   Error Err() {
+    assert(IsErr());
     return err_;
   }
 };
