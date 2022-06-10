@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace utils {
+namespace result {
 
 // Result でエラーを表すためのクラス
 class Error {
@@ -111,6 +111,6 @@ class Result<void> {
   }
 };
 
-}  // namespace utils
+}  // namespace result
 
 #endif
