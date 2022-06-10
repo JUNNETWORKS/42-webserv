@@ -5,6 +5,8 @@
 namespace http {
 
 namespace {
+
+bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
 bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest);
 bool ParseHeaderFieldValue(std::string &str, std::vector<std::string> &vec);
@@ -181,10 +183,9 @@ HttpStatus HttpRequest::InterpretVersion(std::string &str) {
 
 HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   size_t collon_pos = str.find_first_of(":");
-  size_t white_space_pos = str.find_first_of(" ");
 
   if (collon_pos == std::string::npos || collon_pos == 0 ||
-      (white_space_pos != std::string::npos && white_space_pos < collon_pos))
+      IsTcharString(str.substr(0, collon_pos)) == false)
     return parse_status_ = BAD_REQUEST;
 
   std::string header = str.substr(0, collon_pos);
@@ -263,6 +264,23 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 namespace {
+
+bool IsTchar(const char c) {
+  return std::isalnum(c) || kTcharsWithoutAlnum.find(c) != std::string::npos;
+}
+
+// tcharのみの文字列か判定
+// tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*"
+//         "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"/ DIGIT / ALPHA
+// ヘッダ名が入ってきてコロンは含まない想定
+bool IsTcharString(const std::string &str) {
+  for (size_t i = 0; i < str.size(); i++) {
+    if (IsTchar(str[i]) == false) {
+      return false;
+    }
+  }
+  return true;
+}
 
 // RFC7230から読み解ける仕様をできるかぎり実装
 // DQUOTEで囲まれている文字列の内部でのみエスケープが効く
