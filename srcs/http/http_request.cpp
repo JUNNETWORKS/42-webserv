@@ -272,7 +272,7 @@ namespace {
 bool IsTcharString(const std::string &str) {
   for (size_t i = 0; i < str.size(); i++) {
     if (std::isalnum(str[i]) == false &&
-        kNotAlnumTchars.find(str[i]) == std::string::npos) {
+        kTcharsWithoutAlnum.find(str[i]) == std::string::npos) {
       return false;
     }
   }
