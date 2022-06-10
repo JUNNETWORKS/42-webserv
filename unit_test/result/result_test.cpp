@@ -1,9 +1,8 @@
-#include "utils/result.hpp"
+#include "result/result.hpp"
 
 #include <gtest/gtest.h>
 
-namespace utils {
-namespace {
+namespace result {
 
 class NoConstructorClass {
  private:
@@ -100,5 +99,10 @@ TEST(ResultTest, ReturnNoConstructorObjectAndError) {
             "Error ReturnNoConstructorObjectAndError");
 }
 
-}  // namespace
-}  // namespace utils
+TEST(ResultTest, ErrorDefaultConstructor) {
+  Result<void> result = Error();
+  EXPECT_FALSE(result.IsOk());
+  EXPECT_TRUE(result.IsErr());
+}
+
+}  // namespace result
