@@ -265,14 +265,17 @@ HttpStatus HttpRequest::DecideBodySize() {
 
 namespace {
 
+bool IsTchar(const char c) {
+  return std::isalnum(c) || kTcharsWithoutAlnum.find(c) != std::string::npos;
+}
+
 // tcharのみの文字列か判定
 // tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*"
 //         "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"/ DIGIT / ALPHA
 // ヘッダ名が入ってきてコロンは含まない想定
 bool IsTcharString(const std::string &str) {
   for (size_t i = 0; i < str.size(); i++) {
-    if (std::isalnum(str[i]) == false &&
-        kTcharsWithoutAlnum.find(str[i]) == std::string::npos) {
+    if (IsTchar(str[i]) == false) {
       return false;
     }
   }
