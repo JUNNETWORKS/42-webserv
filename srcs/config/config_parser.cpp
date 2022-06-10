@@ -175,10 +175,11 @@ void Parser::ParseAllowMethodDirective(LocationConf &location) {
 void Parser::ParseClientMaxBodySizeDirective(LocationConf &location) {
   SkipSpaces();
   std::string body_size_str = GetWord();
-  unsigned long body_size;
-  if (utils::Stoul(body_size, body_size_str) == false) {
+  Result<unsigned long> result = utils::Stoul(body_size_str);
+  if (result.IsErr()) {
     throw ParserException("Invalid body size.");
   }
+  unsigned long body_size = result.Ok();
   location.SetClientMaxBodySize(body_size);
   SkipSpaces();
   if (GetC() != ';') {
@@ -389,8 +390,8 @@ bool Parser::IsValidHttpStatusCode(const std::string &code) {
 }
 
 bool Parser::IsValidPort(const std::string &port) {
-  unsigned long num;
-  return utils::Stoul(num, port) && num <= kMaxPortNumber;
+  Result<unsigned long> result = utils::Stoul(port);
+  return result.IsOk() && result.Ok() <= kMaxPortNumber;
 }
 
 bool Parser::ParseOnOff(const std::string &on_or_off) {

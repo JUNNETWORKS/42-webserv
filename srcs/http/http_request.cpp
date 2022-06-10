@@ -216,9 +216,11 @@ HttpStatus HttpRequest::InterpretContentLength(
   if (length_header.size() != 1)
     return parse_status_ = BAD_REQUEST;
 
-  if (utils::Stoul(body_size_, length_header.front()) == false)
+  Result<unsigned long> result = utils::Stoul(length_header.front());
+  if (result.IsErr())
     return parse_status_ = BAD_REQUEST;
 
+  body_size_ = result.Ok();
   const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
   if (body_size_ > kMaxSize)
     return parse_status_ = PAYLOAD_TOO_LARGE;

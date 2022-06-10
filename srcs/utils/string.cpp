@@ -44,9 +44,9 @@ bool IsDigits(const std::string &str) {
   return true;
 }
 
-bool Stoul(unsigned long &result, const std::string &str) {
+Result<unsigned long> Stoul(const std::string &str) {
   if (!IsDigits(str)) {
-    return false;
+    return Error();
   }
 
   char *end;
@@ -62,10 +62,9 @@ bool Stoul(unsigned long &result, const std::string &str) {
   // unsigned long の範囲超えてる
   // すべての文字が数字として認識されなかった
   if (p == end || errno == ERANGE || str.size() != used_char_count) {
-    return false;
+    return Error();
   }
-  result = num;
-  return true;
+  return num;
 }
 
 std::vector<std::string> SplitString(const std::string &str,

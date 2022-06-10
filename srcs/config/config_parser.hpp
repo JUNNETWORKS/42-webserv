@@ -7,8 +7,11 @@
 #include "config/config.hpp"
 #include "config/location_conf.hpp"
 #include "config/virtual_server_conf.hpp"
+#include "result/result.hpp"
 
 namespace config {
+
+using namespace result;
 
 class Parser {
  public:
