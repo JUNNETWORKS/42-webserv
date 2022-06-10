@@ -26,7 +26,7 @@ bool Error::IsErr() {
   return is_err_;
 }
 
-const std::string &Error::Print() {
+std::string Error::GetMessage() {
   return err_msg_;
 }
 

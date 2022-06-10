@@ -37,7 +37,7 @@ TEST(ResultTest, ReturnIntError) {
   Result<int> result = ReturnIntError();
   EXPECT_FALSE(result.IsOk());
   EXPECT_TRUE(result.IsErr());
-  EXPECT_EQ(result.Err().Print(), "Error ReturnIntError");
+  EXPECT_EQ(result.Err().GetMessage(), "Error ReturnIntError");
 }
 
 Result<void> ReturnVoid() {
@@ -57,7 +57,7 @@ TEST(ResultTest, ReturnVoidError) {
   Result<void> result = ReturnVoidError();
   EXPECT_FALSE(result.IsOk());
   EXPECT_TRUE(result.IsErr());
-  EXPECT_EQ(result.Err().Print(), "Error ReturnVoidError");
+  EXPECT_EQ(result.Err().GetMessage(), "Error ReturnVoidError");
 }
 
 Result<std::vector<int> > ReturnVector() {
@@ -96,7 +96,8 @@ TEST(ResultTest, ReturnNoConstructorObjectAndError) {
   Result<NoConstructorClass> result = ReturnNoConstructorObjectAndError();
   EXPECT_FALSE(result.IsOk());
   EXPECT_TRUE(result.IsErr());
-  EXPECT_EQ(result.Err().Print(), "Error ReturnNoConstructorObjectAndError");
+  EXPECT_EQ(result.Err().GetMessage(),
+            "Error ReturnNoConstructorObjectAndError");
 }
 
 }  // namespace

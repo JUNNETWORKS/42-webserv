@@ -29,7 +29,7 @@ class Error {
   ~Error();
 
   bool IsErr();
-  const std::string &Print();
+  std::string GetMessage();
 };
 
 // エラーが発生するかもしれない関数の返り値として利用する｡
