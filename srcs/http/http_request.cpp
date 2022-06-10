@@ -288,7 +288,6 @@ bool CutSubstrHeaderValue(std::string &res, std::string &str) {
   bool is_quoting = false;
   std::string result;
   std::string::iterator it = str.begin();
-  std::string::iterator quote_pos;
   for (; it != str.end(); it++) {
     if (is_quoting) {
       if (*it == '"') {
@@ -301,7 +300,6 @@ bool CutSubstrHeaderValue(std::string &res, std::string &str) {
       }
     } else {
       if (*it == '"') {
-        quote_pos = it;
         is_quoting = true;
       } else if (*it == ',') {
         break;
