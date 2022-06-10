@@ -71,13 +71,13 @@ void ProcessResponse(SocketManager &socket_manager, SocketInfo *info,
 
 int StartEventLoop(Epoll &epoll, SocketManager &socket_manager,
                    const config::Config &config) {
-  std::vector<FdEvent> epoll_events;
   // イベントループ
   while (1) {
-    epoll_events.clear();
-    if (!epoll.WaitEvents(epoll_events)) {
+    Result<std::vector<FdEvent> > result = epoll.WaitEvents();
+    if (result.IsErr()) {
       utils::ErrExit("WaitEvents");
     }
+    std::vector<FdEvent> epoll_events = result.Ok();
 
     for (std::vector<FdEvent>::const_iterator it = epoll_events.begin();
          it != epoll_events.end(); ++it) {
