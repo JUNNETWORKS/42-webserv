@@ -30,16 +30,12 @@ class Epoll {
   Result<void> RemoveFd(int fd);
 
   // 購読しているファイルディスクリプタの購読情報を変更
-  // fd が Epoll に存在しない場合やエラーの場合は false を返す｡
   Result<void> ModifyFd(const FdEvent &fd_event, unsigned int events);
 
   // 利用可能なイベントをepoll_waitで取得し､eventsの末尾に挿入する｡
   //
   // timeout は ms 単位｡
   // -1を指定すると1つ以上のイベントが利用可能になるまでブロックする｡
-  //
-  // イベントが1つ以上 events に追加されたら true を返す｡
-  // タイムアウトやエラーの場合は false を返す｡
   Result<std::vector<FdEvent> > WaitEvents(int timeout_ms = -1);
 
  private:
