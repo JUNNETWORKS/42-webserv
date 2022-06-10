@@ -25,6 +25,7 @@ bool IsDir(const std::string& file_path) {
   return S_ISDIR(sb.st_mode);
 }
 
+// TODO: ssoがResult返すようにする｡
 bool GetFileList(const std::string& file_path, std::vector<std::string>& vec) {
   struct dirent* dent;
   DIR* dir = opendir(file_path.c_str());
