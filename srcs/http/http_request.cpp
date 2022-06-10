@@ -2,14 +2,18 @@
 
 #include <stdio.h>
 
+#include "result/result.hpp"
+
 namespace http {
 
 namespace {
 
+using namespace result;
+
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
-bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest);
-bool ParseHeaderFieldValue(std::string &str, std::vector<std::string> &vec);
+Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
+Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
 }  // namespace
 
 HttpRequest::HttpRequest()
@@ -138,9 +142,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseBody(utils::ByteVector &buffer) {
 // Interpret系関数　文字列を解釈する関数　主にparse_statusで動作管理(OKじゃなくなったら次は実行されない)
 
 HttpStatus HttpRequest::InterpretMethod(std::string &str) {
-  if (TryCutSubstrBeforeWhiteSpace(str, method_) == false) {
+  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
+  if (result.IsErr()) {
     return parse_status_ = BAD_REQUEST;
   }
+  method_ = result.Ok();
 
   if (method_ == method_strs::kGet || method_ == method_strs::kDelete ||
       method_ == method_strs::kPost) {
@@ -151,9 +157,11 @@ HttpStatus HttpRequest::InterpretMethod(std::string &str) {
 }
 
 HttpStatus HttpRequest::InterpretPath(std::string &str) {
-  if (TryCutSubstrBeforeWhiteSpace(str, path_) == false) {
+  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
+  if (result.IsErr()) {
     return parse_status_ = BAD_REQUEST;
   }
+  path_ = result.Ok();
 
   if (true) {  // TODO 長いURLの時414(URI Too Long)を判定する
     return parse_status_ = OK;
@@ -193,9 +201,11 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   str.erase(0, collon_pos + 1);
   std::string field = utils::TrimString(str, kOWS);
 
-  if (ParseHeaderFieldValue(str, headers_[header]) == false) {
+  Result<std::vector<std::string> > result = ParseHeaderFieldValue(str);
+  if (result.IsErr()) {
     return parse_status_ = BAD_REQUEST;
   }
+  headers_[header] = result.Ok();
   return parse_status_ = OK;
 }
 
@@ -206,9 +216,11 @@ HttpStatus HttpRequest::InterpretContentLength(
   if (length_header.size() != 1)
     return parse_status_ = BAD_REQUEST;
 
-  if (utils::Stoul(body_size_, length_header.front()) == false)
+  Result<unsigned long> result = utils::Stoul(length_header.front());
+  if (result.IsErr())
     return parse_status_ = BAD_REQUEST;
 
+  body_size_ = result.Ok();
   const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
   if (body_size_ > kMaxSize)
     return parse_status_ = PAYLOAD_TOO_LARGE;
@@ -287,7 +299,7 @@ bool IsTcharString(const std::string &str) {
 //　エスケープされてないDQUOTEは取り除く
 // DQUOTEで囲まれていないカンマまでをreturnする。カンマはstrに残る
 // ペアの存在しないDQUOTEは文字扱いでのこる。
-bool CutSubstrHeaderValue(std::string &res, std::string &str) {
+Result<std::string> CutSubstrHeaderValue(std::string &str) {
   bool is_quoting = false;
   std::string result;
   std::string::iterator it = str.begin();
@@ -312,30 +324,30 @@ bool CutSubstrHeaderValue(std::string &res, std::string &str) {
     }
   }
   if (is_quoting) {
-    return false;
+    return Error();
   }
-  res = result;
   str.erase(str.begin(), it);
-  return true;
+  return result;
 }
 
 // strにヘッダの:以降を受け取り、splitしてvecにつめる
 //  e.g. str = If-Match: "strong", W/"weak", "oops, a \"comma\""
 //  returnは 'strong', 'W/weak'  'oops, a "comma"'
-bool ParseHeaderFieldValue(std::string &str, std::vector<std::string> &vec) {
-  std::string value;
+Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str) {
+  std::vector<std::string> vec;
 
   while (!str.empty()) {
     utils::TrimString(str, kOWS);
-    if (CutSubstrHeaderValue(value, str) == false) {
-      return false;
+    Result<std::string> result = CutSubstrHeaderValue(str);
+    if (result.IsErr()) {
+      return result.Err();
     }
-    vec.push_back(value);
+    vec.push_back(result.Ok());
     if (!str.empty() && str[0] == ',') {
       str.erase(str.begin());
     }
   }
-  return true;
+  return vec;
 }
 
 bool IsCorrectHTTPVersion(const std::string &str) {
@@ -357,14 +369,14 @@ bool IsCorrectHTTPVersion(const std::string &str) {
   return true;
 }
 
-bool TryCutSubstrBeforeWhiteSpace(std::string &buffer, std::string &res) {
+Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer) {
   size_t white_space_pos = buffer.find_first_of(" ");
   if (white_space_pos == std::string::npos) {
-    return false;
+    return Error();
   }
-  res = buffer.substr(0, white_space_pos);
+  std::string res = buffer.substr(0, white_space_pos);
   buffer.erase(0, white_space_pos + 1);
-  return true;
+  return res;
 }
 
 }  // namespace
