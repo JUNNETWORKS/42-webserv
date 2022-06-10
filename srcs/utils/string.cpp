@@ -90,6 +90,7 @@ std::vector<std::string> SplitString(const std::string &str,
 std::string TrimString(std::string &str, const std::string &charset) {
   size_t start_pos = str.find_first_not_of(charset);
   if (start_pos == std::string::npos) {
+    str.clear();
     return str;
   }
   str.erase(str.begin(), str.begin() + start_pos);
