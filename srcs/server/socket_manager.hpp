@@ -15,13 +15,13 @@ namespace server {
 
 class SocketManager {
  private:
-  Epoll epoll_;
+  Epoll &epoll_;
 
   // map[<sock_fd>] = <socket_info>
   std::map<int, SocketInfo> socket_fd_map_;
 
  public:
-  SocketManager();
+  SocketManager(Epoll &epoll);
 
   ~SocketManager();
 
@@ -42,9 +42,9 @@ class SocketManager {
 
   Epoll &GetEpoll();
 
-  bool WaitEvents(std::vector<struct epoll_event> &events);
-
  private:
+  // epoll の参照への引数を渡さないコンストラクタは禁止
+  SocketManager();
   // epoll instance が片方のみでcloseされるのを防ぐためコピー操作は禁止
   SocketManager(const SocketManager &rhs);
   SocketManager &operator=(const SocketManager &rhs);

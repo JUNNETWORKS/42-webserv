@@ -10,7 +10,7 @@
 
 namespace server {
 
-SocketManager::SocketManager() : epoll_() {}
+SocketManager::SocketManager(Epoll &epoll) : epoll_(epoll) {}
 
 SocketManager::~SocketManager() {}
 
@@ -82,10 +82,6 @@ Epoll &SocketManager::GetEpoll() {
   return epoll_;
 }
 
-bool SocketManager::WaitEvents(std::vector<struct epoll_event> &events) {
-  return epoll_.WaitEvents(events);
-}
-
 bool SocketManager::AppendSocketIntoEpoll(int sockfd, const std::string &port,
                                           SocketInfo::ESockType socktype,
                                           unsigned int epevents) {
@@ -93,7 +89,9 @@ bool SocketManager::AppendSocketIntoEpoll(int sockfd, const std::string &port,
   socket_fd_map_[sockfd].port = port;
   socket_fd_map_[sockfd].socktype = socktype;
 
-  return epoll_.AddFd(sockfd, epevents, NULL);
+  FdEvent file_descriptor(sockfd, FdEvent::SocketFd, NULL);
+
+  return epoll_.AddFd(file_descriptor, epevents);
 }
 
 }  // namespace server
