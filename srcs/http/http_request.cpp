@@ -5,8 +5,11 @@
 namespace http {
 
 namespace {
+
+bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
 bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest);
+bool ParseHeaderFieldValue(std::string &str, std::vector<std::string> &vec);
 }  // namespace
 
 HttpRequest::HttpRequest()
@@ -180,19 +183,19 @@ HttpStatus HttpRequest::InterpretVersion(std::string &str) {
 
 HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   size_t collon_pos = str.find_first_of(":");
-  size_t white_space_pos = str.find_first_of(" ");
 
   if (collon_pos == std::string::npos || collon_pos == 0 ||
-      (white_space_pos != std::string::npos && white_space_pos < collon_pos))
+      IsTcharString(str.substr(0, collon_pos)) == false)
     return parse_status_ = BAD_REQUEST;
 
   std::string header = str.substr(0, collon_pos);
   std::transform(header.begin(), header.end(), header.begin(), toupper);
   str.erase(0, collon_pos + 1);
-  std::string field = utils::TrimWhiteSpace(str);
+  std::string field = utils::TrimString(str, kOWS);
 
-  // TODO ,区切りのsplit
-  headers_[header].push_back(field);
+  if (ParseHeaderFieldValue(str, headers_[header]) == false) {
+    return parse_status_ = BAD_REQUEST;
+  }
   return parse_status_ = OK;
 }
 
@@ -261,6 +264,79 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 namespace {
+
+bool IsTchar(const char c) {
+  return std::isalnum(c) || kTcharsWithoutAlnum.find(c) != std::string::npos;
+}
+
+// tcharのみの文字列か判定
+// tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*"
+//         "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"/ DIGIT / ALPHA
+// ヘッダ名が入ってきてコロンは含まない想定
+bool IsTcharString(const std::string &str) {
+  for (size_t i = 0; i < str.size(); i++) {
+    if (IsTchar(str[i]) == false) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// RFC7230から読み解ける仕様をできるかぎり実装
+// DQUOTEで囲まれている文字列の内部でのみエスケープが効く
+//　エスケープされてないDQUOTEは取り除く
+// DQUOTEで囲まれていないカンマまでをreturnする。カンマはstrに残る
+// ペアの存在しないDQUOTEは文字扱いでのこる。
+bool CutSubstrHeaderValue(std::string &res, std::string &str) {
+  bool is_quoting = false;
+  std::string result;
+  std::string::iterator it = str.begin();
+  for (; it != str.end(); it++) {
+    if (is_quoting) {
+      if (*it == '"') {
+        is_quoting = false;
+      } else if (*it == '\\' && it + 1 != str.end()) {
+        it++;
+        result += *it;
+      } else {
+        result += *it;
+      }
+    } else {
+      if (*it == '"') {
+        is_quoting = true;
+      } else if (*it == ',') {
+        break;
+      } else {
+        result += *it;
+      }
+    }
+  }
+  if (is_quoting) {
+    return false;
+  }
+  res = result;
+  str.erase(str.begin(), it);
+  return true;
+}
+
+// strにヘッダの:以降を受け取り、splitしてvecにつめる
+//  e.g. str = If-Match: "strong", W/"weak", "oops, a \"comma\""
+//  returnは 'strong', 'W/weak'  'oops, a "comma"'
+bool ParseHeaderFieldValue(std::string &str, std::vector<std::string> &vec) {
+  std::string value;
+
+  while (!str.empty()) {
+    utils::TrimString(str, kOWS);
+    if (CutSubstrHeaderValue(value, str) == false) {
+      return false;
+    }
+    vec.push_back(value);
+    if (!str.empty() && str[0] == ',') {
+      str.erase(str.begin());
+    }
+  }
+  return true;
+}
 
 bool IsCorrectHTTPVersion(const std::string &str) {
   if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
