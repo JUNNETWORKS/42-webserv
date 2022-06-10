@@ -39,7 +39,7 @@ std::vector<std::string> SplitString(const std::string &str,
                                      const std::string &delim);
 
 // str の前後からcharsetに含まれる文字を消して返す
-// e.g. TrimString("abcHELLOabcbca"") return HELLO
+// e.g. TrimString("abcHELLOabcbca", "abc"") return HELLO
 std::string TrimString(std::string &str, const std::string &charset);
 
 bool ReadFile(const std::string &path, std::string &dest);
