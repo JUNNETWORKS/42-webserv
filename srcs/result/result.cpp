@@ -1,6 +1,6 @@
-#include "utils/result.hpp"
+#include "result/result.hpp"
 
-namespace utils {
+namespace result {
 
 Error::Error(bool is_err) : is_err_(is_err) {}
 
@@ -30,4 +30,4 @@ std::string Error::GetMessage() {
   return err_msg_;
 }
 
-}  // namespace utils
+}  // namespace result
