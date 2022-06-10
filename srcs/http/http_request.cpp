@@ -12,7 +12,7 @@ using namespace result;
 
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
-bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest);
+Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
 Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
 }  // namespace
 
@@ -142,9 +142,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseBody(utils::ByteVector &buffer) {
 // Interpret系関数　文字列を解釈する関数　主にparse_statusで動作管理(OKじゃなくなったら次は実行されない)
 
 HttpStatus HttpRequest::InterpretMethod(std::string &str) {
-  if (TryCutSubstrBeforeWhiteSpace(str, method_) == false) {
+  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
+  if (result.IsErr()) {
     return parse_status_ = BAD_REQUEST;
   }
+  method_ = result.Ok();
 
   if (method_ == method_strs::kGet || method_ == method_strs::kDelete ||
       method_ == method_strs::kPost) {
@@ -155,9 +157,11 @@ HttpStatus HttpRequest::InterpretMethod(std::string &str) {
 }
 
 HttpStatus HttpRequest::InterpretPath(std::string &str) {
-  if (TryCutSubstrBeforeWhiteSpace(str, path_) == false) {
+  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
+  if (result.IsErr()) {
     return parse_status_ = BAD_REQUEST;
   }
+  path_ = result.Ok();
 
   if (true) {  // TODO 長いURLの時414(URI Too Long)を判定する
     return parse_status_ = OK;
@@ -363,14 +367,14 @@ bool IsCorrectHTTPVersion(const std::string &str) {
   return true;
 }
 
-bool TryCutSubstrBeforeWhiteSpace(std::string &buffer, std::string &res) {
+Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer) {
   size_t white_space_pos = buffer.find_first_of(" ");
   if (white_space_pos == std::string::npos) {
-    return false;
+    return Error();
   }
-  res = buffer.substr(0, white_space_pos);
+  std::string res = buffer.substr(0, white_space_pos);
   buffer.erase(0, white_space_pos + 1);
-  return true;
+  return res;
 }
 
 }  // namespace
