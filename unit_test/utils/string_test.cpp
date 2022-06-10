@@ -2,68 +2,59 @@
 
 #include <gtest/gtest.h>
 
+#include "expectations/expect_result.hpp"
+
 namespace utils {
 
 TEST(StoulTest, Zero) {
-  unsigned long num;
-  EXPECT_TRUE(Stoul(num, "0"));
-  EXPECT_EQ(num, 0);
+  EXPECT_RESULT_IS_OK(Stoul("0"));
+  EXPECT_RESULT_OK_EQ(Stoul("0"), Result<unsigned long>(0));
 }
 
 TEST(StoulTest, Maximumvalue) {
-  unsigned long num;
-  EXPECT_TRUE(Stoul(num, "18446744073709551615"));
-  EXPECT_EQ(num, 18446744073709551615ul);
+  EXPECT_RESULT_IS_OK(Stoul("18446744073709551615"));
+  EXPECT_RESULT_OK_EQ(Stoul("18446744073709551615"),
+                      Result<unsigned long>(18446744073709551615ul));
 }
 
 TEST(StoulTest, MaximumvalueWithPlusSign) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "+18446744073709551615"));
+  EXPECT_RESULT_IS_ERR(Stoul("+18446744073709551615"));
 }
 
 TEST(StoulTest, MaximumvaluePlusOne) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "18446744073709551616"));
+  EXPECT_RESULT_IS_ERR(Stoul("18446744073709551616"));
 }
 
 TEST(StoulTest, MaximumvalueWithPlusSigns) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "+++++++++++18446744073709551615"));
+  EXPECT_RESULT_IS_ERR(Stoul("+++++++++++18446744073709551615"));
 }
 
 TEST(StoulTest, MinusOne) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "-1"));
+  EXPECT_RESULT_IS_ERR(Stoul("-1"));
 }
 
 TEST(StoulTest, MinusSigns) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "--------1"));
+  EXPECT_RESULT_IS_ERR(Stoul("--------1"));
 }
 
 TEST(StoulTest, PlusZero) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "+0"));
+  EXPECT_RESULT_IS_ERR(Stoul("+0"));
 }
 
 TEST(StoulTest, MinusZero) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "-0"));
+  EXPECT_RESULT_IS_ERR(Stoul("-0"));
 }
 
 TEST(StoulTest, IncludeAlphabetFront) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "a100"));
+  EXPECT_RESULT_IS_ERR(Stoul("a100"));
 }
 
 TEST(StoulTest, IncludeAlphabetBack) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "100a"));
+  EXPECT_RESULT_IS_ERR(Stoul("100a"));
 }
 
 TEST(StoulTest, IncludeAlphabetMiddle) {
-  unsigned long num;
-  EXPECT_FALSE(Stoul(num, "10a0"));
+  EXPECT_RESULT_IS_ERR(Stoul("10a0"));
 }
 
 }  // namespace utils
