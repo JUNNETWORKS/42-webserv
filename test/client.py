@@ -6,6 +6,7 @@ import sys
 WEBSERV_PORT = 49200
 NGINX_PORT = 49201
 APACHE_PORT = 49202
+LOCAL_PORT = 8080
 
 
 def send_request(test_file, port):
@@ -29,6 +30,10 @@ def print_response_status_code(res):
 
 
 def main():
+    if len(sys.argv) >= 2 and sys.argv[1] == "-l":
+        local_main()
+        return
+
     if len(sys.argv) == 2:
         test_file = sys.argv[1]
     else:
@@ -52,6 +57,19 @@ def main():
     print("--- APACHE ---")
     # print(apache_res)
     print_response_status_code(apache_res)
+
+
+def local_main():
+    test_file = "./req/req1.txt"
+
+    print("TEST FILE :", test_file, file=sys.stderr)
+    print()
+
+    webserv_res = send_request(test_file, LOCAL_PORT)
+
+    print("--- WEBSERV RES ---")
+    # print(webserv_res)
+    print_response_status_code(webserv_res)
 
 
 if __name__ == "__main__":
