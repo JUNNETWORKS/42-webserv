@@ -6,9 +6,11 @@
 #include <map>
 #include <vector>
 
+#include "result/result.hpp"
 #include "server/fd_event.hpp"
 
 namespace server {
+using namespace result;
 
 class Epoll {
  private:
@@ -22,14 +24,14 @@ class Epoll {
   ~Epoll();
 
   // 購読するファイルディスクリプタを追加
-  bool AddFd(const FdEvent &fd_event, unsigned int events);
+  Result<void> AddFd(const FdEvent &fd_event, unsigned int events);
 
   // 購読しているファイルディスクリプタを削除
-  bool RemoveFd(int fd);
+  Result<void> RemoveFd(int fd);
 
   // 購読しているファイルディスクリプタの購読情報を変更
   // fd が Epoll に存在しない場合やエラーの場合は false を返す｡
-  bool ModifyFd(const FdEvent &fd_event, unsigned int events);
+  Result<void> ModifyFd(const FdEvent &fd_event, unsigned int events);
 
   // 利用可能なイベントをepoll_waitで取得し､eventsの末尾に挿入する｡
   //
@@ -38,7 +40,7 @@ class Epoll {
   //
   // イベントが1つ以上 events に追加されたら true を返す｡
   // タイムアウトやエラーの場合は false を返す｡
-  bool WaitEvents(std::vector<FdEvent> &events, int timeout_ms = -1);
+  Result<std::vector<FdEvent> > WaitEvents(int timeout_ms = -1);
 
  private:
   // epoll instance が片方のみでcloseされるのを防ぐためコピー操作は禁止
