@@ -1,4 +1,5 @@
 #include "config/config.hpp"
+#include "server/epoll.hpp"
 #include "server/event_loop.hpp"
 #include "server/setup.hpp"
 #include "server/socket_manager.hpp"
@@ -28,10 +29,11 @@ int main(int argc, char const *argv[]) {
   }
 
   // epoll インスタンス作成
-  server::SocketManager socket_manager;
+  server::Epoll epoll;
+  server::SocketManager socket_manager(epoll);
   socket_manager.AppendListenFd(listen_fd_port_map);
 
-  server::StartEventLoop(socket_manager, config);
+  server::StartEventLoop(epoll, socket_manager, config);
 
   return 0;
 }

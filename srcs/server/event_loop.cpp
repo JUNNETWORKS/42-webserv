@@ -1,6 +1,8 @@
 #include "server/event_loop.hpp"
 
 #include "config/config.hpp"
+#include "server/epoll.hpp"
+#include "server/fd_event.hpp"
 #include "server/socket_info.hpp"
 #include "server/socket_manager.hpp"
 #include "utils/error.hpp"
@@ -67,42 +69,45 @@ void ProcessResponse(SocketManager &socket_manager, SocketInfo *info,
 
 }  // namespace
 
-int StartEventLoop(SocketManager &socket_manager,
+int StartEventLoop(Epoll &epoll, SocketManager &socket_manager,
                    const config::Config &config) {
-  std::vector<struct epoll_event> epoll_events;
+  std::vector<FdEvent> epoll_events;
   // イベントループ
   while (1) {
     epoll_events.clear();
-    if (!socket_manager.WaitEvents(epoll_events)) {
+    if (!epoll.WaitEvents(epoll_events)) {
       utils::ErrExit("WaitEvents");
     }
 
-    for (std::vector<struct epoll_event>::const_iterator it =
-             epoll_events.begin();
+    for (std::vector<FdEvent>::const_iterator it = epoll_events.begin();
          it != epoll_events.end(); ++it) {
-      int fd = it->data.fd;
+      FdEvent::EFdType fd_type = it->fd_type;
+      int fd = it->fd;
       unsigned int event_type = it->events;
-      SocketInfo *socket_info = socket_manager.GetSocketInfo(fd);
 
-      if (socket_info->socktype == SocketInfo::ListenSock) {
-        if (!socket_manager.AcceptNewConnection(socket_info->fd)) {
-          utils::ErrExit("AddSocketFdIntoEpFd");
-        }
-      } else {
-        int conn_fd = socket_info->fd;
-        // if data in read buffer, read
-        if (event_type & EPOLLIN) {
-          ProcessRequest(socket_manager, socket_info);
-        }
-        // if space in write buffer, read
-        if (event_type & EPOLLOUT) {
-          ProcessResponse(socket_manager, socket_info, config);
-        }
+      if (fd_type == FdEvent::SocketFd) {
+        SocketInfo *socket_info = socket_manager.GetSocketInfo(fd);
 
-        // error or timeout? close conn_fd and remove from epfd
-        if (event_type & (EPOLLERR | EPOLLHUP)) {
-          printf("Connection error\n");
-          socket_manager.CloseConnFd(conn_fd);
+        if (socket_info->socktype == SocketInfo::ListenSock) {
+          if (!socket_manager.AcceptNewConnection(socket_info->fd)) {
+            utils::ErrExit("AddSocketFdIntoEpFd");
+          }
+        } else {
+          int conn_fd = socket_info->fd;
+          // if data in read buffer, read
+          if (event_type & EPOLLIN) {
+            ProcessRequest(socket_manager, socket_info);
+          }
+          // if space in write buffer, read
+          if (event_type & EPOLLOUT) {
+            ProcessResponse(socket_manager, socket_info, config);
+          }
+
+          // error or timeout? close conn_fd and remove from epfd
+          if (event_type & (EPOLLERR | EPOLLHUP)) {
+            printf("Connection error\n");
+            socket_manager.CloseConnFd(conn_fd);
+          }
         }
       }
     }
