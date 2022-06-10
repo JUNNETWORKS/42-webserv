@@ -2,14 +2,18 @@
 
 #include <stdio.h>
 
+#include "result/result.hpp"
+
 namespace http {
 
 namespace {
 
+using namespace result;
+
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
 bool TryCutSubstrBeforeWhiteSpace(std::string &src, std::string &dest);
-bool ParseHeaderFieldValue(std::string &str, std::vector<std::string> &vec);
+Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
 }  // namespace
 
 HttpRequest::HttpRequest()
@@ -193,9 +197,11 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   str.erase(0, collon_pos + 1);
   std::string field = utils::TrimString(str, kOWS);
 
-  if (ParseHeaderFieldValue(str, headers_[header]) == false) {
+  Result<std::vector<std::string> > result = ParseHeaderFieldValue(str);
+  if (result.IsErr()) {
     return parse_status_ = BAD_REQUEST;
   }
+  headers_[header] = result.Ok();
   return parse_status_ = OK;
 }
 
@@ -287,7 +293,7 @@ bool IsTcharString(const std::string &str) {
 //　エスケープされてないDQUOTEは取り除く
 // DQUOTEで囲まれていないカンマまでをreturnする。カンマはstrに残る
 // ペアの存在しないDQUOTEは文字扱いでのこる。
-bool CutSubstrHeaderValue(std::string &res, std::string &str) {
+Result<std::string> CutSubstrHeaderValue(std::string &str) {
   bool is_quoting = false;
   std::string result;
   std::string::iterator it = str.begin();
@@ -312,30 +318,30 @@ bool CutSubstrHeaderValue(std::string &res, std::string &str) {
     }
   }
   if (is_quoting) {
-    return false;
+    return Error();
   }
-  res = result;
   str.erase(str.begin(), it);
-  return true;
+  return result;
 }
 
 // strにヘッダの:以降を受け取り、splitしてvecにつめる
 //  e.g. str = If-Match: "strong", W/"weak", "oops, a \"comma\""
 //  returnは 'strong', 'W/weak'  'oops, a "comma"'
-bool ParseHeaderFieldValue(std::string &str, std::vector<std::string> &vec) {
-  std::string value;
+Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str) {
+  std::vector<std::string> vec;
 
   while (!str.empty()) {
     utils::TrimString(str, kOWS);
-    if (CutSubstrHeaderValue(value, str) == false) {
-      return false;
+    Result<std::string> result = CutSubstrHeaderValue(str);
+    if (result.IsErr()) {
+      return result.Err();
     }
-    vec.push_back(value);
+    vec.push_back(result.Ok());
     if (!str.empty() && str[0] == ',') {
       str.erase(str.begin());
     }
   }
-  return true;
+  return vec;
 }
 
 bool IsCorrectHTTPVersion(const std::string &str) {
