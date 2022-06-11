@@ -18,13 +18,11 @@
 #include "http/http_request.hpp"
 #include "http/http_response.hpp"
 #include "server/epoll.hpp"
-#include "server/socket_manager.hpp"
 #include "utils/ByteVector.hpp"
 
 namespace server {
 
-int StartEventLoop(Epoll &epoll, SocketManager &socket_manager,
-                   const config::Config &config);
+int StartEventLoop(Epoll &epoll);
 
 }  // namespace server
 
