@@ -110,4 +110,55 @@ TEST(RequestParserTest, NotExistCRLFAfterRequestLine) {
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
+// Method ===========================================
+
+TEST(RequestParserTest, NotExistMethod) {
+  http::HttpRequest req;
+  utils::ByteVector buf(
+      "HOGE / HTTP/1.1\r\n"
+      "Host: Hoge\r\n"
+      "\r\n"
+      "\r\n");
+
+  req.ParseRequest(buf);
+  EXPECT_FALSE(req.IsCorrectStatus());
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+
+  EXPECT_TRUE(true);
+}
+
+TEST(RequestParserTest, NotImplementMethod) {
+  // http::HttpRequest req;
+  // utils::ByteVector buf(
+  //     "CONNECT / HTTP/1.1\r\n"
+  //     "Host: Hoge\r\n"
+  //     "User-Agent: Pikachu\r\n"
+  //     "Accept: */*\r\n"
+  //     "\r\n"
+  //     "\r\n");
+
+  // req.ParseRequest(buf);
+  // EXPECT_TRUE(req.IsCorrectStatus());
+  // EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
+
+  EXPECT_TRUE(true);
+}
+
+TEST(RequestParserTest, NotAllowdMethod) {
+  //コンフィグを合わせてテスト
+  // http::HttpRequest req;
+  // utils::ByteVector buf(
+  //     "POST / HTTP/1.1\r\n"
+  //     "Host: Hoge\r\n"
+  //     "User-Agent: Pikachu\r\n"
+  //     "Accept: */*\r\n"
+  //     "\r\n"
+  //     "\r\n");
+
+  // req.ParseRequest(buf);
+  // EXPECT_TRUE(req.IsCorrectStatus());
+  // EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
+
+  EXPECT_TRUE(true);
+}
 }  // namespace http
