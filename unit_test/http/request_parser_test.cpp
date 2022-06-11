@@ -63,8 +63,6 @@ TEST(RequestParserTest, ExistSPBeforeMethod) {
   utils::ByteVector buf(
       " GET / HTTP/1.1\r\n"
       "Host: Hoge\r\n"
-      "User-Agent: Pikachu\r\n"
-      "Accept: */*\r\n"
       "\r\n"
       "\r\n");
 
@@ -78,8 +76,6 @@ TEST(RequestParserTest, ExistSPBetweenMethodAndURL) {
   utils::ByteVector buf(
       "GET  / HTTP/1.1\r\n"
       "Host: Hoge\r\n"
-      "User-Agent: Pikachu\r\n"
-      "Accept: */*\r\n"
       "\r\n"
       "\r\n");
 
@@ -93,8 +89,6 @@ TEST(RequestParserTest, ExistSPBetweenURLAndVersion) {
   utils::ByteVector buf(
       "GET /  HTTP/1.1\r\n"
       "Host: Hoge\r\n"
-      "User-Agent: Pikachu\r\n"
-      "Accept: */*\r\n"
       "\r\n"
       "\r\n");
 
@@ -108,8 +102,6 @@ TEST(RequestParserTest, NotExistCRLFAfterRequestLine) {
   utils::ByteVector buf(
       "GET / HTTP/1.1"
       "Host: Hoge\r\n"
-      "User-Agent: Pikachu\r\n"
-      "Accept: */*\r\n"
       "\r\n"
       "\r\n");
 
