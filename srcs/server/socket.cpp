@@ -32,7 +32,7 @@ Result<Socket *> Socket::AcceptNewConnection() {
   struct sockaddr_storage client_addr;
   socklen_t addrlen = sizeof(struct sockaddr_storage);
   int conn_fd = accept(fd_, (struct sockaddr *)&client_addr, &addrlen);
-  if (conn_fd) {
+  if (conn_fd < 0) {
     return Error("accept");
   }
   if (fcntl(conn_fd, F_SETFD, O_NONBLOCK) < 0) {
