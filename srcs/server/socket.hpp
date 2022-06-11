@@ -34,12 +34,6 @@ class Socket {
   http::HttpResponse response_;
   utils::ByteVector buffer_;
 
-  // 最後にデータ操作が行われた時間を記録する｡タイムアウト処理用｡
-
-  // fdの参照カウント.
-  // fd_reference_counter_[fd] = <reference_count>
-  static std::map<int, int> fd_reference_counter_;
-
  public:
   Socket(int fd, ESockType socktype, const std::string &port = "");
   Socket(const Socket &rhs);
@@ -66,10 +60,6 @@ class Socket {
 
  private:
   Socket();
-
-  void IncreaseFdReferenceCount(int fd);
-  void DecreaseFdReferenceCount(int fd);
-  int GetFdReferenceCount(int fd);
 };
 
 }  // namespace server

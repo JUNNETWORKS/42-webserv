@@ -9,12 +9,8 @@
 
 namespace server {
 
-std::map<int, int> Socket::fd_reference_counter_;
-
 Socket::Socket(int fd, ESockType socktype, const std::string &port)
-    : fd_(fd), socktype_(socktype), port_(port) {
-  IncreaseFdReferenceCount(fd_);
-}
+    : fd_(fd), socktype_(socktype), port_(port) {}
 
 Socket::Socket(const Socket &rhs) {
   *this = rhs;
@@ -22,24 +18,17 @@ Socket::Socket(const Socket &rhs) {
 
 Socket &Socket::operator=(const Socket &rhs) {
   if (this != &rhs) {
-    DecreaseFdReferenceCount(fd_);
-
     fd_ = rhs.fd_;
     socktype_ = rhs.socktype_;
     port_ = rhs.port_;
     requests_ = rhs.requests_;
     requests_ = rhs.requests_;
-
-    IncreaseFdReferenceCount(fd_);
   }
   return *this;
 }
 
 Socket::~Socket() {
-  DecreaseFdReferenceCount(fd_);
-  if (GetFdReferenceCount(fd_) == 0) {
-    close(fd_);
-  }
+  close(fd_);
 }
 
 Result<Socket *> Socket::AcceptNewConnection() {
@@ -82,19 +71,6 @@ Socket::ESockType Socket::GetSockType() const {
 
 utils::ByteVector &Socket::GetBuffer() {
   return buffer_;
-}
-
-void Socket::IncreaseFdReferenceCount(int fd) {
-  fd_reference_counter_[fd]++;
-}
-
-void Socket::DecreaseFdReferenceCount(int fd) {
-  assert(fd_reference_counter_[fd] > 0);
-  fd_reference_counter_[fd]--;
-}
-
-int Socket::GetFdReferenceCount(int fd) {
-  return fd_reference_counter_[fd];
 }
 
 }  // namespace server
