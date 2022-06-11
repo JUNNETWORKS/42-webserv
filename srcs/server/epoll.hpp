@@ -37,7 +37,7 @@ struct FdEvent {
 };
 
 // Allocate and initialize fdevent
-FdEvent *CreateFdEvent(int fd, FdFunc func, void *data, unsigned int events);
+FdEvent *CreateFdEvent(int fd, FdFunc func, void *data);
 void InvokeFdEvent(FdEvent *fde, unsigned int events, Epoll *epoll);
 
 class Epoll {
