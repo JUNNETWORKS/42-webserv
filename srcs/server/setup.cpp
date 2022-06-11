@@ -10,15 +10,8 @@
 
 namespace server {
 
-void CloseAllFds(const ListenFdPortMap &listen_fd_port_map) {
-  for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
-       it != listen_fd_port_map.end(); ++it) {
-    close(it->first);
-  }
-}
-
-bool OpenLilstenFds(ListenFdPortMap &listen_fd_port_map,
-                    const config::Config &config) {
+Result<ListenFdPortMap> OpenLilstenFds(const config::Config &config) {
+  ListenFdPortMap listen_fd_port_map;
   std::set<config::PortType> used_ports;
 
   const config::Config::VirtualServerConfVector &virtual_servers =
@@ -33,12 +26,19 @@ bool OpenLilstenFds(ListenFdPortMap &listen_fd_port_map,
     int fd = utils::InetListen(it->GetListenPort().c_str(), SOMAXCONN, NULL);
     if (fd == -1) {
       CloseAllFds(listen_fd_port_map);
-      return false;
+      return Error("OpenLilstenFds");
     }
     listen_fd_port_map[fd] = it->GetListenPort();
     used_ports.insert(it->GetListenPort());
   }
-  return true;
+  return listen_fd_port_map;
+}
+
+void CloseAllFds(const ListenFdPortMap &listen_fd_port_map) {
+  for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
+       it != listen_fd_port_map.end(); ++it) {
+    close(it->first);
+  }
 }
 
 }  // namespace server

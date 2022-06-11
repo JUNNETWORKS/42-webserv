@@ -4,14 +4,15 @@
 #include <vector>
 
 #include "config/config.hpp"
+#include "result/result.hpp"
 #include "server/types.hpp"
 
 namespace server {
+using namespace result;
 
 // config内のバーチャルサーバの情報を元に必要なソケットをオープンし､リッスン状態にする｡
 // 返り値は map[<listen_fd>] = <port> の形のmap
-bool OpenLilstenFds(ListenFdPortMap &listen_fd_port_map,
-                    const config::Config &config);
+Result<ListenFdPortMap> OpenLilstenFds(const config::Config &config);
 
 // fdsのすべての要素に対してcloseシステムコールを実行する｡
 void CloseAllFds(const ListenFdPortMap &listen_fd_port_map);
