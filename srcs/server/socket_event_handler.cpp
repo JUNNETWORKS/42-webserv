@@ -5,6 +5,7 @@
 #include "result/result.hpp"
 #include "server/epoll.hpp"
 #include "server/socket.hpp"
+#include "utils/error.hpp"
 
 namespace server {
 
@@ -17,31 +18,33 @@ bool ProcessResponse(Socket *socket);
 
 void HandleConnSocketEvent(int fd, unsigned int events, void *data,
                            Epoll *epoll) {
-  Socket *socket = reinterpret_cast<Socket *>(data);
+  Socket *conn_sock = reinterpret_cast<Socket *>(data);
   bool should_close_conn = false;
 
   // if data in read buffer, read
   if (events & EPOLLIN) {
-    should_close_conn = ProcessRequest(socket);
+    should_close_conn = ProcessRequest(conn_sock);
   }
   // if space in write buffer, read
   if (events & EPOLLOUT) {
-    should_close_conn = ProcessResponse(socket);
+    should_close_conn = ProcessResponse(conn_sock);
   }
 
   // error or timeout? close conn_fd and remove from epfd
   if (events & (EPOLLERR | EPOLLHUP) || should_close_conn) {
     printf("Connection close\n");
     epoll->RemoveFd(fd);
+    close(fd);
   }
 }
 
 void HandleListenSocketEvent(int fd, unsigned int events, void *data,
                              Epoll *epoll) {
-  Socket *socket = reinterpret_cast<Socket *>(data);
+  (void)fd;
+  Socket *listen_sock = reinterpret_cast<Socket *>(data);
 
   if (events | EPOLLIN) {
-    Result<Socket *> result = socket->AcceptNewConnection();
+    Result<Socket *> result = listen_sock->AcceptNewConnection();
     if (result.IsErr()) {
       // 本当はログ出力とかがあると良い｡
       return;
@@ -54,8 +57,9 @@ void HandleListenSocketEvent(int fd, unsigned int events, void *data,
 
   // error or timeout? close conn_fd and remove from epfd
   if (events & (EPOLLERR | EPOLLHUP)) {
-    // TODO:
-    epoll->RemoveFd(fd);
+    // Listenしているソケットが正常に動いていない場合はプログラムを終了させる
+    utils::ErrExit("ListenSocket(port %s) occur error\n",
+                   listen_sock->GetPort().c_str());
   }
 }
 
