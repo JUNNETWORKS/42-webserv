@@ -55,6 +55,7 @@ class HttpRequest {
   ~HttpRequest();
 
   const std::string &GetPath() const;
+  const HttpStatus GetParseStatus() const;
 
   void ParseRequest(utils::ByteVector &buffer);
   bool IsCorrectRequest();
