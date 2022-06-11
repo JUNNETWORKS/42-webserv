@@ -33,6 +33,9 @@ Epoll::~Epoll() {
 }
 
 Result<void> Epoll::AddFd(FdEvent *fd_event, unsigned int events) {
+  if (registered_fd_events_.find(fd_event->fd) != registered_fd_events_.end()) {
+    return Error();
+  }
   struct epoll_event epev;
   epev.events = events;
   epev.data.fd = fd_event->fd;
