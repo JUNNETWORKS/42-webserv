@@ -6,6 +6,11 @@
 #include <string>
 #include <vector>
 
+#include "config/config.hpp"
+#include "server/epoll.hpp"
+#include "server/socket.hpp"
+#include "server/socket_event_handler.hpp"
+#include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 
 namespace server {
@@ -38,6 +43,22 @@ void CloseAllFds(const ListenFdPortMap &listen_fd_port_map) {
   for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
        it != listen_fd_port_map.end(); ++it) {
     close(it->first);
+  }
+}
+
+void AddListenFds2Epoll(Epoll &epoll, config::Config &config,
+                        const ListenFdPortMap &listen_fd_port_map) {
+  for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
+       it != listen_fd_port_map.end(); ++it) {
+    int listen_fd = it->first;
+    std::string port = it->second;
+    Socket *listen_sock =
+        new Socket(listen_fd, Socket::ListenSock, port, config);
+    FdEvent *fde =
+        CreateFdEvent(listen_fd, HandleListenSocketEvent, listen_sock);
+    if (epoll.AddFd(fde, EPOLLIN).IsErr()) {
+      utils::ErrExit("Epoll.AddFd()");
+    }
   }
 }
 
