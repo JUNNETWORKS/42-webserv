@@ -161,4 +161,17 @@ TEST(RequestParserTest, NotAllowdMethod) {
 
   EXPECT_TRUE(true);
 }
+
+// URL ===========================================
+
+TEST(RequestParserTest, TooLongURL) {
+  // http::HttpRequest req;
+  // utils::ByteVector buf = OpenFile("TooLongURL.txt");
+
+  // req.ParseRequest(buf);
+  // EXPECT_FALSE(req.IsCorrectStatus());
+  // EXPECT_EQ(req.GetParseStatus(), URI_TOO_LONG);
+
+  EXPECT_TRUE(true);
+}
 }  // namespace http
