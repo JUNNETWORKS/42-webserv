@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "config/config.hpp"
 #include "http/http_request.hpp"
 #include "http/http_response.hpp"
 #include "result/result.hpp"
@@ -28,16 +29,17 @@ class Socket {
   // port_ は socktype_ によって意味が変わる｡
   // ListenSock の場合は Listen しているポート番号
   // ConnSock の場合はAcceptされたListenSockのポート番号
-  std::string port_;
+  const std::string port_;
 
+  const config::Config &config_;
   std::vector<http::HttpRequest> requests_;
   http::HttpResponse response_;
   utils::ByteVector buffer_;
 
  public:
-  Socket(int fd, ESockType socktype, const std::string &port = "");
+  Socket(int fd, ESockType socktype, const std::string &port,
+         const config::Config &config);
   Socket(const Socket &rhs);
-  Socket &operator=(const Socket &rhs);
   // close(fd_) はデストラクタで行われる
   ~Socket();
 
@@ -51,8 +53,13 @@ class Socket {
 
   int GetFd() const;
 
-  void SetPort(const std::string &port);
   const std::string &GetPort() const;
+
+  const config::Config &GetConfig() const;
+
+  std::vector<http::HttpRequest> &GetRequests();
+
+  http::HttpResponse &GetResponse();
 
   ESockType GetSockType() const;
 
@@ -60,6 +67,7 @@ class Socket {
 
  private:
   Socket();
+  Socket &operator=(const Socket &rhs);
 };
 
 }  // namespace server
