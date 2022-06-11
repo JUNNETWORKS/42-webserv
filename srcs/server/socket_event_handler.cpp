@@ -38,7 +38,6 @@ void HandleConnSocketEvent(int fd, unsigned int events, void *data,
 
 void HandleListenSocketEvent(int fd, unsigned int events, void *data,
                              Epoll *epoll) {
-  (void)fd;
   Socket *socket = reinterpret_cast<Socket *>(data);
 
   if (events | EPOLLIN) {
@@ -51,6 +50,12 @@ void HandleListenSocketEvent(int fd, unsigned int events, void *data,
     FdEvent *fdevent =
         CreateFdEvent(conn_sock->GetFd(), HandleConnSocketEvent, conn_sock);
     epoll->AddFd(fdevent, EPOLLIN | EPOLLOUT);
+  }
+
+  // error or timeout? close conn_fd and remove from epfd
+  if (events & (EPOLLERR | EPOLLHUP)) {
+    // TODO:
+    epoll->RemoveFd(fd);
   }
 }
 
