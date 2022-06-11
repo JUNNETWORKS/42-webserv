@@ -9,23 +9,18 @@
 
 namespace server {
 
-Socket::Socket(int fd, ESockType socktype, const std::string &port)
-    : fd_(fd), socktype_(socktype), port_(port) {}
+Socket::Socket(int fd, ESockType socktype, const std::string &port,
+               const config::Config &config)
+    : fd_(fd), socktype_(socktype), port_(port), config_(config) {}
 
-Socket::Socket(const Socket &rhs) {
-  *this = rhs;
-}
-
-Socket &Socket::operator=(const Socket &rhs) {
-  if (this != &rhs) {
-    fd_ = rhs.fd_;
-    socktype_ = rhs.socktype_;
-    port_ = rhs.port_;
-    requests_ = rhs.requests_;
-    requests_ = rhs.requests_;
-  }
-  return *this;
-}
+Socket::Socket(const Socket &rhs)
+    : fd_(rhs.fd_),
+      socktype_(rhs.socktype_),
+      port_(rhs.port_),
+      config_(rhs.config_),
+      requests_(rhs.requests_),
+      response_(rhs.response_),
+      buffer_(rhs.buffer_) {}
 
 Socket::~Socket() {
   close(fd_);
@@ -46,7 +41,7 @@ Result<Socket *> Socket::AcceptNewConnection() {
 
   utils::LogConnectionInfoToStdout(client_addr);
 
-  Socket *conn_sock = new Socket(conn_fd, ConnSock, port_);
+  Socket *conn_sock = new Socket(conn_fd, ConnSock, port_, config_);
   return conn_sock;
 }
 
@@ -57,12 +52,20 @@ int Socket::GetFd() const {
   return fd_;
 }
 
-void Socket::SetPort(const std::string &port) {
-  port_ = port;
-}
-
 const std::string &Socket::GetPort() const {
   return port_;
+}
+
+const config::Config &Socket::GetConfig() const {
+  return config_;
+}
+
+std::vector<http::HttpRequest> &Socket::GetRequests() {
+  return requests_;
+}
+
+http::HttpResponse &Socket::GetResponse() {
+  return response_;
 }
 
 Socket::ESockType Socket::GetSockType() const {
