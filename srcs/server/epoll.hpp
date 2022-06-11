@@ -36,8 +36,11 @@ struct FdEvent {
   void *data;
 };
 
-// Allocate and initialize fdevent
+// FdEvent を動的確保し､引数を元に初期化を行い､それを返す｡
 FdEvent *CreateFdEvent(int fd, FdFunc func, void *data);
+
+// fde->func を呼び出す｡
+// Epoll のポインタを渡しているのは listen_sock のように func に
 void InvokeFdEvent(FdEvent *fde, unsigned int events, Epoll *epoll);
 
 class Epoll {
@@ -54,7 +57,9 @@ class Epoll {
   // 購読するファイルディスクリプタを追加
   Result<void> AddFd(FdEvent *fd_event, unsigned int events);
 
-  // 購読しているファイルディスクリプタを削除
+  // 購読しているファイルディスクリプタをepollから削除｡
+  // 対応する FdEvent を解放｡
+  // FdEvent.data は解放しないことに注意｡
   Result<void> RemoveFd(int fd);
 
   // 購読しているファイルディスクリプタの購読情報を変更
