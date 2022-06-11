@@ -174,4 +174,84 @@ TEST(RequestParserTest, TooLongURL) {
 
   EXPECT_TRUE(true);
 }
+
+// Version ===========================================
+
+TEST(RequestParserTest, InvalidMajorVersionLower) {
+  http::HttpRequest req;
+  utils::ByteVector buf(
+      "GET / HTTP/0.9\r\n"
+      "Host: Hoge\r\n"
+      "\r\n"
+      "\r\n");
+
+  req.ParseRequest(buf);
+  EXPECT_FALSE(req.IsCorrectStatus());
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, InvalidMajorVersionUpper) {
+  http::HttpRequest req;
+  utils::ByteVector buf(
+      "GET / HTTP/1234\r\n"
+      "Host: Hoge\r\n"
+      "\r\n"
+      "\r\n");
+
+  req.ParseRequest(buf);
+  EXPECT_FALSE(req.IsCorrectStatus());
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, MinorVersionLower) {
+  http::HttpRequest req;
+  utils::ByteVector buf(
+      "GET / HTTP/1.0\r\n"
+      "Host: Hoge\r\n"
+      "\r\n"
+      "\r\n");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus());
+  EXPECT_EQ(req.GetParseStatus(), OK);
+}
+
+TEST(RequestParserTest, MinorVersionUpper) {
+  http::HttpRequest req;
+  utils::ByteVector buf(
+      "GET / HTTP/1.2\r\n"
+      "Host: Hoge\r\n"
+      "\r\n"
+      "\r\n");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus());
+  EXPECT_EQ(req.GetParseStatus(), OK);
+}
+
+TEST(RequestParserTest, MinorVersionLong) {
+  http::HttpRequest req;
+  utils::ByteVector buf(
+      "GET / HTTP/1.123456789\r\n"
+      "Host: Hoge\r\n"
+      "\r\n"
+      "\r\n");
+
+  req.ParseRequest(buf);
+  EXPECT_FALSE(req.IsCorrectStatus());
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, InvalidPrefix) {
+  http::HttpRequest req;
+  utils::ByteVector buf(
+      "GET / HP/1.1\r\n"
+      "Host: Hoge\r\n"
+      "\r\n"
+      "\r\n");
+
+  req.ParseRequest(buf);
+  EXPECT_FALSE(req.IsCorrectStatus());
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
 }  // namespace http
