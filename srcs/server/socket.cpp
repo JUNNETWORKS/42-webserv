@@ -42,13 +42,18 @@ Socket::~Socket() {
   }
 }
 
-Socket *Socket::AcceptNewConnection() {
+Result<Socket *> Socket::AcceptNewConnection() {
   assert(socktype_ == ListenSock);
 
   struct sockaddr_storage client_addr;
   socklen_t addrlen = sizeof(struct sockaddr_storage);
   int conn_fd = accept(fd_, (struct sockaddr *)&client_addr, &addrlen);
-  fcntl(conn_fd, F_SETFD, O_NONBLOCK);
+  if (conn_fd) {
+    return Error("accept");
+  }
+  if (fcntl(conn_fd, F_SETFD, O_NONBLOCK) < 0) {
+    return Error("fcntl");
+  }
 
   utils::LogConnectionInfoToStdout(client_addr);
 

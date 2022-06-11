@@ -6,9 +6,12 @@
 
 #include "http/http_request.hpp"
 #include "http/http_response.hpp"
+#include "result/result.hpp"
 #include "utils/ByteVector.hpp"
 
 namespace server {
+
+using namespace result;
 
 // listen_fd の情報などを持たせたい｡
 // CGI でリクエスト元IPなど色々情報が必要になってくるので,
@@ -47,7 +50,7 @@ class Socket {
   // 現在の Socket に来た接続要求を accept する｡
   // 返り値の Socket* はヒープ領域に存在しており､
   // 解放するのは呼び出し側の責任である｡
-  Socket *AcceptNewConnection();
+  Result<Socket *> AcceptNewConnection();
 
   // ========================================================================
   // Getter and Setter
