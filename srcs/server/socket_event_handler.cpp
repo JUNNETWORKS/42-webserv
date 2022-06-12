@@ -37,7 +37,7 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   if (events & kFdeError || should_close_conn) {
     printf("Connection close\n");
     epoll->Unregister(fde);
-    close(fde->fd);
+    // conn_sock->fd の close は Socket のデストラクタで行うので不要｡
     delete conn_sock;
     delete fde;
   }
