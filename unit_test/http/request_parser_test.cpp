@@ -22,236 +22,319 @@ utils::ByteVector OpenFile(const std::string& name) {
   return res;
 }
 
-// CorrectRequest=====================================
-TEST(RequestParserTest, CorrectRequest) {
+TEST(RequestParserTest, KOFormatExistOBSfold) {
   http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET / HTTP/1.1\r\n"
-      "Host: Hoge\r\n"
-      "User-Agent: Pikachu\r\n"
-      "Accept: */*\r\n"
-      "\r\n"
-      "\r\n");
+  utils::ByteVector buf = OpenFile("KOFormatExistOBSfold.txt");
 
   req.ParseRequest(buf);
-  EXPECT_TRUE(req.IsCorrectStatus());
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOFormatExistSPAfterVersion) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatExistSPAfterVersion.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOFormatExistSPBeforeSpace) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatExistSPBeforeSpace.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOFormatExistSPBetWeenMethodAndURL) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatExistSPBetWeenMethodAndURL.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOFormatExistSPBetWeenURLAndVersion) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatExistSPBetWeenURLAndVersion.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOFormatNotExistCRLF) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatNotExistCRLF.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+// TEST(RequestParserTest, KOFormatNotExistHostHeader) {
+//   http::HttpRequest req;
+//   utils::ByteVector buf = OpenFile("KOFormatNotExistHostHeader.txt");
+
+//   req.ParseRequest(buf);
+//   EXPECT_TRUE(req.IsCorrectStatus() == false);
+//   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+// }
+
+TEST(RequestParserTest, KOFormatNotExistMethod) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatNotExistMethod.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOFormatNotExistRequestLine) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatNotExistRequestLine.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOFormatNotExistURL) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatNotExistURL.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOFormatNotExistVersion) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatNotExistVersion.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOHeaderExistSPBeforeColon) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOHeaderExistSPBeforeColon.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOHeaderExistTabBeforeColon) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOHeaderExistTabBeforeColon.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOHeaderNotExistDquotePair) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOHeaderNotExistDquotePair.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+// TEST(RequestParserTest, KOMethodNotAllowd) {
+//   http::HttpRequest req;
+//   utils::ByteVector buf = OpenFile("KOMethodNotAllowd.txt");
+
+//   req.ParseRequest(buf);
+//   EXPECT_TRUE(req.IsCorrectStatus() == false);
+//   EXPECT_EQ(req.GetParseStatus(), NOT_ALLOWED);
+// }
+
+// TEST(RequestParserTest, KOMethodNotImplemented) {
+//   http::HttpRequest req;
+//   utils::ByteVector buf = OpenFile("KOMethodNotImplemented.txt");
+
+//   req.ParseRequest(buf);
+//   EXPECT_TRUE(req.IsCorrectStatus() == false);
+//   EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
+// }
+
+TEST(RequestParserTest, KOUnknownMethod) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOUnknownMethod.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+// TEST(RequestParserTest, KOURLTooLong) {
+//   http::HttpRequest req;
+//   utils::ByteVector buf = OpenFile("KOURLTooLong.txt");
+
+//   req.ParseRequest(buf);
+//   EXPECT_TRUE(req.IsCorrectStatus() == false);
+//   EXPECT_EQ(req.GetParseStatus(), URI_TOO_LONG);
+// }
+
+TEST(RequestParserTest, KOVersioExistMultipleDot) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOVersioExistMultipleDot.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOVersioInvalidMinorLong) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOVersioInvalidMinorLong.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOVersionInvalidMajorLong) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOVersionInvalidMajorLong.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOVersionInvalidMajorLower) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOVersionInvalidMajorLower.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+// TEST(RequestParserTest, KOVersionInvalidMajorUpper) {
+//   http::HttpRequest req;
+//   utils::ByteVector buf = OpenFile("KOVersionInvalidMajorUpper.txt");
+
+//   req.ParseRequest(buf);
+//   EXPECT_TRUE(req.IsCorrectStatus() == false);
+//   EXPECT_EQ(req.GetParseStatus(), HTTP_VERSION_NOT_SUPPORTED);
+// }
+
+TEST(RequestParserTest, KOVersionInvalidPrefix) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOVersionInvalidPrefix.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOVersioNotExistDot) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOVersioNotExistDot.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, OKCommaInDquote) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKCommaInDquote.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
-TEST(RequestParserTest, ExistNewLineBeforeCorrectRequest) {
+TEST(RequestParserTest, OKCorrectNewLine) {
   http::HttpRequest req;
-  utils::ByteVector buf(
-      "\r\n"
-      "\r\n"
-      "\r\n"
-      "GET / HTTP/1.1\r\n"
-      "Host: Hoge\r\n"
-      "User-Agent: Pikachu\r\n"
-      "Accept: */*\r\n"
-      "\r\n"
-      "\r\n");
+  utils::ByteVector buf = OpenFile("OKCorrectNewLine.txt");
 
   req.ParseRequest(buf);
-  EXPECT_TRUE(req.IsCorrectStatus());
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
-// InvalidFormat RequestLine================================
-
-TEST(RequestParserTest, ExistSPBeforeMethod) {
+TEST(RequestParserTest, OKCorrect) {
   http::HttpRequest req;
-  utils::ByteVector buf(
-      " GET / HTTP/1.1\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
+  utils::ByteVector buf = OpenFile("OKCorrect.txt");
 
   req.ParseRequest(buf);
-  EXPECT_FALSE(req.IsCorrectStatus());
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
-}
-
-TEST(RequestParserTest, ExistSPBetweenMethodAndURL) {
-  http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET  / HTTP/1.1\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
-
-  req.ParseRequest(buf);
-  EXPECT_FALSE(req.IsCorrectStatus());
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
-}
-
-TEST(RequestParserTest, ExistSPBetweenURLAndVersion) {
-  http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET /  HTTP/1.1\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
-
-  req.ParseRequest(buf);
-  EXPECT_FALSE(req.IsCorrectStatus());
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
-}
-
-TEST(RequestParserTest, NotExistCRLFAfterRequestLine) {
-  http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET / HTTP/1.1"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
-
-  req.ParseRequest(buf);
-  EXPECT_FALSE(req.IsCorrectStatus());
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
-}
-
-// Method ===========================================
-
-TEST(RequestParserTest, NotExistMethod) {
-  http::HttpRequest req;
-  utils::ByteVector buf(
-      "HOGE / HTTP/1.1\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
-
-  req.ParseRequest(buf);
-  EXPECT_FALSE(req.IsCorrectStatus());
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
-
-  EXPECT_TRUE(true);
-}
-
-TEST(RequestParserTest, NotImplementMethod) {
-  // http::HttpRequest req;
-  // utils::ByteVector buf(
-  //     "CONNECT / HTTP/1.1\r\n"
-  //     "Host: Hoge\r\n"
-  //     "User-Agent: Pikachu\r\n"
-  //     "Accept: */*\r\n"
-  //     "\r\n"
-  //     "\r\n");
-
-  // req.ParseRequest(buf);
-  // EXPECT_TRUE(req.IsCorrectStatus());
-  // EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
-
-  EXPECT_TRUE(true);
-}
-
-TEST(RequestParserTest, NotAllowdMethod) {
-  //コンフィグを合わせてテスト
-  // http::HttpRequest req;
-  // utils::ByteVector buf(
-  //     "POST / HTTP/1.1\r\n"
-  //     "Host: Hoge\r\n"
-  //     "User-Agent: Pikachu\r\n"
-  //     "Accept: */*\r\n"
-  //     "\r\n"
-  //     "\r\n");
-
-  // req.ParseRequest(buf);
-  // EXPECT_TRUE(req.IsCorrectStatus());
-  // EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
-
-  EXPECT_TRUE(true);
-}
-
-// URL ===========================================
-
-TEST(RequestParserTest, TooLongURL) {
-  // http::HttpRequest req;
-  // utils::ByteVector buf = OpenFile("TooLongURL.txt");
-
-  // req.ParseRequest(buf);
-  // EXPECT_FALSE(req.IsCorrectStatus());
-  // EXPECT_EQ(req.GetParseStatus(), URI_TOO_LONG);
-
-  EXPECT_TRUE(true);
-}
-
-// Version ===========================================
-
-TEST(RequestParserTest, InvalidMajorVersionLower) {
-  http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET / HTTP/0.9\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
-
-  req.ParseRequest(buf);
-  EXPECT_FALSE(req.IsCorrectStatus());
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
-}
-
-TEST(RequestParserTest, InvalidMajorVersionUpper) {
-  http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET / HTTP/1234\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
-
-  req.ParseRequest(buf);
-  EXPECT_FALSE(req.IsCorrectStatus());
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
-}
-
-TEST(RequestParserTest, MinorVersionLower) {
-  http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET / HTTP/1.0\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
-
-  req.ParseRequest(buf);
-  EXPECT_TRUE(req.IsCorrectStatus());
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
-TEST(RequestParserTest, MinorVersionUpper) {
+TEST(RequestParserTest, OKHeaderDquoteStringEscape) {
   http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET / HTTP/1.2\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
+  utils::ByteVector buf = OpenFile("OKHeaderDquoteStringEscape.txt");
 
   req.ParseRequest(buf);
-  EXPECT_TRUE(req.IsCorrectStatus());
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
-TEST(RequestParserTest, MinorVersionLong) {
+TEST(RequestParserTest, OKHeaderDquoteString) {
   http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET / HTTP/1.123456789\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
+  utils::ByteVector buf = OpenFile("OKHeaderDquoteString.txt");
 
   req.ParseRequest(buf);
-  EXPECT_FALSE(req.IsCorrectStatus());
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
-TEST(RequestParserTest, InvalidPrefix) {
+TEST(RequestParserTest, OKHeaderExistOWSBeforeValue) {
   http::HttpRequest req;
-  utils::ByteVector buf(
-      "GET / HP/1.1\r\n"
-      "Host: Hoge\r\n"
-      "\r\n"
-      "\r\n");
+  utils::ByteVector buf = OpenFile("OKHeaderExistOWSBeforeValue.txt");
 
   req.ParseRequest(buf);
-  EXPECT_FALSE(req.IsCorrectStatus());
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
 }
+
+TEST(RequestParserTest, OKHeaderExistOWSftrerValue) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKHeaderExistOWSftrerValue.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+}
+
+TEST(RequestParserTest, OKHeaderListMultipleLine) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKHeaderListMultipleLine.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+}
+
+TEST(RequestParserTest, OKHeaderList) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKHeaderList.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+}
+
+TEST(RequestParserTest, OKVersionMinorUpper) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKVersionMinorUpper.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+}
+
 }  // namespace http
