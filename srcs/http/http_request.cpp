@@ -259,7 +259,6 @@ HttpStatus HttpRequest::DecideBodySize() {
   bool has_length_header = length_header_it != headers_.end();
 
   if (has_encoding_header && has_length_header) {
-    // TODO ステータスの検証　BAD_Requestは仮
     return parse_status_ = BAD_REQUEST;
   }
 
