@@ -56,9 +56,8 @@ void AddListenFds2Epoll(Epoll &epoll, config::Config &config,
         new Socket(listen_fd, Socket::ListenSock, port, config);
     FdEvent *fde =
         CreateFdEvent(listen_fd, HandleListenSocketEvent, listen_sock);
-    if (epoll.AddFd(fde, EPOLLIN).IsErr()) {
-      utils::ErrExit("Epoll.AddFd()");
-    }
+    epoll.Register(fde);
+    epoll.Add(fde, kFdeRead);
   }
 }
 

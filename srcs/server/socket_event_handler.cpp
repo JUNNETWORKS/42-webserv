@@ -16,34 +16,39 @@ bool ProcessResponse(Socket *socket);
 
 }  // namespace
 
-void HandleConnSocketEvent(int fd, unsigned int events, void *data,
+void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
                            Epoll *epoll) {
   Socket *conn_sock = reinterpret_cast<Socket *>(data);
   bool should_close_conn = false;
 
   // if data in read buffer, read
-  if (events & EPOLLIN) {
+  if (events & kFdeRead) {
     should_close_conn = ProcessRequest(conn_sock);
   }
   // if space in write buffer, read
-  if (events & EPOLLOUT) {
+  if (events & kFdeWrite) {
     should_close_conn = ProcessResponse(conn_sock);
+  }
+  if (events & kFdeTimeout) {
+    // TODO: タイムアウト処理
   }
 
   // error or timeout? close conn_fd and remove from epfd
-  if (events & (EPOLLERR | EPOLLHUP) || should_close_conn) {
+  if (events & kFdeError || should_close_conn) {
     printf("Connection close\n");
-    epoll->RemoveFd(fd);
-    close(fd);
+    epoll->Unregister(fde);
+    close(fde->fd);
+    delete conn_sock;
+    delete fde;
   }
 }
 
-void HandleListenSocketEvent(int fd, unsigned int events, void *data,
+void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
                              Epoll *epoll) {
-  (void)fd;
+  (void)fde;
   Socket *listen_sock = reinterpret_cast<Socket *>(data);
 
-  if (events | EPOLLIN) {
+  if (events & kFdeRead) {
     Result<Socket *> result = listen_sock->AcceptNewConnection();
     if (result.IsErr()) {
       // 本当はログ出力とかがあると良い｡
@@ -52,11 +57,13 @@ void HandleListenSocketEvent(int fd, unsigned int events, void *data,
     Socket *conn_sock = result.Ok();
     FdEvent *fdevent =
         CreateFdEvent(conn_sock->GetFd(), HandleConnSocketEvent, conn_sock);
-    epoll->AddFd(fdevent, EPOLLIN | EPOLLOUT);
+    epoll->Register(fdevent);
+    epoll->Add(fdevent, kFdeRead);
+    epoll->Add(fdevent, kFdeWrite);
   }
 
   // error or timeout? close conn_fd and remove from epfd
-  if (events & (EPOLLERR | EPOLLHUP)) {
+  if (events & kFdeError) {
     // Listenしているソケットが正常に動いていない場合はプログラムを終了させる
     utils::ErrExit("ListenSocket(port %s) occur error\n",
                    listen_sock->GetPort().c_str());

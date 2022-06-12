@@ -9,11 +9,11 @@ namespace server {
 using namespace result;
 
 // ConnectionSocketのイベントハンドラー
-void HandleConnSocketEvent(int fd, unsigned int events, void *userdata,
+void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
                            Epoll *epoll);
 
 // ListenSocketのイベントハンドラー
-void HandleListenSocketEvent(int fd, unsigned int events, void *userdata,
+void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
                              Epoll *epoll);
 
 }  // namespace server
