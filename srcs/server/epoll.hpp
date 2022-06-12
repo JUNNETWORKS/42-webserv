@@ -11,17 +11,25 @@
 namespace server {
 using namespace result;
 
+// タイムアウトなどのイベントも通知したいのでイベントを自分で定義し直す
+enum EFdeEvent {
+  kFdeRead = 0x0001,
+  kFdeWrite = 0x0002,
+  kFdeError = 0x0004,
+  kFdeTimeout = 0x0008
+};
 class Epoll;
 struct FdEvent;
 
 // Epoll で利用するイベントハンドラーのインターフェース
-typedef void (*FdFunc)(int fd, unsigned int events, void *data, Epoll *epoll);
+typedef void (*FdFunc)(FdEvent *fde, unsigned int events, void *data,
+                       Epoll *epoll);
 
 // Epoll.WaitsEvent() で返す構造体
 struct FdEventEvent {
   FdEvent *fde;
 
-  // epoll events
+  // EFdeEvent
   unsigned int events;
 };
 
@@ -32,6 +40,10 @@ struct FdEvent {
 
   // TODO: Timeクラスを作ってタイムアウトを管理する
   // Time timeout;
+  // Time last_active;
+
+  // 監視対象のFdeEvent
+  unsigned int state;
 
   void *data;
 };
@@ -54,30 +66,32 @@ class Epoll {
   Epoll();
   ~Epoll();
 
-  // 購読するファイルディスクリプタを追加
-  Result<void> AddFd(FdEvent *fd_event, unsigned int events);
+  // Epoll で監視するイベントの登録/解除
+  void Register(FdEvent *fde);
+  void Unregister(FdEvent *fde);
 
-  // 購読しているファイルディスクリプタをepollから削除｡
-  // 対応する FdEvent を解放｡
-  // FdEvent.data は解放しないことに注意｡
-  Result<void> RemoveFd(int fd);
+  // 監視するイベントを変更する
+  // events は kFdeEvent
+  void Set(FdEvent *fde, unsigned int events);
+  void Add(FdEvent *fde, unsigned int events);
+  void Del(FdEvent *fde, unsigned int events);
 
-  // 購読しているファイルディスクリプタの購読情報を変更
-  Result<void> ModifyFd(int fd, unsigned int events);
-
-  // 利用可能なイベントをepoll_waitで取得し､eventsの末尾に挿入する｡
+  // 利用可能なイベントをepoll_waitで取得し､FdEventEventを返す｡
   //
   // timeout は ms 単位｡
   // -1を指定すると1つ以上のイベントが利用可能になるまでブロックする｡
   Result<std::vector<FdEventEvent> > WaitEvents(int timeout_ms = -1);
 
-  // TODO: タイムアウトかどうかを判定し､タイムアウトならばepollから削除する
-  // void RemoveTimeoutFds();
-
  private:
   // epoll instance が片方のみでcloseされるのを防ぐためコピー操作は禁止
   Epoll(const Epoll &rhs);
   Epoll &operator=(const Epoll &rhs);
+
+  // TODO: タイムアウトかどうかを判定
+  // WaitEvents 内で実行し､もしタイムアウトがあった場合は
+  // kFdeTimeout のようなオリジナルのイベントフラグを用いて
+  // ハンドラーにタイムアウトしたことを伝える｡
+  // bool IsTimeout(FdEvent *fde);
 };
 
 }  // namespace server

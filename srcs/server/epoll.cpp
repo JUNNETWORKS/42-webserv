@@ -10,6 +10,24 @@
 
 namespace server {
 
+namespace {
+
+epoll_event CalculateEpollEvent(FdEvent *fde) {
+  epoll_event epev;
+  epev.events = 0;
+  if (fde->state & kFdeRead) {
+    epev.events |= EPOLLIN;
+  }
+  if (fde->state & kFdeWrite) {
+    epev.events |= EPOLLOUT;
+  }
+  epev.events |= EPOLLRDHUP;
+  epev.data.fd = fde->fd;
+  return epev;
+}
+
+}  // namespace
+
 FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
   FdEvent *fde = new FdEvent();
   fde->fd = fd;
@@ -19,7 +37,7 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
 }
 
 void InvokeFdEvent(FdEvent *fde, unsigned int events, Epoll *epoll) {
-  fde->func(fde->fd, events, fde->data, epoll);
+  fde->func(fde, events, fde->data, epoll);
 }
 
 Epoll::Epoll() : epfd_(epoll_create(1)) {
@@ -32,67 +50,83 @@ Epoll::~Epoll() {
   close(epfd_);
 }
 
-Result<void> Epoll::AddFd(FdEvent *fd_event, unsigned int events) {
-  if (registered_fd_events_.find(fd_event->fd) != registered_fd_events_.end()) {
-    return Error();
-  }
+void Epoll::Register(FdEvent *fde) {
+  assert(registered_fd_events_.find(fde->fd) == registered_fd_events_.end());
   struct epoll_event epev;
-  epev.events = events;
-  epev.data.fd = fd_event->fd;
+  epev.events = 0;
+  epev.data.fd = fde->fd;
 
-  if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fd_event->fd, &epev) < 0) {
-    return Error();
+  if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fde->fd, &epev) < 0) {
+    utils::ErrExit("Epoll::Register epoll_ctl");
   }
-  registered_fd_events_[fd_event->fd] = fd_event;
-  return Result<void>();
+  registered_fd_events_[fde->fd] = fde;
 }
 
-Result<void> Epoll::RemoveFd(int fd) {
-  if (epoll_ctl(epfd_, EPOLL_CTL_DEL, fd, NULL) < 0) {
-    return Error();
+void Epoll::Unregister(FdEvent *fde) {
+  assert(registered_fd_events_.find(fde->fd) != registered_fd_events_.end());
+  if (epoll_ctl(epfd_, EPOLL_CTL_DEL, fde->fd, NULL) < 0) {
+    utils::ErrExit("Epoll::Unregister epoll_ctl");
   }
-  FdEvent *fde = registered_fd_events_[fd];
-  registered_fd_events_.erase(fd);
-  delete fde;
-  return Result<void>();
+  registered_fd_events_.erase(fde->fd);
 }
 
-Result<void> Epoll::ModifyFd(int fd, unsigned int events) {
-  if (registered_fd_events_.find(fd) == registered_fd_events_.end()) {
-    return Error();
+void Epoll::Set(FdEvent *fde, unsigned int events) {
+  unsigned int previous_state = fde->state;
+  fde->state = events;
+  // 前回と同じだったら epoll_ctl は実行しない
+  // kFdeTimeout が変わっても epoll を変更する必要はない
+  if ((fde->state & ~kFdeTimeout) == (previous_state & ~kFdeTimeout)) {
+    return;
   }
 
-  struct epoll_event epev;
-  epev.events = events;
-  epev.data.fd = fd;
-  if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fd, &epev) < 0) {
-    return Error();
+  epoll_event epev = CalculateEpollEvent(fde);
+  if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fde->fd, &epev) < 0) {
+    utils::ErrExit("Epoll:Set epoll_ctl");
   }
-  return Result<void>();
+}
+
+void Epoll::Add(FdEvent *fde, unsigned int events) {
+  Set(fde, fde->state | events);
+}
+
+void Epoll::Del(FdEvent *fde, unsigned int events) {
+  Set(fde, fde->state & ~events);
 }
 
 Result<std::vector<FdEventEvent> > Epoll::WaitEvents(int timeout_ms) {
-  int maxevents = registered_fd_events_.size();
-  std::vector<FdEventEvent> events;
-  struct epoll_event *event_arr = new struct epoll_event[maxevents];
-  int event_num = epoll_wait(epfd_, event_arr, maxevents, timeout_ms);
+  std::vector<FdEventEvent> fdee_vec;
+  std::vector<epoll_event> epoll_events;
+  epoll_events.resize(registered_fd_events_.size());
 
-  if (event_num <= 0) {
-    delete[] event_arr;
+  int event_num =
+      epoll_wait(epfd_, epoll_events.data(), epoll_events.size(), timeout_ms);
+
+  if (event_num < 0) {
     return Error();
   }
 
   for (int i = 0; i < event_num; ++i) {
-    assert(registered_fd_events_.find(event_arr[i].data.fd) !=
+    assert(registered_fd_events_.find(epoll_events[i].data.fd) !=
            registered_fd_events_.end());
-    FdEvent *fd_event = registered_fd_events_[event_arr[i].data.fd];
+    FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
+
+    unsigned int events = 0;
+    if ((epoll_events[i].events & EPOLLIN) && (fde->state & kFdeRead)) {
+      events |= kFdeRead;
+    }
+    if ((epoll_events[i].events & EPOLLOUT) && (fde->state & kFdeWrite)) {
+      events |= kFdeWrite;
+    }
+    if (epoll_events[i].events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+      events |= kFdeError;
+    }
+
     FdEventEvent fdee;
-    fdee.fde = fd_event;
-    fdee.events = event_arr[i].events;
-    events.push_back(fdee);
+    fdee.fde = fde;
+    fdee.events = events;
+    fdee_vec.push_back(fdee);
   }
-  delete[] event_arr;
-  return events;
+  return fdee_vec;
 }
 
 }  // namespace server
