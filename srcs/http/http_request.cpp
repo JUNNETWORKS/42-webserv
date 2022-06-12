@@ -251,8 +251,6 @@ const std::vector<std::string> &HttpRequest::GetHeader(
 HttpStatus HttpRequest::DecideBodySize() {
   // https://triple-underscore.github.io/RFC7230-ja.html#message.body.length
 
-  body_size_ = 0;
-
   HeaderMap::iterator encoding_header_it = headers_.find("TRANSFER-ENCODING");
   HeaderMap::iterator length_header_it = headers_.find("CONTENT-LENGTH");
   bool has_encoding_header = encoding_header_it != headers_.end();
