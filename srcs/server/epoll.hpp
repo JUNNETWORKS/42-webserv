@@ -18,6 +18,7 @@ enum EFdeEvent {
   kFdeError = 0x0004,
   kFdeTimeout = 0x0008
 };
+
 class Epoll;
 struct FdEvent;
 
@@ -52,7 +53,8 @@ struct FdEvent {
 FdEvent *CreateFdEvent(int fd, FdFunc func, void *data);
 
 // fde->func を呼び出す｡
-// Epoll のポインタを渡しているのは listen_sock のように func に
+// InvokeFdEvent(FdEventEvent.fde, FdEventEvent.events, &epoll)
+//   のように使われる想定
 void InvokeFdEvent(FdEvent *fde, unsigned int events, Epoll *epoll);
 
 class Epoll {
@@ -66,12 +68,15 @@ class Epoll {
   Epoll();
   ~Epoll();
 
-  // Epoll で監視するイベントの登録/解除
+  // Epoll で監視する FdEvent を登録
   void Register(FdEvent *fde);
+
+  // Epoll で監視していた FdEvent を監視対象から外す
+  // fde や fde.data の delete はしない｡
   void Unregister(FdEvent *fde);
 
   // 監視するイベントを変更する
-  // events は kFdeEvent
+  // events は kFdeEvent である｡ EPOLLIN などではない｡
   void Set(FdEvent *fde, unsigned int events);
   void Add(FdEvent *fde, unsigned int events);
   void Del(FdEvent *fde, unsigned int events);
