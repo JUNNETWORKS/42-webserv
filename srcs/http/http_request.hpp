@@ -80,6 +80,8 @@ class HttpRequest {
       const HeaderMap::mapped_type &length_header);
   HttpStatus InterpretTransferEncoding(
       const HeaderMap::mapped_type &encoding_header);
+  ParsingPhase ParsePlainBody(utils::ByteVector &buffer);
+  ParsingPhase ParseChunkedBody(utils::ByteVector &buffer);
 
   HttpStatus DecideBodySize();
   void PrintRequestInfo();

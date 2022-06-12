@@ -125,6 +125,15 @@ HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseBody(utils::ByteVector &buffer) {
+  if (is_chunked_) {
+    return ParseChunkedBody(buffer);
+  } else {
+    return ParsePlainBody(buffer);
+  }
+}
+
+HttpRequest::ParsingPhase HttpRequest::ParsePlainBody(
+    utils::ByteVector &buffer) {
   if (body_size_ == 0)
     return kParsed;
 
@@ -137,6 +146,10 @@ HttpRequest::ParsingPhase HttpRequest::ParseBody(utils::ByteVector &buffer) {
     buffer.erase(buffer.begin(), buffer.begin() + request_size);
   }
   return body_.size() == body_size_ ? kParsed : kBody;
+}
+
+HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(utils::ByteVector &) {
+  return kParsed;
 }
 
 //========================================================================
