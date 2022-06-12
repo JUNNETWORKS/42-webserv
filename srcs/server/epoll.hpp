@@ -76,7 +76,7 @@ class Epoll {
   void Unregister(FdEvent *fde);
 
   // 監視するイベントを変更する
-  // events は kFdeEvent である｡ EPOLLIN などではない｡
+  // events は EFdeEvent である｡ EPOLLIN などではない｡
   void Set(FdEvent *fde, unsigned int events);
   void Add(FdEvent *fde, unsigned int events);
   void Del(FdEvent *fde, unsigned int events);
