@@ -23,6 +23,7 @@ class ByteVector : public std::vector<Byte> {
   bool CompareHead(const std::string& str);
   iterator FindString(const std::string& str);
   std::string CutSubstrBeforePos(iterator pos);
+  std::string SubstrBeforePos(ByteVector::iterator pos);
 
   void AppendDataToBuffer(const Byte* buf, size_t size);
 

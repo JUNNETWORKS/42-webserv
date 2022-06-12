@@ -53,6 +53,11 @@ std::string ByteVector::CutSubstrBeforePos(ByteVector::iterator pos) {
   return res;
 }
 
+std::string ByteVector::SubstrBeforePos(ByteVector::iterator pos) {
+  std::string res = std::string(begin(), pos);
+  return res;
+}
+
 void ByteVector::AppendDataToBuffer(const Byte* buf, size_t size) {
   insert(end(), buf, buf + size);
   printf("current buf len: %lu\n", this->size());
