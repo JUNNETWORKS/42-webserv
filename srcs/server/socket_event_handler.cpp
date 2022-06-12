@@ -21,11 +21,9 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   Socket *conn_sock = reinterpret_cast<Socket *>(data);
   bool should_close_conn = false;
 
-  // if data in read buffer, read
   if (events & kFdeRead) {
     should_close_conn = ProcessRequest(conn_sock);
   }
-  // if space in write buffer, read
   if (events & kFdeWrite) {
     should_close_conn = ProcessResponse(conn_sock);
   }
