@@ -52,7 +52,7 @@ Epoll::~Epoll() {
 
 void Epoll::Register(FdEvent *fde) {
   assert(registered_fd_events_.find(fde->fd) == registered_fd_events_.end());
-  struct epoll_event epev;
+  epoll_event epev;
   epev.events = 0;
   epev.data.fd = fde->fd;
 
