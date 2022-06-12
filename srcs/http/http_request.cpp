@@ -258,6 +258,10 @@ const std::vector<std::string> &HttpRequest::GetHeader(
   return headers_[header];
 }
 
+HttpStatus HttpRequest::GetParseStatus() const {
+  return parse_status_;
+}
+
 //========================================================================
 // Helper関数
 
