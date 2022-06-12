@@ -34,8 +34,10 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
     // TODO: タイムアウト処理
   }
 
-  // error or timeout? close conn_fd and remove from epfd
-  if (events & kFdeError || should_close_conn) {
+  // TCP FIN が送信したデータより早く来る場合があり､
+  // その対策として kFdeError で接続切断をするのではなく､
+  // read(conn_fd) の返り値が0(EOF)または-1(Error)だったら切断する｡
+  if (should_close_conn) {
     printf("Connection close\n");
     epoll->Unregister(fde);
     // conn_sock->fd の close は Socket のデストラクタで行うので不要｡
