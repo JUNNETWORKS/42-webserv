@@ -60,7 +60,6 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
     epoll->Add(fdevent, kFdeWrite);
   }
 
-  // error or timeout? close conn_fd and remove from epfd
   if (events & kFdeError) {
     // Listenしているソケットが正常に動いていない場合はプログラムを終了させる
     utils::ErrExit("ListenSocket(port %s) occur error\n",
