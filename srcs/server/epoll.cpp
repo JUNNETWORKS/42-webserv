@@ -26,6 +26,24 @@ epoll_event CalculateEpollEvent(FdEvent *fde) {
   return epev;
 }
 
+FdEventEvent CalculateFdEventEvent(FdEvent *fde, epoll_event epev) {
+  unsigned int events = 0;
+  if ((epev.events & EPOLLIN) && (fde->state & kFdeRead)) {
+    events |= kFdeRead;
+  }
+  if ((epev.events & EPOLLOUT) && (fde->state & kFdeWrite)) {
+    events |= kFdeWrite;
+  }
+  if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+    events |= kFdeError;
+  }
+
+  FdEventEvent fdee;
+  fdee.fde = fde;
+  fdee.events = events;
+  return fdee;
+}
+
 }  // namespace
 
 FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
@@ -110,20 +128,7 @@ Result<std::vector<FdEventEvent> > Epoll::WaitEvents(int timeout_ms) {
            registered_fd_events_.end());
     FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
 
-    unsigned int events = 0;
-    if ((epoll_events[i].events & EPOLLIN) && (fde->state & kFdeRead)) {
-      events |= kFdeRead;
-    }
-    if ((epoll_events[i].events & EPOLLOUT) && (fde->state & kFdeWrite)) {
-      events |= kFdeWrite;
-    }
-    if (epoll_events[i].events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
-      events |= kFdeError;
-    }
-
-    FdEventEvent fdee;
-    fdee.fde = fde;
-    fdee.events = events;
+    FdEventEvent fdee = CalculateFdEventEvent(fde, epoll_events[i]);
     fdee_vec.push_back(fdee);
   }
   return fdee_vec;
