@@ -105,6 +105,7 @@ static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
   return (rp == NULL) ? -1 : sfd;
 }
 
+// TODO: Result を返すようにする
 int InetListen(const char *service, int backlog, socklen_t *addrlen) {
   return InetPassiveSocket(service, SOCK_STREAM, addrlen, true, backlog);
 }

@@ -17,12 +17,12 @@
 #include "config/config.hpp"
 #include "http/http_request.hpp"
 #include "http/http_response.hpp"
-#include "server/socket_manager.hpp"
+#include "server/epoll.hpp"
 #include "utils/ByteVector.hpp"
 
 namespace server {
 
-int StartEventLoop(SocketManager &socket_manager, const config::Config &config);
+int StartEventLoop(Epoll &epoll);
 
 }  // namespace server
 
