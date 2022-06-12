@@ -11,7 +11,10 @@ namespace server {
 
 namespace {
 
+// 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessRequest(Socket *socket);
+
+// 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessResponse(Socket *socket);
 
 }  // namespace
@@ -70,7 +73,6 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
 namespace {
 const int BUF_SIZE = 1024;
 
-// 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessRequest(Socket *socket) {
   unsigned char buf[BUF_SIZE];
   int conn_fd = socket->GetFd();
@@ -101,7 +103,6 @@ bool ProcessRequest(Socket *socket) {
   return false;
 }
 
-// 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessResponse(Socket *socket) {
   int conn_fd = socket->GetFd();
   const config::Config &config = socket->GetConfig();
