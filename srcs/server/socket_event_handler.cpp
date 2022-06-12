@@ -25,10 +25,10 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   bool should_close_conn = false;
 
   if (events & kFdeRead) {
-    should_close_conn = ProcessRequest(conn_sock);
+    should_close_conn |= ProcessRequest(conn_sock);
   }
   if (events & kFdeWrite) {
-    should_close_conn = ProcessResponse(conn_sock);
+    should_close_conn |= ProcessResponse(conn_sock);
   }
   if (events & kFdeTimeout) {
     // TODO: タイムアウト処理
