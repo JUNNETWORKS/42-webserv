@@ -229,6 +229,19 @@ HttpStatus HttpRequest::InterpretContentLength(
   return parse_status_ = OK;
 }
 
+HttpStatus HttpRequest::InterpretTransferEncoding(
+    const HeaderMap::mapped_type &encoding_header) {
+  if (encoding_header.size() == 1 && encoding_header.front() == "chunked") {
+    // 最終転送符号法はチャンク化である
+    is_chunked_ = true;
+    return parse_status_ = OK;
+  } else {
+    // 最終転送符号法はチャンク化でない
+    // webservではchunkedのみ許容
+    return parse_status_ = NOT_IMPLEMENTED;
+  }
+}
+
 //========================================================================
 // Is系関数　外部から状態取得
 bool HttpRequest::IsParsed() {
@@ -260,18 +273,8 @@ HttpStatus HttpRequest::DecideBodySize() {
     return parse_status_ = BAD_REQUEST;
   }
 
-  if (has_encoding_header) {
-    if (encoding_header_it->second.size() == 1 &&
-        encoding_header_it->second.front() == "chunked") {
-      // 最終転送符号法はチャンク化である
-      is_chunked_ = true;
-      return parse_status_ = OK;
-    } else {
-      // 最終転送符号法はチャンク化でない
-      // webservではchunkedのみ許容
-      return parse_status_ = NOT_IMPLEMENTED;
-    }
-  }
+  if (has_encoding_header)
+    return InterpretTransferEncoding((*encoding_header_it).second);
 
   if (has_length_header)
     return InterpretContentLength((*length_header_it).second);
