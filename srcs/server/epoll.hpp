@@ -11,7 +11,7 @@
 namespace server {
 using namespace result;
 
-// タイムアウトなどのイベントも通知したいのでイベントを自分で定義し直す
+// タイムアウトなどのイベントも通知したいのでイベントを自分で定義する
 enum EFdeEvent {
   kFdeRead = 0x0001,
   kFdeWrite = 0x0002,
