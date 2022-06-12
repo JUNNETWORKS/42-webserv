@@ -24,7 +24,8 @@ HttpRequest::HttpRequest()
       phase_(kRequestLine),
       parse_status_(OK),
       body_(),
-      body_size_(0) {}
+      body_size_(0),
+      is_chunked_(false) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
   *this = rhs;
@@ -392,6 +393,7 @@ void HttpRequest::PrintRequestInfo() {
     printf("method_: %s\n", method_.c_str());
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
+    printf("is_chuked_: %d\n", is_chunked_);
     printf("body_size: %ld\n", body_size_);
     for (std::map<std::string, std::vector<std::string> >::iterator it =
              headers_.begin();

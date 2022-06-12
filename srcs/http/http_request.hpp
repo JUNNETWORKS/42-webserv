@@ -42,6 +42,7 @@ class HttpRequest {
   HttpStatus parse_status_;
   utils::ByteVector body_;  // HTTP リクエストのボディ
   unsigned long body_size_;
+  bool is_chunked_;
 
   // buffer内の文字列で処理を完了できない時、current_bufferに文字列を保持して処理を中断
   // 次のbufferが来るのを待つ
