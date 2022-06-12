@@ -21,7 +21,7 @@ class Socket {
  public:
   enum ESockType { ListenSock, ConnSock };
 
- private:
+ protected:
   int fd_;
 
   ESockType socktype_;
@@ -32,24 +32,13 @@ class Socket {
   const std::string port_;
 
   const config::Config &config_;
-  std::vector<http::HttpRequest> requests_;
-  http::HttpResponse response_;
-  utils::ByteVector buffer_;
 
  public:
   Socket(int fd, ESockType socktype, const std::string &port,
          const config::Config &config);
   Socket(const Socket &rhs);
   // close(fd_) はデストラクタで行われる
-  ~Socket();
-
-  // 現在の Socket に来た接続要求を accept する｡
-  // 返り値の Socket* はヒープ領域に存在しており､
-  // 解放するのは呼び出し側の責任である｡
-  Result<Socket *> AcceptNewConnection();
-
-  // ========================================================================
-  // Getter and Setter
+  virtual ~Socket() = 0;
 
   int GetFd() const;
 
@@ -57,17 +46,45 @@ class Socket {
 
   const config::Config &GetConfig() const;
 
-  std::vector<http::HttpRequest> &GetRequests();
-
-  http::HttpResponse &GetResponse();
-
   ESockType GetSockType() const;
-
-  utils::ByteVector &GetBuffer();
 
  private:
   Socket();
   Socket &operator=(const Socket &rhs);
+};
+
+class ConnSocket : public Socket {
+ private:
+  std::vector<http::HttpRequest> requests_;
+  http::HttpResponse response_;
+  utils::ByteVector buffer_;
+
+ public:
+  ConnSocket(int fd, const std::string &port, const config::Config &config);
+
+  std::vector<http::HttpRequest> &GetRequests();
+
+  http::HttpResponse &GetResponse();
+
+  utils::ByteVector &GetBuffer();
+
+ private:
+  ConnSocket();
+  ConnSocket &operator=(const ConnSocket &rhs);
+};
+
+class ListenSocket : public Socket {
+ public:
+  ListenSocket(int fd, const std::string &port, const config::Config &config);
+
+  // 現在の Socket に来た接続要求を accept する｡
+  // 返り値の Socket* はヒープ領域に存在しており､
+  // 解放するのは呼び出し側の責任である｡
+  Result<ConnSocket *> AcceptNewConnection();
+
+ private:
+  ListenSocket();
+  ListenSocket &operator=(const ListenSocket &rhs);
 };
 
 }  // namespace server

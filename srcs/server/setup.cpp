@@ -52,8 +52,7 @@ void AddListenFds2Epoll(Epoll &epoll, config::Config &config,
        it != listen_fd_port_map.end(); ++it) {
     int listen_fd = it->first;
     std::string port = it->second;
-    Socket *listen_sock =
-        new Socket(listen_fd, Socket::ListenSock, port, config);
+    ListenSocket *listen_sock = new ListenSocket(listen_fd, port, config);
     FdEvent *fde =
         CreateFdEvent(listen_fd, HandleListenSocketEvent, listen_sock);
     epoll.Register(fde);
