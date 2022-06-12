@@ -264,10 +264,16 @@ HttpStatus HttpRequest::DecideBodySize() {
   }
 
   if (has_encoding_header) {
-    // TODO
-    // 最終転送符号法はチャンク化である
-    // 最終転送符号法はチャンク化でない
-    return parse_status_ = OK;
+    if (encoding_header_it->second.size() == 1 &&
+        encoding_header_it->second.front() == "chunked") {
+      // 最終転送符号法はチャンク化である
+      is_chunked_ = true;
+      return parse_status_ = OK;
+    } else {
+      // 最終転送符号法はチャンク化でない
+      // webservではchunkedのみ許容
+      return parse_status_ = NOT_IMPLEMENTED;
+    }
   }
 
   if (has_length_header)
