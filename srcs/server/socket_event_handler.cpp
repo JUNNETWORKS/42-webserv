@@ -12,16 +12,16 @@ namespace server {
 namespace {
 
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
-bool ProcessRequest(Socket *socket);
+bool ProcessRequest(ConnSocket *socket);
 
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
-bool ProcessResponse(Socket *socket);
+bool ProcessResponse(ConnSocket *socket);
 
 }  // namespace
 
 void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
                            Epoll *epoll) {
-  Socket *conn_sock = reinterpret_cast<Socket *>(data);
+  ConnSocket *conn_sock = reinterpret_cast<ConnSocket *>(data);
   bool should_close_conn = false;
 
   if (events & kFdeRead) {
@@ -49,15 +49,15 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
 void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
                              Epoll *epoll) {
   (void)fde;
-  Socket *listen_sock = reinterpret_cast<Socket *>(data);
+  ListenSocket *listen_sock = reinterpret_cast<ListenSocket *>(data);
 
   if (events & kFdeRead) {
-    Result<Socket *> result = listen_sock->AcceptNewConnection();
+    Result<ConnSocket *> result = listen_sock->AcceptNewConnection();
     if (result.IsErr()) {
       // 本当はログ出力とかがあると良い｡
       return;
     }
-    Socket *conn_sock = result.Ok();
+    ConnSocket *conn_sock = result.Ok();
     FdEvent *fdevent =
         CreateFdEvent(conn_sock->GetFd(), HandleConnSocketEvent, conn_sock);
     epoll->Register(fdevent);
@@ -75,7 +75,7 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
 namespace {
 const int BUF_SIZE = 1024;
 
-bool ProcessRequest(Socket *socket) {
+bool ProcessRequest(ConnSocket *socket) {
   unsigned char buf[BUF_SIZE];
   int conn_fd = socket->GetFd();
   int n = read(conn_fd, buf, sizeof(buf) - 1);
@@ -105,7 +105,7 @@ bool ProcessRequest(Socket *socket) {
   return false;
 }
 
-bool ProcessResponse(Socket *socket) {
+bool ProcessResponse(ConnSocket *socket) {
   int conn_fd = socket->GetFd();
   const config::Config &config = socket->GetConfig();
 
