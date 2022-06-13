@@ -26,7 +26,6 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   ConnSocket *conn_sock = reinterpret_cast<ConnSocket *>(data);
   bool should_close_conn = false;
 
-
   if (events & kFdeRead) {
     should_close_conn |= ProcessRequest(conn_sock);
   }
@@ -40,9 +39,6 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
     epoll->Del(fde, kFdeWrite);
   }
 
-  // TCP FIN が送信したデータより早く来る場合があり､
-  // その対策として kFdeError で接続切断をするのではなく､
-  // read(conn_fd) の返り値が0(EOF)または-1(Error)だったら切断する｡
   if (should_close_conn || (events & kFdeTimeout)) {
     printf("Connection close\n");
     epoll->Unregister(fde);

@@ -161,7 +161,10 @@ std::vector<FdEventEvent> Epoll::RetrieveTimeouts() {
         current_time - fde->last_active > fde->timeout_ms) {
       FdEventEvent fdee;
       fdee.fde = fde;
-      fdee.events = kFdeTimeout;
+      // TCP FIN が送信したデータより早く来る場合があり､
+      // その対策として kFdeError で接続切断をするのではなく､
+      // read(conn_fd) の返り値が0(EOF)または-1(Error)だったら切断する｡
+      fdee.events = kFdeTimeout | kFdeRead;
       fdee_vec.push_back(fdee);
     }
   }
