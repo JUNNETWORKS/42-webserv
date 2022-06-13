@@ -121,7 +121,7 @@ void Epoll::Del(FdEvent *fde, unsigned int events) {
 }
 
 void Epoll::SetTimeout(FdEvent *fde, long timeout_ms) {
-  fde->state |= kFdeTimeout;
+  Set(fde, kFdeTimeout);
   fde->timeout_ms = timeout_ms;
   fde->last_active = utils::GetCurrentTimeMs();
 }
