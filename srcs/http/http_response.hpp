@@ -9,8 +9,11 @@
 #include "http/http_request.hpp"
 #include "http/http_status.hpp"
 #include "http/types.hpp"
+#include "result/result.hpp"
 
 namespace http {
+
+using namespace result;
 
 class HttpResponse {
  private:
@@ -39,6 +42,9 @@ class HttpResponse {
                     const HttpRequest &request);
   bool MakeErrorResponse(const config::LocationConf *location,
                          const HttpRequest &request, HttpStatus status);
+
+  std::string MakeAutoIndex(const std::string &root_path,
+                            const std::string &relative_path) const;
 
   void Write(int fd) const;
 
