@@ -2,6 +2,8 @@
 
 #include <unistd.h>
 
+#include <deque>
+
 #include "result/result.hpp"
 #include "server/epoll.hpp"
 #include "server/socket.hpp"
@@ -17,6 +19,12 @@ bool ProcessRequest(ConnSocket *socket);
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessResponse(ConnSocket *socket);
 
+// HTTPリクエストのヘッダーに "Connection: close" が含まれているか
+//
+// request を const_reference で受け取っていないのは
+// HttpRequest.GetHeader() が const メソッドじゃないから
+bool RequestHeaderHasConnectionClose(http::HttpRequest &request);
+
 }  // namespace
 
 void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
@@ -30,14 +38,14 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   if (events & kFdeWrite) {
     should_close_conn |= ProcessResponse(conn_sock);
   }
-  if (events & kFdeTimeout) {
-    // TODO: タイムアウト処理
+
+  if (conn_sock->HasParsedRequest()) {
+    epoll->Add(fde, kFdeWrite);
+  } else {
+    epoll->Del(fde, kFdeWrite);
   }
 
-  // TCP FIN が送信したデータより早く来る場合があり､
-  // その対策として kFdeError で接続切断をするのではなく､
-  // read(conn_fd) の返り値が0(EOF)または-1(Error)だったら切断する｡
-  if (should_close_conn) {
+  if (should_close_conn || (events & kFdeTimeout)) {
     printf("Connection close\n");
     epoll->Unregister(fde);
     // conn_sock->fd の close は Socket のデストラクタで行うので不要｡
@@ -58,11 +66,11 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
       return;
     }
     ConnSocket *conn_sock = result.Ok();
-    FdEvent *fdevent =
+    FdEvent *conn_fde =
         CreateFdEvent(conn_sock->GetFd(), HandleConnSocketEvent, conn_sock);
-    epoll->Register(fdevent);
-    epoll->Add(fdevent, kFdeRead);
-    epoll->Add(fdevent, kFdeWrite);
+    epoll->Register(conn_fde);
+    epoll->Add(conn_fde, kFdeRead);
+    epoll->SetTimeout(conn_fde, ConnSocket::kDefaultTimeoutMs);
   }
 
   if (events & kFdeError) {
@@ -89,7 +97,7 @@ bool ProcessRequest(ConnSocket *socket) {
     buffer.AppendDataToBuffer(buf, n);
 
     while (1) {
-      std::vector<http::HttpRequest> &requests = socket->GetRequests();
+      std::deque<http::HttpRequest> &requests = socket->GetRequests();
       if (requests.empty() || requests.back().IsParsed()) {
         requests.push_back(http::HttpRequest());
       }
@@ -105,13 +113,26 @@ bool ProcessRequest(ConnSocket *socket) {
   return false;
 }
 
+bool RequestHeaderHasConnectionClose(http::HttpRequest &request) {
+  const std::vector<std::string> &connection_header =
+      request.GetHeader("Connection");
+  for (std::vector<std::string>::const_iterator it = connection_header.begin();
+       it != connection_header.end(); ++it) {
+    if (*it == "close") {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool ProcessResponse(ConnSocket *socket) {
   int conn_fd = socket->GetFd();
   const config::Config &config = socket->GetConfig();
+  std::deque<http::HttpRequest> &requests = socket->GetRequests();
+  bool should_close_conn = false;
 
-  if (!socket->GetRequests().empty() &&
-      socket->GetRequests().front().IsCorrectRequest()) {
-    http::HttpRequest &request = socket->GetRequests().front();
+  if (socket->HasParsedRequest()) {
+    http::HttpRequest &request = requests.front();
     http::HttpResponse &response = socket->GetResponse();
     const std::string &host =
         request.GetHeader("Host").empty() ? "" : request.GetHeader("Host")[0];
@@ -124,18 +145,23 @@ bool ProcessResponse(ConnSocket *socket) {
       // 404 Not Found を返す
       response.MakeErrorResponse(NULL, request, http::NOT_FOUND);
       response.Write(conn_fd);
-      return true;
+      response.Clear();
+      return should_close_conn;
     }
     printf("===== Virtual Server =====\n");
     vserver->Print();
 
     response.MakeResponse(*vserver, request);
     response.Write(conn_fd);
+    response.Clear();
+
+    // "Connection: close" がリクエストで指定されていた場合はソケット接続を切断
+    should_close_conn = RequestHeaderHasConnectionClose(request);
+
+    requests.pop_front();
   }
-  // TODO: 複数リクエストに対応する際には､
-  //       リクエストの状態によってcloseするかどうか判断して返す｡
-  // 現在はレスポンスを write したら常にソケットをcloseするようにしている｡
-  return true;
+
+  return should_close_conn;
 }
 
 }  // namespace

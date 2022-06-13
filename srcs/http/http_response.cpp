@@ -56,6 +56,13 @@ void HttpResponse::Write(int fd) const {
   WriteBody(fd);
 }
 
+void HttpResponse::Clear() {
+  status_ = OK;
+  headers_.clear();
+  status_line_.clear();
+  body_.clear();
+}
+
 void HttpResponse::WriteStatusLine(int fd) const {
   utils::PutStrFd(status_line_, fd);
   utils::PutStrFd(http::kCrlf, fd);

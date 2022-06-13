@@ -10,7 +10,15 @@ namespace server {
 int StartEventLoop(Epoll &epoll) {
   // イベントループ
   while (1) {
-    Result<std::vector<FdEventEvent> > result = epoll.WaitEvents();
+    std::vector<FdEventEvent> timeouts = epoll.RetrieveTimeouts();
+    for (std::vector<FdEventEvent>::const_iterator it = timeouts.begin();
+         it != timeouts.end(); ++it) {
+      FdEvent *fde = it->fde;
+      unsigned int events = it->events;
+      InvokeFdEvent(fde, events, &epoll);
+    }
+
+    Result<std::vector<FdEventEvent> > result = epoll.WaitEvents(0);
     if (result.IsErr()) {
       utils::ErrExit("WaitEvents");
     }

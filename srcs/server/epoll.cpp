@@ -7,6 +7,7 @@
 
 #include "result/result.hpp"
 #include "utils/error.hpp"
+#include "utils/time.hpp"
 
 namespace server {
 
@@ -56,7 +57,9 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
   FdEvent *fde = new FdEvent();
   fde->fd = fd;
   fde->func = func;
+  fde->timeout_ms = 0;
   fde->data = data;
+  fde->state = 0;
   return fde;
 }
 
@@ -76,9 +79,7 @@ Epoll::~Epoll() {
 
 void Epoll::Register(FdEvent *fde) {
   assert(registered_fd_events_.find(fde->fd) == registered_fd_events_.end());
-  epoll_event epev;
-  epev.events = 0;
-  epev.data.fd = fde->fd;
+  epoll_event epev = CalculateEpollEvent(fde);
 
   if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fde->fd, &epev) < 0) {
     utils::ErrExit("Epoll::Register epoll_ctl");
@@ -117,6 +118,12 @@ void Epoll::Del(FdEvent *fde, unsigned int events) {
   Set(fde, fde->state & ~events);
 }
 
+void Epoll::SetTimeout(FdEvent *fde, long timeout_ms) {
+  Add(fde, kFdeTimeout);
+  fde->timeout_ms = timeout_ms;
+  fde->last_active = utils::GetCurrentTimeMs();
+}
+
 Result<std::vector<FdEventEvent> > Epoll::WaitEvents(int timeout_ms) {
   std::vector<FdEventEvent> fdee_vec;
   std::vector<epoll_event> epoll_events;
@@ -133,9 +140,33 @@ Result<std::vector<FdEventEvent> > Epoll::WaitEvents(int timeout_ms) {
     assert(registered_fd_events_.find(epoll_events[i].data.fd) !=
            registered_fd_events_.end());
     FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
-
     FdEventEvent fdee = CalculateFdEventEvent(fde, epoll_events[i]);
     fdee_vec.push_back(fdee);
+
+    fde->last_active = utils::GetCurrentTimeMs();
+  }
+
+  return fdee_vec;
+}
+
+std::vector<FdEventEvent> Epoll::RetrieveTimeouts() {
+  std::vector<FdEventEvent> fdee_vec;
+
+  long current_time = utils::GetCurrentTimeMs();
+  for (std::map<int, FdEvent *>::const_iterator it =
+           registered_fd_events_.begin();
+       it != registered_fd_events_.end(); ++it) {
+    FdEvent *fde = it->second;
+    if (fde->state & kFdeTimeout &&
+        current_time - fde->last_active > fde->timeout_ms) {
+      FdEventEvent fdee;
+      fdee.fde = fde;
+      // TCP FIN が送信したデータより早く来る場合があり､
+      // その対策として kFdeError で接続切断をするのではなく､
+      // read(conn_fd) の返り値が0(EOF)または-1(Error)だったら切断する｡
+      fdee.events = kFdeTimeout | kFdeRead;
+      fdee_vec.push_back(fdee);
+    }
   }
   return fdee_vec;
 }

@@ -3,6 +3,7 @@
 
 #include <sys/epoll.h>
 
+#include <ctime>
 #include <map>
 #include <vector>
 
@@ -39,9 +40,8 @@ struct FdEvent {
   int fd;
   FdFunc func;
 
-  // TODO: Timeクラスを作ってタイムアウトを管理する
-  // Time timeout;
-  // Time last_active;
+  long timeout_ms;
+  long last_active;
 
   // 監視対象のFdeEvent
   unsigned int state;
@@ -81,22 +81,21 @@ class Epoll {
   void Add(FdEvent *fde, unsigned int events);
   void Del(FdEvent *fde, unsigned int events);
 
+  void SetTimeout(FdEvent *fde, long timeout_ms);
+
   // 利用可能なイベントをepoll_waitで取得し､FdEventEventを返す｡
   //
   // timeout は ms 単位｡
   // -1を指定すると1つ以上のイベントが利用可能になるまでブロックする｡
-  Result<std::vector<FdEventEvent> > WaitEvents(int timeout_ms = -1);
+  Result<std::vector<FdEventEvent> > WaitEvents(int timeout_ms = 0);
+
+  // Timeoutなfd取得し､FdEventEventを返す｡
+  std::vector<FdEventEvent> RetrieveTimeouts();
 
  private:
   // epoll instance が片方のみでcloseされるのを防ぐためコピー操作は禁止
   Epoll(const Epoll &rhs);
   Epoll &operator=(const Epoll &rhs);
-
-  // TODO: タイムアウトかどうかを判定
-  // WaitEvents 内で実行し､もしタイムアウトがあった場合は
-  // kFdeTimeout のようなオリジナルのイベントフラグを用いて
-  // ハンドラーにタイムアウトしたことを伝える｡
-  // bool IsTimeout(FdEvent *fde);
 };
 
 }  // namespace server

@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include <cassert>
+#include <deque>
 
 #include "utils/inet_sockets.hpp"
 
@@ -49,8 +50,12 @@ ConnSocket::ConnSocket(int fd, const std::string &port,
                        const config::Config &config)
     : Socket(fd, ListenSock, port, config) {}
 
-std::vector<http::HttpRequest> &ConnSocket::GetRequests() {
+std::deque<http::HttpRequest> &ConnSocket::GetRequests() {
   return requests_;
+}
+
+bool ConnSocket::HasParsedRequest() {
+  return !requests_.empty() && requests_.front().IsCorrectRequest();
 }
 
 http::HttpResponse &ConnSocket::GetResponse() {
@@ -77,7 +82,9 @@ Result<ConnSocket *> ListenSocket::AcceptNewConnection() {
   if (conn_fd < 0) {
     return Error("accept");
   }
-  if (fcntl(conn_fd, F_SETFD, O_NONBLOCK) < 0) {
+  int flags;
+  if ((flags = fcntl(conn_fd, F_GETFL, 0)) < 0 ||
+      fcntl(conn_fd, F_SETFL, flags | O_NONBLOCK) < 0) {
     return Error("fcntl");
   }
 

@@ -1,6 +1,7 @@
 #ifndef SERVER_SOCKET_HPP_
 #define SERVER_SOCKET_HPP_
 
+#include <deque>
 #include <string>
 #include <vector>
 
@@ -11,7 +12,6 @@
 #include "utils/ByteVector.hpp"
 
 namespace server {
-
 using namespace result;
 
 // listen_fd の情報などを持たせたい｡
@@ -55,14 +55,22 @@ class Socket {
 
 class ConnSocket : public Socket {
  private:
-  std::vector<http::HttpRequest> requests_;
+  std::deque<http::HttpRequest> requests_;
   http::HttpResponse response_;
   utils::ByteVector buffer_;
 
  public:
+  // タイムアウトのデフォルト時間は5秒
+  // HTTP/1.1 では Connection: close が来るまでソケットを接続し続ける｡
+  // Nginx などでは5秒間クライアントからデータが来なければ
+  //   切断するのでそれに合わせる｡
+  static const long kDefaultTimeoutMs = 5 * 1000;
+
   ConnSocket(int fd, const std::string &port, const config::Config &config);
 
-  std::vector<http::HttpRequest> &GetRequests();
+  std::deque<http::HttpRequest> &GetRequests();
+
+  bool HasParsedRequest();
 
   http::HttpResponse &GetResponse();
 
