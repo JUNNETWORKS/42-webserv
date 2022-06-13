@@ -2,6 +2,8 @@
 
 #include <unistd.h>
 
+#include <deque>
+
 #include "result/result.hpp"
 #include "server/epoll.hpp"
 #include "server/socket.hpp"
@@ -32,6 +34,12 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   }
   if (events & kFdeTimeout) {
     // TODO: タイムアウト処理
+  }
+
+  if (conn_sock->HasParsedRequest()) {
+    epoll->Add(fde, kFdeWrite);
+  } else {
+    epoll->Del(fde, kFdeWrite);
   }
 
   // TCP FIN が送信したデータより早く来る場合があり､
@@ -89,7 +97,7 @@ bool ProcessRequest(ConnSocket *socket) {
     buffer.AppendDataToBuffer(buf, n);
 
     while (1) {
-      std::vector<http::HttpRequest> &requests = socket->GetRequests();
+      std::deque<http::HttpRequest> &requests = socket->GetRequests();
       if (requests.empty() || requests.back().IsParsed()) {
         requests.push_back(http::HttpRequest());
       }
@@ -108,10 +116,10 @@ bool ProcessRequest(ConnSocket *socket) {
 bool ProcessResponse(ConnSocket *socket) {
   int conn_fd = socket->GetFd();
   const config::Config &config = socket->GetConfig();
+  std::deque<http::HttpRequest> &requests = socket->GetRequests();
 
-  if (!socket->GetRequests().empty() &&
-      socket->GetRequests().front().IsCorrectRequest()) {
-    http::HttpRequest &request = socket->GetRequests().front();
+  if (socket->HasParsedRequest()) {
+    http::HttpRequest &request = requests.front();
     http::HttpResponse &response = socket->GetResponse();
     const std::string &host =
         request.GetHeader("Host").empty() ? "" : request.GetHeader("Host")[0];
@@ -124,18 +132,22 @@ bool ProcessResponse(ConnSocket *socket) {
       // 404 Not Found を返す
       response.MakeErrorResponse(NULL, request, http::NOT_FOUND);
       response.Write(conn_fd);
-      return true;
+      response.Clear();
+      return false;
     }
     printf("===== Virtual Server =====\n");
     vserver->Print();
 
     response.MakeResponse(*vserver, request);
     response.Write(conn_fd);
+    response.Clear();
+
+    requests.pop_front();
   }
   // TODO: 複数リクエストに対応する際には､
   //       リクエストの状態によってcloseするかどうか判断して返す｡
   // 現在はレスポンスを write したら常にソケットをcloseするようにしている｡
-  return true;
+  return false;
 }
 
 }  // namespace
