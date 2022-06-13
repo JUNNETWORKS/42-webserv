@@ -12,6 +12,8 @@
 
 namespace http {
 
+using namespace result;
+
 class HttpResponse {
  private:
   HttpStatus status_;
@@ -54,6 +56,9 @@ class HttpResponse {
                             const HttpRequest &request);
   bool MakeCgiReponse(const config::LocationConf &location,
                       const HttpRequest &request);
+
+  std::string MakeAutoIndex(const std::string &root_path,
+                            const std::string &relative_path) const;
 };
 
 }  // namespace http
