@@ -89,7 +89,7 @@ class Epoll {
   // -1を指定すると1つ以上のイベントが利用可能になるまでブロックする｡
   Result<std::vector<FdEventEvent> > WaitEvents(int timeout_ms = 0);
 
-  // Timeout だった場合にタイムアウトイベントとして回収する｡
+  // Timeoutなfd取得し､FdEventEventを返す｡
   std::vector<FdEventEvent> RetrieveTimeouts();
 
  private:
