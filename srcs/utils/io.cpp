@@ -27,7 +27,7 @@ bool IsDir(const std::string& file_path) {
   return S_ISDIR(sb.st_mode);
 }
 
-Result<std::vector<utils::File> > GetFileList(const std::string target_dir) {
+Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
   std::vector<utils::File> vec;
   struct dirent* dent;
   DIR* dir = opendir(target_dir.c_str());
