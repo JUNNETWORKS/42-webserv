@@ -57,4 +57,50 @@ TEST(StoulTest, IncludeAlphabetMiddle) {
   EXPECT_RESULT_IS_ERR(Stoul("10a0"));
 }
 
+TEST(StoulTest, Hex_Zero) {
+  EXPECT_RESULT_IS_OK(Stoul("0", kHexadecimal));
+  EXPECT_RESULT_OK_EQ(Stoul("0", kHexadecimal), Result<unsigned long>(0));
+}
+
+TEST(StoulTest, Hex_Maximumvalue) {
+  EXPECT_RESULT_IS_OK(Stoul("FFFFFFFFFFFFFFFF", kHexadecimal));
+  EXPECT_RESULT_OK_EQ(Stoul("FFFFFFFFFFFFFFFF", kHexadecimal),
+                      Result<unsigned long>(18446744073709551615ul));
+}
+
+TEST(StoulTest, Hex_OnlyCharValueLower) {
+  EXPECT_RESULT_IS_OK(Stoul("abcdef", kHexadecimal));
+  EXPECT_RESULT_OK_EQ(Stoul("abcdef", kHexadecimal),
+                      Result<unsigned long>(11259375));
+}
+
+TEST(StoulTest, Hex_OnlyCharValueUpper) {
+  EXPECT_RESULT_IS_OK(Stoul("ABCDEF", kHexadecimal));
+  EXPECT_RESULT_OK_EQ(Stoul("ABCDEF", kHexadecimal),
+                      Result<unsigned long>(11259375));
+}
+
+TEST(StoulTest, Hex_OnlyCharValueMix) {
+  EXPECT_RESULT_IS_OK(Stoul("abcdefABCDEF", kHexadecimal));
+  EXPECT_RESULT_OK_EQ(Stoul("abcdefABCDEF", kHexadecimal),
+                      Result<unsigned long>(188900977659375ul));
+}
+
+TEST(StoulTest, Hex_MixValue) {
+  EXPECT_RESULT_IS_OK(Stoul("123BcD4F657e90A", kHexadecimal));
+  EXPECT_RESULT_OK_EQ(Stoul("123BcD4F657e90A", kHexadecimal),
+                      Result<unsigned long>(82116841074845962ul));
+}
+
+TEST(StoulTest, Hex_NonHexadecimalValue) {
+  EXPECT_RESULT_IS_ERR(Stoul("100G", kHexadecimal));
+}
+
+TEST(StoulTest, Hex_ContainsMinusSign) {
+  EXPECT_RESULT_IS_ERR(Stoul("-1aB", kHexadecimal));
+}
+
+TEST(StoulTest, Hex_ContainsPlusSign) {
+  EXPECT_RESULT_IS_ERR(Stoul("+1aB", kHexadecimal));
+}
 }  // namespace utils
