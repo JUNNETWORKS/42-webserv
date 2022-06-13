@@ -1,6 +1,5 @@
 #include "server/epoll.hpp"
 
-#include <stdio.h>
 #include <unistd.h>
 
 #include <cassert>
@@ -160,7 +159,6 @@ std::vector<FdEventEvent> Epoll::RetrieveTimeouts() {
     FdEvent *fde = it->second;
     if (fde->state & kFdeTimeout &&
         current_time - fde->last_active > fde->timeout_ms) {
-      printf("fd(%d) is timeout!\n", fde->fd);
       FdEventEvent fdee;
       fdee.fde = fde;
       fdee.events = kFdeTimeout;

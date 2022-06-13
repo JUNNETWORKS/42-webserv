@@ -26,7 +26,6 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   ConnSocket *conn_sock = reinterpret_cast<ConnSocket *>(data);
   bool should_close_conn = false;
 
-  printf("Conn(%d) catch event %d\n", fde->fd, events);
 
   if (events & kFdeRead) {
     should_close_conn |= ProcessRequest(conn_sock);
