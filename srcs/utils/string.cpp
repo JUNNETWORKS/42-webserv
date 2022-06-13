@@ -44,14 +44,27 @@ bool IsDigits(const std::string &str) {
   return true;
 }
 
-Result<unsigned long> Stoul(const std::string &str) {
-  if (!IsDigits(str)) {
+bool IsHexadecimals(const std::string &str) {
+  if (str.empty()) {
+    return false;
+  }
+  for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+    if (!('0' <= *it && *it <= '9') && !('a' <= *it && *it <= 'f') &&
+        !('A' <= *it && *it <= 'F')) {
+      return false;
+    }
+  }
+  return true;
+}
+
+Result<unsigned long> Stoul(const std::string &str, BaseDigit base) {
+  if ((base == kDecimal && !IsDigits(str)) ||
+      (base == kHexadecimal && !IsHexadecimals(str))) {
     return Error();
   }
 
   char *end;
   const char *p = str.c_str();
-  int base = 10;
   errno = 0;
   unsigned long num = std::strtoul(p, &end, base);
   size_t used_char_count = end - p;
