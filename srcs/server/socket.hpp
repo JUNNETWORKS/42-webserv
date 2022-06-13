@@ -1,6 +1,7 @@
 #ifndef SERVER_SOCKET_HPP_
 #define SERVER_SOCKET_HPP_
 
+#include <deque>
 #include <string>
 #include <vector>
 
@@ -54,14 +55,16 @@ class Socket {
 
 class ConnSocket : public Socket {
  private:
-  std::vector<http::HttpRequest> requests_;
+  std::deque<http::HttpRequest> requests_;
   http::HttpResponse response_;
   utils::ByteVector buffer_;
 
  public:
   ConnSocket(int fd, const std::string &port, const config::Config &config);
 
-  std::vector<http::HttpRequest> &GetRequests();
+  std::deque<http::HttpRequest> &GetRequests();
+
+  bool ConnSocket::HasParsedRequest();
 
   http::HttpResponse &GetResponse();
 
