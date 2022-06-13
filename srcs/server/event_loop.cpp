@@ -11,7 +11,6 @@ int StartEventLoop(Epoll &epoll) {
   // イベントループ
   while (1) {
     std::vector<FdEventEvent> timeouts = epoll.RetrieveTimeouts();
-    printf("timeout count: %ld\n", timeouts.size());
     for (std::vector<FdEventEvent>::const_iterator it = timeouts.begin();
          it != timeouts.end(); ++it) {
       FdEvent *fde = it->fde;

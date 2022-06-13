@@ -60,6 +60,7 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
   fde->func = func;
   fde->timeout_ms = 0;
   fde->data = data;
+  fde->state = 0;
   return fde;
 }
 
@@ -79,9 +80,7 @@ Epoll::~Epoll() {
 
 void Epoll::Register(FdEvent *fde) {
   assert(registered_fd_events_.find(fde->fd) == registered_fd_events_.end());
-  epoll_event epev;
-  epev.events = 0;
-  epev.data.fd = fde->fd;
+  epoll_event epev = CalculateEpollEvent(fde);
 
   if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fde->fd, &epev) < 0) {
     utils::ErrExit("Epoll::Register epoll_ctl");
@@ -121,7 +120,7 @@ void Epoll::Del(FdEvent *fde, unsigned int events) {
 }
 
 void Epoll::SetTimeout(FdEvent *fde, long timeout_ms) {
-  Set(fde, kFdeTimeout);
+  Add(fde, kFdeTimeout);
   fde->timeout_ms = timeout_ms;
   fde->last_active = utils::GetCurrentTimeMs();
 }

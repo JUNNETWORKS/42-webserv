@@ -26,14 +26,13 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   ConnSocket *conn_sock = reinterpret_cast<ConnSocket *>(data);
   bool should_close_conn = false;
 
+  printf("Conn(%d) catch event %d\n", fde->fd, events);
+
   if (events & kFdeRead) {
     should_close_conn |= ProcessRequest(conn_sock);
   }
   if (events & kFdeWrite) {
     should_close_conn |= ProcessResponse(conn_sock);
-  }
-  if (events & kFdeTimeout) {
-    // TODO: タイムアウト処理
   }
 
   if (conn_sock->HasParsedRequest()) {
@@ -45,7 +44,7 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   // TCP FIN が送信したデータより早く来る場合があり､
   // その対策として kFdeError で接続切断をするのではなく､
   // read(conn_fd) の返り値が0(EOF)または-1(Error)だったら切断する｡
-  if (should_close_conn) {
+  if (should_close_conn || (events & kFdeTimeout)) {
     printf("Connection close\n");
     epoll->Unregister(fde);
     // conn_sock->fd の close は Socket のデストラクタで行うので不要｡
@@ -66,11 +65,11 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
       return;
     }
     ConnSocket *conn_sock = result.Ok();
-    FdEvent *fdevent =
+    FdEvent *conn_fde =
         CreateFdEvent(conn_sock->GetFd(), HandleConnSocketEvent, conn_sock);
-    epoll->Register(fdevent);
-    epoll->Add(fdevent, kFdeRead);
-    epoll->SetTimeout(fdevent, ConnSocket::kDefaultTimeoutMs);
+    epoll->Register(conn_fde);
+    epoll->Add(conn_fde, kFdeRead);
+    epoll->SetTimeout(conn_fde, ConnSocket::kDefaultTimeoutMs);
   }
 
   if (events & kFdeError) {
