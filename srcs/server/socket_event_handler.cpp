@@ -19,6 +19,12 @@ bool ProcessRequest(ConnSocket *socket);
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessResponse(ConnSocket *socket);
 
+// HTTPリクエストのヘッダーに "Connection: close" が含まれているか
+//
+// request を const_reference で受け取っていないのは
+// HttpRequest.GetHeader() が const メソッドじゃないから
+bool RequestHeaderHasConnectionClose(http::HttpRequest &request);
+
 }  // namespace
 
 void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
@@ -107,6 +113,18 @@ bool ProcessRequest(ConnSocket *socket) {
   return false;
 }
 
+bool RequestHeaderHasConnectionClose(http::HttpRequest &request) {
+  const std::vector<std::string> &connection_header =
+      request.GetHeader("Connection");
+  for (std::vector<std::string>::const_iterator it = connection_header.begin();
+       it != connection_header.end(); ++it) {
+    if (*it == "close") {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool ProcessResponse(ConnSocket *socket) {
   int conn_fd = socket->GetFd();
   const config::Config &config = socket->GetConfig();
@@ -138,15 +156,7 @@ bool ProcessResponse(ConnSocket *socket) {
     response.Clear();
 
     // "Connection: close" がリクエストで指定されていた場合はソケット接続を切断
-    const std::vector<std::string> &connection_header =
-        request.GetHeader("Connection");
-    for (std::vector<std::string>::const_iterator it =
-             connection_header.begin();
-         it != connection_header.end(); ++it) {
-      if (*it == "close") {
-        should_close_conn = true;
-      }
-    }
+    should_close_conn = RequestHeaderHasConnectionClose(request);
 
     requests.pop_front();
   }
