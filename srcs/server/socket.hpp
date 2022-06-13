@@ -60,6 +60,9 @@ class ConnSocket : public Socket {
   utils::ByteVector buffer_;
 
  public:
+  // タイムアウトのデフォルト時間は30秒
+  static const long kDefaultTimeoutMs = 30 * 1000;
+
   ConnSocket(int fd, const std::string &port, const config::Config &config);
 
   std::deque<http::HttpRequest> &GetRequests();
@@ -69,9 +72,6 @@ class ConnSocket : public Socket {
   http::HttpResponse &GetResponse();
 
   utils::ByteVector &GetBuffer();
-
-  // タイムアウトのデフォルト時間は30秒
-  static const long kDefaultTimeoutMs = 10 * 1000;
 
  private:
   ConnSocket();
