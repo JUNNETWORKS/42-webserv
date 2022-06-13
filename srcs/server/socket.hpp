@@ -64,7 +64,7 @@ class ConnSocket : public Socket {
 
   std::deque<http::HttpRequest> &GetRequests();
 
-  bool ConnSocket::HasParsedRequest();
+  bool HasParsedRequest();
 
   http::HttpResponse &GetResponse();
 
