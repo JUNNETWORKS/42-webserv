@@ -82,8 +82,9 @@ Result<ConnSocket *> ListenSocket::AcceptNewConnection() {
   if (conn_fd < 0) {
     return Error("accept");
   }
-  int flags = fcntl(conn_fd, F_GETFL, 0);
-  if (fcntl(conn_fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+  int flags;
+  if ((flags = fcntl(conn_fd, F_GETFL, 0)) < 0 ||
+      fcntl(conn_fd, F_SETFL, flags | O_NONBLOCK) < 0) {
     return Error("fcntl");
   }
 
