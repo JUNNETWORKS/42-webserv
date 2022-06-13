@@ -111,6 +111,7 @@ bool ProcessResponse(ConnSocket *socket) {
   int conn_fd = socket->GetFd();
   const config::Config &config = socket->GetConfig();
   std::deque<http::HttpRequest> &requests = socket->GetRequests();
+  bool should_close_conn = false;
 
   if (socket->HasParsedRequest()) {
     http::HttpRequest &request = requests.front();
@@ -127,7 +128,7 @@ bool ProcessResponse(ConnSocket *socket) {
       response.MakeErrorResponse(NULL, request, http::NOT_FOUND);
       response.Write(conn_fd);
       response.Clear();
-      return false;
+      return should_close_conn;
     }
     printf("===== Virtual Server =====\n");
     vserver->Print();
@@ -136,12 +137,21 @@ bool ProcessResponse(ConnSocket *socket) {
     response.Write(conn_fd);
     response.Clear();
 
+    // "Connection: close" がリクエストで指定されていた場合はソケット接続を切断
+    const std::vector<std::string> &connection_header =
+        request.GetHeader("Connection");
+    for (std::vector<std::string>::const_iterator it =
+             connection_header.begin();
+         it != connection_header.end(); ++it) {
+      if (*it == "close") {
+        should_close_conn = true;
+      }
+    }
+
     requests.pop_front();
   }
-  // TODO: 複数リクエストに対応する際には､
-  //       リクエストの状態によってcloseするかどうか判断して返す｡
-  // 現在はレスポンスを write したら常にソケットをcloseするようにしている｡
-  return false;
+
+  return should_close_conn;
 }
 
 }  // namespace
