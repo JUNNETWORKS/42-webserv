@@ -23,6 +23,19 @@ const std::string kPost = "POST";
 const std::string kDelete = "DELETE";
 }  // namespace method_strs
 
+struct Chunk {
+  enum ChunkStatus {
+    kReceived = 200,
+    kWaiting = 0,
+    kErrorLength = PAYLOAD_TOO_LARGE,
+    kErrorBadRequest = BAD_REQUEST
+  };
+  ChunkStatus chunk_status;
+  std::string size_str;
+  unsigned long size;
+  unsigned long required_size;
+};
+
 class HttpRequest {
  private:
   enum ParsingPhase {

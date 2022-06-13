@@ -301,6 +301,36 @@ HttpStatus HttpRequest::DecideBodySize() {
 
 namespace {
 
+Chunk CheckChunkReceived(utils::ByteVector &buffer) {
+  Chunk res;
+  res.chunk_status = Chunk::kWaiting;
+
+  utils::ByteVector::iterator pos = buffer.FindString(kCrlf);
+  if (pos == buffer.end())
+    return res;
+  res.size_str = buffer.SubstrBeforePos(pos);
+
+  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
+  Result<unsigned long> convert_res = utils::Stoul(res.size_str);
+  if (convert_res.IsErr()) {
+    res.chunk_status = Chunk::kErrorBadRequest;
+    return res;
+  }
+  res.size = convert_res.Ok();
+
+  if (res.size >= kMaxSize) {
+    res.chunk_status = Chunk::kErrorLength;
+    return res;
+  }
+
+  res.required_size =
+      res.size_str.size() + kCrlf.size() + res.size + kCrlf.size();
+  if (buffer.size() < res.required_size)
+    return res;
+  res.chunk_status = Chunk::kReceived;
+  return res;
+}
+
 bool IsTchar(const char c) {
   return std::isalnum(c) || kTcharsWithoutAlnum.find(c) != std::string::npos;
 }
