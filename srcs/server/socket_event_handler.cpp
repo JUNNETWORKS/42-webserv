@@ -62,7 +62,7 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
         CreateFdEvent(conn_sock->GetFd(), HandleConnSocketEvent, conn_sock);
     epoll->Register(fdevent);
     epoll->Add(fdevent, kFdeRead);
-    epoll->Add(fdevent, kFdeWrite);
+    epoll->SetTimeout(fdevent, ConnSocket::kDefaultTimeoutMs);
   }
 
   if (events & kFdeError) {

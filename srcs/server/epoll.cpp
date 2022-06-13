@@ -1,5 +1,6 @@
 #include "server/epoll.hpp"
 
+#include <stdio.h>
 #include <unistd.h>
 
 #include <cassert>
@@ -7,6 +8,7 @@
 
 #include "result/result.hpp"
 #include "utils/error.hpp"
+#include "utils/time.hpp"
 
 namespace server {
 
@@ -56,6 +58,7 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
   FdEvent *fde = new FdEvent();
   fde->fd = fd;
   fde->func = func;
+  fde->timeout_ms = 0;
   fde->data = data;
   return fde;
 }
@@ -117,6 +120,12 @@ void Epoll::Del(FdEvent *fde, unsigned int events) {
   Set(fde, fde->state & ~events);
 }
 
+void Epoll::SetTimeout(FdEvent *fde, long timeout_ms) {
+  fde->state |= kFdeTimeout;
+  fde->timeout_ms = timeout_ms;
+  fde->last_active = utils::GetCurrentTimeMs();
+}
+
 Result<std::vector<FdEventEvent> > Epoll::WaitEvents(int timeout_ms) {
   std::vector<FdEventEvent> fdee_vec;
   std::vector<epoll_event> epoll_events;
@@ -133,9 +142,31 @@ Result<std::vector<FdEventEvent> > Epoll::WaitEvents(int timeout_ms) {
     assert(registered_fd_events_.find(epoll_events[i].data.fd) !=
            registered_fd_events_.end());
     FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
-
     FdEventEvent fdee = CalculateFdEventEvent(fde, epoll_events[i]);
     fdee_vec.push_back(fdee);
+
+    fde->last_active = utils::GetCurrentTimeMs();
+  }
+
+  return fdee_vec;
+}
+
+std::vector<FdEventEvent> Epoll::RetrieveTimeouts() {
+  std::vector<FdEventEvent> fdee_vec;
+
+  long current_time = utils::GetCurrentTimeMs();
+  for (std::map<int, FdEvent *>::const_iterator it =
+           registered_fd_events_.begin();
+       it != registered_fd_events_.end(); ++it) {
+    FdEvent *fde = it->second;
+    if (fde->state & kFdeTimeout &&
+        current_time - fde->last_active > fde->timeout_ms) {
+      printf("fd(%d) is timeout!\n", fde->fd);
+      FdEventEvent fdee;
+      fdee.fde = fde;
+      fdee.events = kFdeTimeout;
+      fdee_vec.push_back(fdee);
+    }
   }
   return fdee_vec;
 }

@@ -11,7 +11,6 @@
 #include "utils/ByteVector.hpp"
 
 namespace server {
-
 using namespace result;
 
 // listen_fd の情報などを持たせたい｡
@@ -67,6 +66,9 @@ class ConnSocket : public Socket {
   http::HttpResponse &GetResponse();
 
   utils::ByteVector &GetBuffer();
+
+  // タイムアウトのデフォルト時間は30秒
+  static const long kDefaultTimeoutMs = 10 * 1000;
 
  private:
   ConnSocket();
