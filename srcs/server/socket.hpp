@@ -60,8 +60,11 @@ class ConnSocket : public Socket {
   utils::ByteVector buffer_;
 
  public:
-  // タイムアウトのデフォルト時間は30秒
-  static const long kDefaultTimeoutMs = 30 * 1000;
+  // タイムアウトのデフォルト時間は5秒
+  // HTTP/1.1 では Connection: close が来るまでソケットを接続し続ける｡
+  // Nginx などでは5秒間クライアントからデータが来なければ
+  //   切断するのでそれに合わせる｡
+  static const long kDefaultTimeoutMs = 5 * 1000;
 
   ConnSocket(int fd, const std::string &port, const config::Config &config);
 
