@@ -37,7 +37,11 @@ Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
   }
 
   while ((dent = readdir(dir))) {  // TODO : readdir err ck
-    vec.push_back(File(target_dir + "/" + dent->d_name));
+    File f(target_dir + "/" + dent->d_name);
+    if (!f.Load()) {
+      continue;
+    }
+    vec.push_back(f);
   }
   closedir(dir);
   return vec;
