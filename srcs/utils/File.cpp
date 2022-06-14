@@ -31,11 +31,27 @@ File& File::operator=(File const& rhs) {
 
 // autoindexでsortを使用したいので作成
 // ディレクトリが上にきてほしい。
-bool File::operator<(File const& rhs) {
-  if (IsDir() != rhs.IsDir()) {
-    return IsDir() ? true : false;
+bool operator<(const File& lhs, const File& rhs) {
+  if (lhs.IsDir() != rhs.IsDir()) {
+    return lhs.IsDir() ? true : false;
   }
-  return absolute_path_ < rhs.absolute_path_;
+  return lhs.GetAbsolutePath() < rhs.GetAbsolutePath();
+}
+
+bool operator>(const File& lhs, const File& rhs) {
+  return rhs < lhs;
+}
+
+bool operator<=(const File& lhs, const File& rhs) {
+  return !(lhs > rhs);
+}
+
+bool operator>=(const File& lhs, const File& rhs) {
+  return !(lhs < rhs);
+}
+
+std::string File::GetAbsolutePath() const {
+  return absolute_path_;
 }
 
 // TODO : 最後に / が入ってるとき正常に機能しない？

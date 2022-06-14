@@ -9,13 +9,13 @@ namespace utils {
 
 class File {
  public:
-  File(const std::string& absolute_path);
-  File(const File& rhs);
+  File(const std::string &absolute_path);
+  File(const File &rhs);
   ~File();
 
-  File& operator=(const File& rhs);
-  bool operator<(const File& rhs);
+  File &operator=(const File &rhs);
 
+  std::string GetAbsolutePath() const;
   std::string GetFileName() const;
 
   bool IsDir() const;
@@ -26,6 +26,11 @@ class File {
   std::string absolute_path_;
   struct stat stat_;
 };
+
+bool operator>(const File &lhs, const File &rhs);
+bool operator<(const File &lhs, const File &rhs);
+bool operator>=(const File &lhs, const File &rhs);
+bool operator<=(const File &lhs, const File &rhs);
 
 }  // namespace utils
 
