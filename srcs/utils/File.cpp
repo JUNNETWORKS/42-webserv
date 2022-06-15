@@ -88,7 +88,7 @@ std::string File::GetFileName() const {
   }
 }
 
-FileType File::GetFileType() const {
+File::FileType File::GetFileType() const {
   return file_type_;
 }
 

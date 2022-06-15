@@ -7,11 +7,11 @@
 
 namespace utils {
 
-// enum の順番が sort の順番になる
-enum FileType { kNotExist, kDir, kFile };
-
 class File {
  public:
+  // enum の順番が sort の順番になる
+  enum FileType { kNotExist, kDir, kFile };
+
   File(const std::string &absolute_path);
   File(const File &rhs);
   ~File();
@@ -20,7 +20,7 @@ class File {
 
   std::string GetAbsolutePath() const;
   std::string GetFileName() const;
-  FileType GetFileType() const;
+  File::FileType GetFileType() const;
 
   void SetFileType();
 
