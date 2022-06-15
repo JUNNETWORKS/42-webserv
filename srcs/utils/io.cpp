@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include "utils/File.hpp"
+
 namespace utils {
 
 // TODO :
@@ -25,20 +27,24 @@ bool IsDir(const std::string& file_path) {
   return S_ISDIR(sb.st_mode);
 }
 
-// TODO: ssoがResult返すようにする｡
-bool GetFileList(const std::string& file_path, std::vector<std::string>& vec) {
+Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
+  std::vector<utils::File> vec;
   struct dirent* dent;
-  DIR* dir = opendir(file_path.c_str());
+  DIR* dir = opendir(target_dir.c_str());
 
   if (dir == NULL) {
-    return false;
+    return Error();
   }
 
   while ((dent = readdir(dir))) {  // TODO : readdir err ck
-    vec.push_back(std::string(dent->d_name));
+    File f(target_dir + "/" + dent->d_name);
+    if (f.GetFileType() == File::kNotExist) {
+      continue;
+    }
+    vec.push_back(f);
   }
   closedir(dir);
-  return true;
+  return vec;
 }
 
 bool PutStrFdBase(const char* str, size_t len, int fd) {
