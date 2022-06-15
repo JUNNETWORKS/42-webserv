@@ -28,6 +28,7 @@ class File {
 
   // FileType が kNotExist の場合呼び出し NG
   std::string GetFileSizeStr() const;
+  // FileType が kNotExist の場合呼び出し NG
   std::string GetDateStr(const std::string fmt) const;
 
  private:
