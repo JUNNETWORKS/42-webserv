@@ -10,6 +10,8 @@
 
 namespace utils {
 
+enum BaseDigit { kDecimal = 10, kHexadecimal = 16 };
+
 using namespace result;
 
 // 前方一致｡
@@ -30,12 +32,15 @@ int Stoi(const std::string &str, size_t *idx = NULL, int base = 10);
 // strが数字のみで構成されているか
 bool IsDigits(const std::string &str);
 
+// strが数字とa~f,A~Fで構成されているか
+bool IsHexadecimals(const std::string &str);
+
 // std::string を unsigned long に変換したものを返す｡
 //
 // 変換がが失敗した場合はfalseを返す
 // 全部数字の文字列以外は失敗する設計｡符号もだめ｡
 // e.g. "42hoge", "hoge42", "+42" -> false   "42" -> true
-Result<unsigned long> Stoul(const std::string &str);
+Result<unsigned long> Stoul(const std::string &str, BaseDigit base = kDecimal);
 
 // str を delim で区切った文字列vectorを返す｡
 // e.g. SplitString("a,bc,,d", ",") return ["a", "bc", ,"", "d"]
