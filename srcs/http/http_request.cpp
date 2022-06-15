@@ -295,8 +295,8 @@ bool HttpRequest::IsCorrectStatus() {
 
 // ========================================================================
 // Getter and Setter
-const std::vector<std::string> &HttpRequest::GetHeader(
-    const std::string header) {
+const std::vector<std::string> &HttpRequest::GetHeader(std::string header) {
+  std::transform(header.begin(), header.end(), header.begin(), toupper);
   return headers_[header];
 }
 

@@ -6,25 +6,17 @@
 #include <string>
 #include <vector>
 
+#include "config/config.hpp"
+#include "server/epoll.hpp"
+#include "server/socket.hpp"
+#include "server/socket_event_handler.hpp"
+#include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 
 namespace server {
 
-ServerException::ServerException(const char *errmsg) : errmsg_(errmsg) {}
-
-const char *ServerException::what() const throw() {
-  return errmsg_;
-}
-
-void CloseAllFds(const ListenFdPortMap &listen_fd_port_map) {
-  for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
-       it != listen_fd_port_map.end(); ++it) {
-    close(it->first);
-  }
-}
-
-bool OpenLilstenFds(ListenFdPortMap &listen_fd_port_map,
-                    const config::Config &config) {
+Result<ListenFdPortMap> OpenLilstenFds(const config::Config &config) {
+  ListenFdPortMap listen_fd_port_map;
   std::set<config::PortType> used_ports;
 
   const config::Config::VirtualServerConfVector &virtual_servers =
@@ -39,12 +31,33 @@ bool OpenLilstenFds(ListenFdPortMap &listen_fd_port_map,
     int fd = utils::InetListen(it->GetListenPort().c_str(), SOMAXCONN, NULL);
     if (fd == -1) {
       CloseAllFds(listen_fd_port_map);
-      return false;
+      return Error("OpenLilstenFds");
     }
     listen_fd_port_map[fd] = it->GetListenPort();
     used_ports.insert(it->GetListenPort());
   }
-  return true;
+  return listen_fd_port_map;
+}
+
+void CloseAllFds(const ListenFdPortMap &listen_fd_port_map) {
+  for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
+       it != listen_fd_port_map.end(); ++it) {
+    close(it->first);
+  }
+}
+
+void AddListenFds2Epoll(Epoll &epoll, config::Config &config,
+                        const ListenFdPortMap &listen_fd_port_map) {
+  for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
+       it != listen_fd_port_map.end(); ++it) {
+    int listen_fd = it->first;
+    std::string port = it->second;
+    ListenSocket *listen_sock = new ListenSocket(listen_fd, port, config);
+    FdEvent *fde =
+        CreateFdEvent(listen_fd, HandleListenSocketEvent, listen_sock);
+    epoll.Register(fde);
+    epoll.Add(fde, kFdeRead);
+  }
 }
 
 }  // namespace server

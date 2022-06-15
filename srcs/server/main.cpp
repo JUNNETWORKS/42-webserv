@@ -1,12 +1,17 @@
 #include "config/config.hpp"
+#include "result/result.hpp"
+#include "server/epoll.hpp"
 #include "server/event_loop.hpp"
 #include "server/setup.hpp"
-#include "server/socket_manager.hpp"
+#include "server/socket.hpp"
+#include "server/socket_event_handler.hpp"
 #include "server/types.hpp"
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 
 int main(int argc, char const *argv[]) {
+  using namespace result;
+
   setbuf(stdout, NULL);
   config::Config config;
   if (argc >= 2) {
@@ -22,16 +27,19 @@ int main(int argc, char const *argv[]) {
   }
   config.Print();
 
-  server::ListenFdPortMap listen_fd_port_map;
-  if (!server::OpenLilstenFds(listen_fd_port_map, config)) {
-    utils::ErrExit("OpenListenFds()");
+  Result<server::ListenFdPortMap> result = server::OpenLilstenFds(config);
+  if (result.IsErr()) {
+    utils::ErrExit("server::OpenLilstenFds()");
   }
 
-  // epoll インスタンス作成
-  server::SocketManager socket_manager;
-  socket_manager.AppendListenFd(listen_fd_port_map);
+  server::ListenFdPortMap listen_fd_port_map = result.Ok();
 
-  server::StartEventLoop(socket_manager, config);
+  // epoll インスタンス作成
+  server::Epoll epoll;
+
+  server::AddListenFds2Epoll(epoll, config, listen_fd_port_map);
+
+  server::StartEventLoop(epoll);
 
   return 0;
 }

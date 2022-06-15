@@ -42,6 +42,9 @@ class HttpResponse {
 
   void Write(int fd) const;
 
+  // すべてのメンバー変数を初期化する
+  void Clear();
+
  private:
   void WriteStatusLine(int fd) const;
   void WriteHeaders(int fd) const;
