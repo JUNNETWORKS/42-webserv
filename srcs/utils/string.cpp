@@ -2,7 +2,10 @@
 
 #include <cerrno>
 #include <cstdlib>
+#include <iomanip>
+#include <iostream>
 #include <limits>
+#include <list>
 #include <stdexcept>
 #include <vector>
 
@@ -78,6 +81,61 @@ Result<unsigned long> Stoul(const std::string &str, BaseDigit base) {
     return Error();
   }
   return num;
+}
+
+bool is_encode(ByteVector::const_iterator const &it) {
+  if (*it == ' ' || *it == '"' || *it == '#' || *it == '<' || *it == '>' ||
+      *it == '`' || *it == '{' || *it == '}') {
+    return true;
+  }
+  if (*it == '@') {
+    return true;
+  }
+  if (*it <= 0x1F || *it >= 0x7e) {
+    return true;
+  }
+  return false;
+}
+
+Result<std::string> encode(const ByteVector &to_encode) {
+  std::stringstream ss;
+
+  for (ByteVector::const_iterator it = to_encode.begin(); it != to_encode.end();
+       it++) {
+    // TODO : 条件のリファクタリング
+    // if (!std::isalnum(*it)) {
+    if (is_encode(it)) {
+      int n = *it;
+      ss << "%" << std::uppercase << std::setw(2) << std::setfill('0')
+         << std::hex << n;
+    } else {
+      ss << *it;
+    }
+  }
+  std::cout << "encode : " << ss.str() << ";" << std::endl;
+  return ss.str();
+}
+
+Result<std::string> decode(const ByteVector &to_decode) {
+  std::string decoded;
+  unsigned char c;
+
+  for (ByteVector::const_iterator it = to_decode.begin(); it != to_decode.end();
+       it++) {
+    if (*it == '%' && std::distance(it, to_decode.end()) >= 3) {
+      std::string s = std::string(it + 1, it + 3);
+      Result<unsigned long> res = Stoul(s, kDecimal);
+      // std::cout << s << std::endl;
+      if (res.IsErr()) {
+        std::cout << "Stoul_x err" << std::endl;
+        return Error();
+      }
+      c = res.Ok();
+      decoded.insert(decoded.end(), c);
+    }
+  }
+  std::cout << "decoded : " << decoded << ";" << std::endl;
+  return decoded;
 }
 
 std::vector<std::string> SplitString(const std::string &str,

@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "ByteVector.hpp"
 #include "result/result.hpp"
 
 namespace utils {
@@ -41,6 +42,10 @@ bool IsHexadecimals(const std::string &str);
 // 全部数字の文字列以外は失敗する設計｡符号もだめ｡
 // e.g. "42hoge", "hoge42", "+42" -> false   "42" -> true
 Result<unsigned long> Stoul(const std::string &str, BaseDigit base = kDecimal);
+
+Result<std::string> decode(const ByteVector &to_decode);
+
+Result<std::string> encode(const ByteVector &to_encode);
 
 // str を delim で区切った文字列vectorを返す｡
 // e.g. SplitString("a,bc,,d", ",") return ["a", "bc", ,"", "d"]
