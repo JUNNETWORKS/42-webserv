@@ -25,12 +25,13 @@ class File {
   void SetFileType();
 
   bool IsDir() const;
+
+  // FileType が kNotExist の場合呼び出し NG
   std::string GetFileSizeStr() const;
   std::string GetDateStr(const std::string fmt) const;
 
  private:
   std::string absolute_path_;
-  bool is_loaded_;
   struct stat stat_;
   FileType file_type_;
 };

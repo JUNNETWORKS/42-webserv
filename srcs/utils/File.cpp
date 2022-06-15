@@ -8,7 +8,7 @@
 namespace utils {
 
 File::File(const std::string& absolute_path)
-    : absolute_path_(absolute_path), is_loaded_(false), file_type_(kNotExist) {
+    : absolute_path_(absolute_path), file_type_(kNotExist) {
   if (stat(absolute_path_.c_str(), &stat_) < 0) {
     file_type_ = kNotExist;
   } else {
@@ -25,7 +25,6 @@ File::~File() {}
 File& File::operator=(File const& rhs) {
   if (this != &rhs) {
     absolute_path_ = rhs.absolute_path_;
-    is_loaded_ = rhs.is_loaded_;
     stat_ = rhs.stat_;
     file_type_ = rhs.file_type_;
   }
@@ -99,7 +98,9 @@ bool File::IsDir() const {
 std::string File::GetFileSizeStr() const {
   std::stringstream ss;
 
-  if (file_type_ != kFile) {
+  assert(file_type_ != kNotExist);
+
+  if (file_type_ != kDir) {
     return "-";
   }
   ss << stat_.st_size;
@@ -110,9 +111,7 @@ std::string File::GetDateStr(const std::string fmt) const {
   char buf[256];
   struct tm* tm;
 
-  if (file_type_ == kNotExist) {
-    assert(is_loaded_);
-  }
+  assert(file_type_ != kNotExist);
 
   // tm = gmtime(&stat_.st_atime);
   tm = gmtime(&stat_.st_mtime);
