@@ -8,7 +8,13 @@
 namespace utils {
 
 File::File(const std::string& absolute_path)
-    : absolute_path_(absolute_path), is_loaded_(false) {}
+    : absolute_path_(absolute_path), is_loaded_(false), file_type_(kNotExist) {
+  if (stat(absolute_path_.c_str(), &stat_)) {
+    file_type_ = kNotExist;
+  } else {
+    SetFileType();
+  }
+}
 
 File::File(const File& rhs) {
   *this = rhs;
@@ -21,6 +27,7 @@ File& File::operator=(File const& rhs) {
     absolute_path_ = rhs.absolute_path_;
     is_loaded_ = rhs.is_loaded_;
     stat_ = rhs.stat_;
+    file_type_ = rhs.file_type_;
   }
   return *this;
 }
@@ -28,8 +35,8 @@ File& File::operator=(File const& rhs) {
 // autoindexでsortを使用したいので作成
 // ディレクトリが上にきてほしい。
 bool operator<(const File& lhs, const File& rhs) {
-  if (lhs.IsDir() != rhs.IsDir()) {
-    return lhs.IsDir() ? true : false;
+  if (lhs.GetFileType() != rhs.GetFileType()) {
+    return lhs.GetFileType() < rhs.GetFileType();
   }
   return lhs.GetAbsolutePath() < rhs.GetAbsolutePath();
 }
@@ -46,19 +53,16 @@ bool operator>=(const File& lhs, const File& rhs) {
   return !(lhs < rhs);
 }
 
-std::string File::GetAbsolutePath() const {
-  return absolute_path_;
+void File::SetFileType() {
+  if (S_ISDIR(stat_.st_mode)) {
+    file_type_ = kDir;
+  } else {
+    file_type_ = kFile;
+  }
 }
 
-bool File::Load() {
-  // statが失敗するケースで file classを使うパターンがあるか？
-  // パーミッションがない時、stat失敗するか調べる
-  if (stat(absolute_path_.c_str(), &stat_)) {
-    std::cerr << "File class stat err" << std::endl;
-    return false;
-  }
-  is_loaded_ = true;
-  return true;
+std::string File::GetAbsolutePath() const {
+  return absolute_path_;
 }
 
 // TODO : 最後に / が入ってるとき正常に機能しない？
@@ -84,17 +88,18 @@ std::string File::GetFileName() const {
   }
 }
 
+FileType File::GetFileType() const {
+  return file_type_;
+}
+
 bool File::IsDir() const {
-  assert(is_loaded_);
-  return S_ISDIR(stat_.st_mode);
+  return file_type_ == kDir;
 }
 
 std::string File::GetFileSizeStr() const {
   std::stringstream ss;
 
-  assert(is_loaded_);
-
-  if (IsDir()) {
+  if (file_type_ != kFile) {
     return "-";
   }
   ss << stat_.st_size;
@@ -105,9 +110,12 @@ std::string File::GetDateStr(const std::string fmt) const {
   char buf[256];
   struct tm* tm;
 
-  assert(is_loaded_);
+  if (file_type_ == kNotExist) {
+    assert(is_loaded_);
+  }
 
-  tm = gmtime(&stat_.st_atime);
+  // tm = gmtime(&stat_.st_atime);
+  tm = gmtime(&stat_.st_mtime);
   strftime(buf, 256, fmt.c_str(), tm);
   return std::string(buf);
 }

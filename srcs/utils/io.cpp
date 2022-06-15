@@ -38,7 +38,7 @@ Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
 
   while ((dent = readdir(dir))) {  // TODO : readdir err ck
     File f(target_dir + "/" + dent->d_name);
-    if (!f.Load()) {
+    if (f.GetFileType() == utils::FileType::kNotExist) {
       continue;
     }
     vec.push_back(f);
