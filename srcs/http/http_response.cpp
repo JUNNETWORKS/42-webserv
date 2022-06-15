@@ -98,8 +98,6 @@ void HttpResponse::MakeResponse(const config::VirtualServerConf &vserver,
     MakeErrorResponse(NULL, request, NOT_FOUND);
     return;
   }
-  printf("===== Location =====\n");
-  location->Print();
 
   if (location->GetIsCgi()) {
     MakeCgiReponse(*location, request);
