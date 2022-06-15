@@ -339,7 +339,8 @@ std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     return std::make_pair(Chunk::kWaiting, res);
   res.size_str = buffer.SubstrBeforePos(pos);
 
-  Result<unsigned long> convert_res = utils::Stoul(res.size_str);
+  Result<unsigned long> convert_res =
+      utils::Stoul(res.size_str, utils::kHexadecimal);
   if (convert_res.IsErr())
     return std::make_pair(Chunk::kErrorBadRequest, res);
   res.data_size = convert_res.Ok();
