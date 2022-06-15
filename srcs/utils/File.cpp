@@ -100,7 +100,7 @@ std::string File::GetFileSizeStr() const {
 
   assert(file_type_ != kNotExist);
 
-  if (file_type_ != kDir) {
+  if (file_type_ == kDir) {
     return "-";
   }
   ss << stat_.st_size;
