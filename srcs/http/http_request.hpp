@@ -30,10 +30,8 @@ struct Chunk {
     kErrorLength = PAYLOAD_TOO_LARGE,
     kErrorBadRequest = BAD_REQUEST
   };
-  ChunkStatus chunk_status;
   std::string size_str;
-  unsigned long size;
-  unsigned long required_size;
+  unsigned long data_size;
 };
 
 class HttpRequest {

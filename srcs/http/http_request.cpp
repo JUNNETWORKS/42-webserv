@@ -14,6 +14,8 @@ bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
 Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
 Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
+std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
+    utils::ByteVector &buffer);
 }  // namespace
 
 HttpRequest::HttpRequest()
@@ -148,8 +150,35 @@ HttpRequest::ParsingPhase HttpRequest::ParsePlainBody(
   return body_.size() == body_size_ ? kParsed : kBody;
 }
 
-HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(utils::ByteVector &) {
-  return kParsed;
+HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
+    utils::ByteVector &buffer) {
+  while (buffer.empty() == false) {
+    std::pair<Chunk::ChunkStatus, Chunk> chunk_pair =
+        CheckChunkReceived(buffer);
+    switch (chunk_pair.first) {
+      case Chunk::kWaiting:  // bufferにchunkが届ききっていない。
+        return phase_;
+      case Chunk::kErrorBadRequest:
+        parse_status_ = BAD_REQUEST;
+        return kError;
+      case Chunk::kErrorLength:  // TODO TOOLARGEじゃないかも
+        parse_status_ = PAYLOAD_TOO_LARGE;
+        return kError;
+      default:
+        break;
+    }
+
+    Chunk chunk = chunk_pair.second;
+    buffer.erase(buffer.begin(),
+                 buffer.begin() + chunk.size_str.size() + kCrlf.size());
+    if (chunk_pair.second.data_size == 0)
+      return kParsed;
+    body_.insert(body_.begin(), buffer.begin(),
+                 buffer.begin() + chunk.data_size);
+    buffer.erase(buffer.begin(),
+                 buffer.begin() + chunk.data_size + kCrlf.size());
+  }
+  return phase_;
 }
 
 //========================================================================
@@ -301,34 +330,39 @@ HttpStatus HttpRequest::DecideBodySize() {
 
 namespace {
 
-Chunk CheckChunkReceived(utils::ByteVector &buffer) {
+std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
+    utils::ByteVector &buffer) {
   Chunk res;
-  res.chunk_status = Chunk::kWaiting;
 
   utils::ByteVector::iterator pos = buffer.FindString(kCrlf);
   if (pos == buffer.end())
-    return res;
+    return std::make_pair(Chunk::kWaiting, res);
   res.size_str = buffer.SubstrBeforePos(pos);
 
-  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
   Result<unsigned long> convert_res = utils::Stoul(res.size_str);
-  if (convert_res.IsErr()) {
-    res.chunk_status = Chunk::kErrorBadRequest;
-    return res;
-  }
-  res.size = convert_res.Ok();
+  if (convert_res.IsErr())
+    return std::make_pair(Chunk::kErrorBadRequest, res);
+  res.data_size = convert_res.Ok();
 
-  if (res.size >= kMaxSize) {
-    res.chunk_status = Chunk::kErrorLength;
-    return res;
+  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
+  if (res.data_size >= kMaxSize) {
+    return std::make_pair(Chunk::kErrorLength, res);
   }
 
-  res.required_size =
-      res.size_str.size() + kCrlf.size() + res.size + kCrlf.size();
-  if (buffer.size() < res.required_size)
-    return res;
-  res.chunk_status = Chunk::kReceived;
-  return res;
+  if (res.data_size == 0) {
+    return std::make_pair(Chunk::kReceived, res);
+  }
+
+  unsigned long expect_erase_size =
+      res.size_str.size() + kCrlf.size() + res.data_size + kCrlf.size();
+
+  if (buffer.size() < expect_erase_size)
+    return std::make_pair(Chunk::kWaiting, res);
+  if (buffer[expect_erase_size - 2] != '\r' ||
+      buffer[expect_erase_size - 1] != '\n')
+    return std::make_pair(Chunk::kErrorBadRequest, res);
+
+  return std::make_pair(Chunk::kReceived, res);
 }
 
 bool IsTchar(const char c) {
