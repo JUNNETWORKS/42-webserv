@@ -9,7 +9,7 @@ namespace utils {
 
 File::File(const std::string& absolute_path)
     : absolute_path_(absolute_path), is_loaded_(false), file_type_(kNotExist) {
-  if (stat(absolute_path_.c_str(), &stat_)) {
+  if (stat(absolute_path_.c_str(), &stat_) < 0) {
     file_type_ = kNotExist;
   } else {
     SetFileType();
