@@ -83,7 +83,7 @@ Result<unsigned long> Stoul(const std::string &str, BaseDigit base) {
   return num;
 }
 
-Result<std::string> encode(const ByteVector &to_encode) {
+Result<std::string> PercentEncode(const ByteVector &to_encode) {
   std::stringstream ss;
 
   for (ByteVector::const_iterator it = to_encode.begin(); it != to_encode.end();
@@ -101,7 +101,7 @@ Result<std::string> encode(const ByteVector &to_encode) {
   return ss.str();
 }
 
-Result<std::string> decode(const ByteVector &to_decode) {
+Result<std::string> PercentDecode(const ByteVector &to_decode) {
   std::string decoded;
   unsigned char c;
 
@@ -110,9 +110,7 @@ Result<std::string> decode(const ByteVector &to_decode) {
     if (*it == '%' && std::distance(it, to_decode.end()) >= 3) {
       std::string s = std::string(it + 1, it + 3);
       Result<unsigned long> res = Stoul(s, kDecimal);
-      // std::cout << s << std::endl;
       if (res.IsErr()) {
-        std::cout << "Stoul_x err" << std::endl;
         return Error();
       }
       c = res.Ok();
