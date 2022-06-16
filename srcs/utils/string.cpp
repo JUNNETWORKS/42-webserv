@@ -83,28 +83,14 @@ Result<unsigned long> Stoul(const std::string &str, BaseDigit base) {
   return num;
 }
 
-bool is_encode(ByteVector::const_iterator const &it) {
-  if (*it == ' ' || *it == '"' || *it == '#' || *it == '<' || *it == '>' ||
-      *it == '`' || *it == '{' || *it == '}') {
-    return true;
-  }
-  if (*it == '@') {
-    return true;
-  }
-  if (*it <= 0x1F || *it >= 0x7e) {
-    return true;
-  }
-  return false;
-}
-
 Result<std::string> encode(const ByteVector &to_encode) {
   std::stringstream ss;
 
   for (ByteVector::const_iterator it = to_encode.begin(); it != to_encode.end();
        it++) {
-    // TODO : 条件のリファクタリング
-    // if (!std::isalnum(*it)) {
-    if (is_encode(it)) {
+    // TODO : 条件の確認
+    if (!std::isalnum(*it) && *it != '-' && *it != '_' && *it != '.' &&
+        *it != '~') {
       int n = *it;
       ss << "%" << std::uppercase << std::setw(2) << std::setfill('0')
          << std::hex << n;
@@ -112,7 +98,6 @@ Result<std::string> encode(const ByteVector &to_encode) {
       ss << *it;
     }
   }
-  std::cout << "encode : " << ss.str() << ";" << std::endl;
   return ss.str();
 }
 
@@ -134,7 +119,6 @@ Result<std::string> decode(const ByteVector &to_decode) {
       decoded.insert(decoded.end(), c);
     }
   }
-  std::cout << "decoded : " << decoded << ";" << std::endl;
   return decoded;
 }
 
