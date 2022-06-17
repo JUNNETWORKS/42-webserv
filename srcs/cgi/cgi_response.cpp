@@ -10,7 +10,7 @@ CgiResponse &CgiResponse::operator=(const CgiResponse &rhs) {}
 
 CgiResponse::~CgiResponse() {}
 
-void CgiResponse::ParseResponse(utils::ByteVector &buffer) {}
+void CgiResponse::Parse(utils::ByteVector &buffer) {}
 
 http::HttpResponse CgiResponse::ToHttpResponse() {}
 

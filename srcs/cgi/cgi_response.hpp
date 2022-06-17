@@ -36,7 +36,7 @@ class CgiResponse {
   CgiResponse &operator=(const CgiResponse &rhs);
   ~CgiResponse();
 
-  void ParseResponse(utils::ByteVector &buffer);
+  void Parse(utils::ByteVector &buffer);
   http::HttpResponse ToHttpResponse();
 
   bool IsParsed();
