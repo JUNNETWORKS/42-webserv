@@ -363,10 +363,9 @@ std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     return std::make_pair(Chunk::kReceived, res);
   }
 
-  unsigned long expect_erase_size =
+  unsigned long expect_buffer_size =
       res.size_str.size() + kCrlf.size() + res.data_size + kCrlf.size();
-
-  if (buffer.size() < expect_erase_size)
+  if (buffer.size() < expect_buffer_size)
     return std::make_pair(Chunk::kWaiting, res);
 
   if (ValidateChunkFormat(res, buffer) == false)
