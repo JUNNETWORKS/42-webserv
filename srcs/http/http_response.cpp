@@ -90,39 +90,6 @@ void HttpResponse::WriteBody(int fd) const {
 
 //========================================================================
 //
-
-//
-static std::string MakeAutoIndex(const std::string &root_path,
-                                 const std::string &relative_path) {
-  std::string html;
-  std::vector<std::string> file_vec;
-  std::string head = "<html>\n<head><title>Index of " + relative_path +
-                     "</title></head>\n"
-                     "<body bgcolor=\"white\">\n"
-                     "<h1>Index of " +
-                     relative_path + "</h1><hr><pre>";
-  std::string tail =
-      "</pre><hr></body>\n"
-      "</html>\n";
-
-  const std::string abs_dir_path = root_path + relative_path;
-  // TODO : / が連続するパターンの考慮
-  utils::GetFileList(abs_dir_path, file_vec);
-  std::sort(file_vec.begin(), file_vec.end());
-  std::string is_dir;
-  for (size_t i = 0; i < file_vec.size(); i++) {
-    if (utils::IsDir(abs_dir_path + "/" + file_vec[i])) {
-      is_dir = "/";
-    } else {
-      is_dir = "";
-    }
-    html += "<a href=\"" + file_vec[i] + is_dir + "\">";
-    html += file_vec[i] + is_dir + "</a>\n";
-  }
-
-  return head + html + tail;
-}
-
 void HttpResponse::MakeResponse(const config::VirtualServerConf &vserver,
                                 const HttpRequest &request) {
   // path から LocationConf を取得
@@ -131,8 +98,6 @@ void HttpResponse::MakeResponse(const config::VirtualServerConf &vserver,
     MakeErrorResponse(NULL, request, NOT_FOUND);
     return;
   }
-  printf("===== Location =====\n");
-  location->Print();
 
   if (location->GetIsCgi()) {
     MakeCgiReponse(*location, request);

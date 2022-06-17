@@ -148,8 +148,6 @@ bool ProcessResponse(ConnSocket *socket) {
       response.Clear();
       return should_close_conn;
     }
-    printf("===== Virtual Server =====\n");
-    vserver->Print();
 
     response.MakeResponse(*vserver, request);
     response.Write(conn_fd);
