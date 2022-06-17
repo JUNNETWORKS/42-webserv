@@ -330,6 +330,15 @@ HttpStatus HttpRequest::DecideBodySize() {
 
 namespace {
 
+// Chunk内にCRLFがあること、CRLFがチャンクの末尾についている事を検証する。
+bool ValidateChunkFormat(const Chunk &chunk, utils::ByteVector &buffer) {
+  utils::ByteVector chunk_data_bytes = utils::ByteVector(
+      buffer.begin() + chunk.size_str.size() + kCrlf.size(), buffer.end());
+  unsigned long crlf_pos = std::distance(chunk_data_bytes.begin(),
+                                         chunk_data_bytes.FindString(kCrlf));
+  return crlf_pos == chunk.data_size;
+}
+
 std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     utils::ByteVector &buffer) {
   Chunk res;
@@ -359,8 +368,8 @@ std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
 
   if (buffer.size() < expect_erase_size)
     return std::make_pair(Chunk::kWaiting, res);
-  if (buffer[expect_erase_size - 2] != '\r' ||
-      buffer[expect_erase_size - 1] != '\n')
+
+  if (ValidateChunkFormat(res, buffer) == false)
     return std::make_pair(Chunk::kErrorBadRequest, res);
 
   return std::make_pair(Chunk::kReceived, res);
