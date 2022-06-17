@@ -58,20 +58,27 @@ int CgiRequest::ForkAndExecuteCgi() {
   }
 }
 
+// 各変数の役割は以下のサイトを参照
+// http://bashhp.web.fc2.com/WWW/header.html
 void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
     http::HttpRequest &request, const config::LocationConf &location) {
+  // unsetenv してるメタ変数は必須じゃない
+
+  unsetenv("AUTH_TYPE");
+
   std::string length = request.GetHeader("CONTENT_LENGTH")[0];
   cgi_variables_["CONTENT_LENGTH"] = length.c_str();
 
   std::string content_type = request.GetHeader("CONTENT_TYPE")[0];
   cgi_variables_["CONTENT_TYPE"] = content_type.c_str();
 
-  // CGI のバージョン
   cgi_variables_["GATEWAY_INTERFACE"] = "CGI/1.1";
 
   // TODO: path から location.path 情報を削除した相対パスをセットする
   std::string path = request.GetPath();
   cgi_variables_["PATH_INFO"] = "";
+
+  unsetenv("PATH_TRANSLATED");
 
   std::string path = request.GetPath();
   cgi_variables_["QUERY_STRING"] = "";
@@ -79,6 +86,12 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
   cgi_variables_["REMOTE_ADDR"] = "";
 
   cgi_variables_["REMOTE_HOST"] = "";
+
+  // IDENTプロトコル関係｡ webserv ではサポートしない｡
+  unsetenv("REMOTE_IDENT");
+
+  // IDENTプロトコル関係｡ webserv ではサポートしない｡
+  unsetenv("REMOTE_USER");
 
   cgi_variables_["REQUEST_METHOD"] = "";
 
@@ -90,7 +103,13 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
 
   cgi_variables_["SERVER_PROTOCOL"] = "";
 
-  cgi_variables_["SERVER_SOFTWARE"] = "";
+  cgi_variables_["SERVER_SOFTWARE"] = "webserv/1.0";
+
+  // TODO: HTTP固有のメタ変数
+  // HTTP_ACCEPT
+  // HTTP_COOKIE
+  // HTTP_REFERER
+  // HTTP_USER_AGENT
 }
 
 void CgiRequest::SetMetaVariables() {
