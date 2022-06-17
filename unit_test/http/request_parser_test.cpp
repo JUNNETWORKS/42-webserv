@@ -337,4 +337,67 @@ TEST(RequestParserTest, OKVersionMinorUpper) {
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
+TEST(RequestParserTest, KOBodyChunkSizeTooLarge) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOBodyChunkSizeTooLarge.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), PAYLOAD_TOO_LARGE);
+}
+
+TEST(RequestParserTest, KOBodyInvalidChunkSizeLower) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOBodyInvalidChunkSizeLower.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOBodyInvalidChunkSizeUpper) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOBodyInvalidChunkSizeUpper.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOBodyNotExistChunkSize) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOBodyNotExistChunkSize.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, OKBodyChunkSizeZero) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKBodyChunkSizeZero.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+}
+
+TEST(RequestParserTest, OKBodyCorrectChunkHexadecimal) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKBodyCorrectChunkHexadecimal.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+}
+
+TEST(RequestParserTest, OKBodyCorrectChunk) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKBodyCorrectChunk.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+}
+
 }  // namespace http
