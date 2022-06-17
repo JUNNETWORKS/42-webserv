@@ -303,6 +303,10 @@ HttpStatus HttpRequest::GetParseStatus() const {
   return parse_status_;
 }
 
+const utils::ByteVector &HttpRequest::GetBody() {
+  return body_;
+}
+
 //========================================================================
 // Helper関数
 

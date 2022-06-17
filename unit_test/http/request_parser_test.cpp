@@ -389,6 +389,10 @@ TEST(RequestParserTest, OKBodyChunkSizeZero) {
   req.ParseRequest(buf);
   EXPECT_TRUE(req.IsCorrectStatus() == true);
   EXPECT_EQ(req.GetParseStatus(), OK);
+
+  const utils::ByteVector expect_body("");
+  const utils::ByteVector body = req.GetBody();
+  EXPECT_EQ(body, expect_body);
 }
 
 TEST(RequestParserTest, OKBodyCorrectChunkHexadecimal) {
@@ -398,6 +402,14 @@ TEST(RequestParserTest, OKBodyCorrectChunkHexadecimal) {
   req.ParseRequest(buf);
   EXPECT_TRUE(req.IsCorrectStatus() == true);
   EXPECT_EQ(req.GetParseStatus(), OK);
+
+  const utils::ByteVector expect_body(
+      "123456789012345678901234567890123456789012345678901234567890123456789012"
+      "345678901234567890123456789012345678901234567890123456789012345678901234"
+      "567890123456789012345678901123456789012123456789012312345678901234123456"
+      "789012345");
+  const utils::ByteVector body = req.GetBody();
+  EXPECT_EQ(body, expect_body);
 }
 
 TEST(RequestParserTest, OKBodyCorrectChunk) {
@@ -407,6 +419,10 @@ TEST(RequestParserTest, OKBodyCorrectChunk) {
   req.ParseRequest(buf);
   EXPECT_TRUE(req.IsCorrectStatus() == true);
   EXPECT_EQ(req.GetParseStatus(), OK);
+
+  const utils::ByteVector expect_body("12345abcde");
+  const utils::ByteVector body = req.GetBody();
+  EXPECT_EQ(body, expect_body);
 }
 
 }  // namespace http

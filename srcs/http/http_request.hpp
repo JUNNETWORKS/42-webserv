@@ -77,6 +77,7 @@ class HttpRequest {
   // ========================================================================
   // Getter and Setter
   const std::vector<std::string> &GetHeader(std::string header);
+  const utils::ByteVector &GetBody();
 
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
