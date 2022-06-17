@@ -373,6 +373,15 @@ TEST(RequestParserTest, KOBodyNotExistChunkSize) {
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
+TEST(RequestParserTest, KOFieldInvalidTransferEncoding) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFieldInvalidTransferEncoding.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
+}
+
 TEST(RequestParserTest, OKBodyChunkSizeZero) {
   http::HttpRequest req;
   utils::ByteVector buf = OpenFile("OKBodyChunkSizeZero.txt");
