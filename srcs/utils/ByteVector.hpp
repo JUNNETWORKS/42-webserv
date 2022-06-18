@@ -24,16 +24,16 @@ class ByteVector : public std::vector<Byte> {
   ByteVector& operator=(ByteVector const& rhs);
 
   void EraseHead(size_t size);
-  bool CompareHead(const std::string& str);
+  bool CompareHead(const std::string& str) const;
   Result<unsigned long> FindString(const std::string& str) const;
   std::string CutSubstrBeforePos(size_t pos);
-  std::string SubstrBeforePos(size_t pos);
+  std::string SubstrBeforePos(size_t pos) const;
   void AppendDataToBuffer(const Byte* buf, size_t size);
 
  private:
   static const size_type kReserveSize_ = 2 * 1024;  // 2KB
 
-  const char* GetReinterpretedData();
+  const char* GetReinterpretedData() const;
 };
 
 }  // namespace utils

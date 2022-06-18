@@ -29,7 +29,7 @@ void ByteVector::EraseHead(size_t size) {
   erase(begin(), begin() + size);
 }
 
-bool ByteVector::CompareHead(const std::string& str) {
+bool ByteVector::CompareHead(const std::string& str) const {
   if (size() < str.size())
     return false;
   return std::strncmp(GetReinterpretedData(), str.c_str(), str.size()) == 0;
@@ -53,7 +53,7 @@ std::string ByteVector::CutSubstrBeforePos(size_t pos) {
   return res;
 }
 
-std::string ByteVector::SubstrBeforePos(size_t pos) {
+std::string ByteVector::SubstrBeforePos(size_t pos) const {
   std::string res = std::string(begin(), begin() + pos);
   return res;
 }
@@ -63,7 +63,7 @@ void ByteVector::AppendDataToBuffer(const Byte* buf, size_t size) {
   printf("current buf len: %lu\n", this->size());
 }
 
-const char* ByteVector::GetReinterpretedData() {
+const char* ByteVector::GetReinterpretedData() const {
   return reinterpret_cast<const char*>(data());
 }
 
