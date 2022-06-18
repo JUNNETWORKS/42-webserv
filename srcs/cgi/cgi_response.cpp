@@ -228,7 +228,7 @@ bool CgiResponse::IsLocalPathQuery(const std::string &pathquery) {
   size_t idx = 0;
   while (idx < abs_path_len) {
     if (isalnum(pathquery[idx]) || strchr(unreserved_marks, pathquery[idx]) ||
-        strchr(extra_marks, pathquery[idx])) {
+        strchr(extra_marks, pathquery[idx]) || pathquery[idx] == '/') {
       // allowed char
       ++idx;
     } else if (pathquery[idx] == '%') {
