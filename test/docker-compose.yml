@@ -28,3 +28,4 @@ services:
       - 49202:80
     volumes:
       - ./public:/public
+      - ./conf/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
