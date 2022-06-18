@@ -230,9 +230,11 @@ HttpStatus HttpRequest::InterpretVersion(std::string &str) {
 
 HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
   size_t collon_pos = str.find_first_of(":");
+  size_t header_name_pos = str.find_first_not_of(kOWS);
 
   if (collon_pos == std::string::npos || collon_pos == 0 ||
-      IsTcharString(str.substr(0, collon_pos)) == false)
+      header_name_pos == collon_pos ||
+      IsTcharString(str.substr(header_name_pos, collon_pos)) == false)
     return parse_status_ = BAD_REQUEST;
 
   std::string header = str.substr(0, collon_pos);
