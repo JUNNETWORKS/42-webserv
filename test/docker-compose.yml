@@ -10,7 +10,9 @@ services:
       - ./public:/public
       - ./webserv_configurations:/root/configurations
     stop_grace_period: 1s
-    command: [ "/root/configurations/sample.conf" ]
+    command: [ "./webserv", "/root/configurations/sample.conf" ]
+    # command: [ "sleep", "infinity" ]
+    # command: [ "valgrind", "./webserv", "/root/configurations/sample.conf" ]
 
   nginx:
     image: nginx:latest
