@@ -3,4 +3,4 @@
 set -eux
 
 make
-exec ./webserv "$@"
+exec $@
