@@ -112,11 +112,22 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
       buffer.EraseHead(kCrlf.size());
     }
 
-    Result<size_t> crlf_pos = buffer.FindString(kCrlf);
-
-    std::string line =
-        buffer.CutSubstrBeforePos(crlf_pos.Ok());  // headerfieldの解釈
-    if (InterpretHeaderField(line) != OK)
+    utils::ByteVector field_buffer;
+    while (1) {
+      Result<size_t> crlf_pos = buffer.FindString(kCrlf);
+      field_buffer.insert(field_buffer.end(), buffer.begin(),
+                          buffer.begin() + crlf_pos.Ok());
+      buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
+      if (buffer.CompareHead(kCrlf + " ") == false &&
+          buffer.CompareHead(kCrlf + "\t") == false)
+        break;
+      has_obs_fold_ = true;
+      buffer.erase(buffer.begin(), buffer.begin() + kCrlf.size() + 1);
+      field_buffer.push_back(' ');
+    }
+    std::string field_buffer_str =
+        field_buffer.SubstrBeforePos(field_buffer.size());
+    if (InterpretHeaderField(field_buffer_str) != OK)
       return kError;
   }
 }
