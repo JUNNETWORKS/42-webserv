@@ -43,6 +43,7 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     parse_status_ = rhs.parse_status_;
     body_ = rhs.body_;
     body_size_ = rhs.body_size_;
+    is_chunked_ = rhs.is_chunked_;
   }
   return *this;
 }
