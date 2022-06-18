@@ -44,6 +44,9 @@ Result<void> CgiResponse::Parse(utils::ByteVector &buffer) {
       SetBodyFromBuffer(buffer).IsErr()) {
     return Error();
   }
+
+  AdjustHeadersBasedOnResponseType();
+
   return Result<void>();
 }
 
@@ -128,6 +131,17 @@ Result<void> CgiResponse::SetBodyFromBuffer(utils::ByteVector &buffer) {
       headers_boundary + (newline_chars_ + newline_chars_).size(),
       buffer.end());
   return Result<void>();
+}
+
+void CgiResponse::AdjustHeadersBasedOnResponseType() {
+  if (response_type_ == kDocumentResponse) {
+    if (headers_.find("STATUS") == headers_.end()) {
+      headers_["STATUS"] = "200 OK";
+    }
+  } else if (response_type_ == kLocalRedirect) {
+  } else if (response_type_ == kClientRedirect) {
+  } else if (response_type_ == kClientRedirectWithDocument) {
+  }
 }
 
 std::vector<std::pair<std::string, std::string> >

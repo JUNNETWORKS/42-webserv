@@ -62,6 +62,10 @@ class CgiResponse {
 
   Result<void> SetBodyFromBuffer(utils::ByteVector &buffer);
 
+  // response-type
+  // によってはヘッダーにデフォルト値が設定されていたりするので､設定する
+  void AdjustHeadersBasedOnResponseType();
+
   // buffer からヘッダー部分を取り出す｡
   // pair->first がヘッダー名, pair->second が値になっている
   HeaderVecType GetHeaderVecFromBuffer(utils::ByteVector &buffer);
