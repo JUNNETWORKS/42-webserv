@@ -47,14 +47,14 @@ Result<size_t> ByteVector::FindString(const std::string& str) const {
   return Error();
 }
 
-std::string ByteVector::CutSubstrBeforePos(ByteVector::iterator pos) {
-  std::string res = std::string(begin(), pos);
-  erase(begin(), pos);
+std::string ByteVector::CutSubstrBeforePos(size_t pos) {
+  std::string res = std::string(begin(), begin() + pos);
+  erase(begin(), begin() + pos);
   return res;
 }
 
-std::string ByteVector::SubstrBeforePos(ByteVector::iterator pos) {
-  std::string res = std::string(begin(), pos);
+std::string ByteVector::SubstrBeforePos(size_t pos) {
+  std::string res = std::string(begin(), begin() + pos);
   return res;
 }
 

@@ -26,9 +26,8 @@ class ByteVector : public std::vector<Byte> {
   void EraseHead(size_t size);
   bool CompareHead(const std::string& str);
   Result<unsigned long> FindString(const std::string& str) const;
-  std::string CutSubstrBeforePos(iterator pos);
-  std::string SubstrBeforePos(ByteVector::iterator pos);
-
+  std::string CutSubstrBeforePos(size_t pos);
+  std::string SubstrBeforePos(size_t pos);
   void AppendDataToBuffer(const Byte* buf, size_t size);
 
  private:
