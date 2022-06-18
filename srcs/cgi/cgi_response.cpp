@@ -21,7 +21,9 @@ CgiResponse &CgiResponse::operator=(const CgiResponse &rhs) {
 
 CgiResponse::~CgiResponse() {}
 
-void CgiResponse::Parse(utils::ByteVector &buffer) {}
+void CgiResponse::Parse(utils::ByteVector &buffer) {
+  (void)buffer;
+}
 
 // ========================================================================
 // Getter and Setter

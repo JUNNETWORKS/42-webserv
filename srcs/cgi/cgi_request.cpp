@@ -62,6 +62,7 @@ int CgiRequest::ForkAndExecuteCgi() {
 // http://bashhp.web.fc2.com/WWW/header.html
 void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
     http::HttpRequest &request, const config::LocationConf &location) {
+  (void)location;
   // unsetenv してるメタ変数は必須じゃない
 
   unsetenv("AUTH_TYPE");
@@ -80,7 +81,6 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
 
   unsetenv("PATH_TRANSLATED");
 
-  std::string path = request.GetPath();
   cgi_variables_["QUERY_STRING"] = "";
 
   cgi_variables_["REMOTE_ADDR"] = "";
@@ -122,8 +122,10 @@ void CgiRequest::SetMetaVariables() {
 
 void CgiRequest::ExecuteCgi() {
   SetMetaVariables();
-  const char *const argv[] = {cgi_path_.c_str(), NULL};
-  execve(cgi_path_.c_str(), (char **const)argv, environ);
+  char **argv = new char *[2];
+  argv[0] = strdup(cgi_path_.c_str());
+  argv[1] = NULL;
+  execve(cgi_path_.c_str(), argv, environ);
 }
 
 }  // namespace cgi

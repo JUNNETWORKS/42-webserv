@@ -32,9 +32,9 @@ TEST(CgiResponseParse, DocumentResponseWithStatus) {
   EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
-            "<HTML>\n"
-            "<body><p>404 Not Found</p></body>\n"
-            "</HTML>");
+            utils::ByteVector("<HTML>\n"
+                              "<body><p>404 Not Found</p></body>\n"
+                              "</HTML>"));
 }
 
 // Status が付いていないドキュメントレスポンス
@@ -58,10 +58,9 @@ TEST(CgiResponseParse, ValidDocumentResponseWithoutStatus) {
                                {"OPTIONAL", "hoge"}};
   EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
 
-  EXPECT_EQ(cgi_res.GetBody(),
-            "<HTML>\n"
-            "<body><p>200 OK</p></body>\n"
-            "</HTML>");
+  EXPECT_EQ(cgi_res.GetBody(), utils::ByteVector("<HTML>\n"
+                                                 "<body><p>200 OK</p></body>\n"
+                                                 "</HTML>"));
 }
 
 // ローカルリダイレクト
@@ -129,9 +128,9 @@ TEST(CgiResponseParse, ValidClientRedirectResponseWithDocument) {
   EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
-            "<HTML>\n"
-            "<body><p>Let's redirect!!</p></body>\n"
-            "</HTML>");
+            utils::ByteVector("<HTML>\n"
+                              "<body><p>Let's redirect!!</p></body>\n"
+                              "</HTML>"));
 }
 
 // ドキュメント付きクライアントリダイレクトの Status は､
@@ -161,9 +160,9 @@ TEST(CgiResponseParse,
   EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
-            "<HTML>\n"
-            "<body><p>Let's redirect!!</p></body>\n"
-            "</HTML>");
+            utils::ByteVector("<HTML>\n"
+                              "<body><p>Let's redirect!!</p></body>\n"
+                              "</HTML>"));
 }
 
 // UNIX 上での CGI は改行コードとして CRLF も受け付け可能である
@@ -188,9 +187,9 @@ TEST(CgiResponseParse, NewLineIsCrlf) {
   EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
-            "<HTML>\r\n"
-            "<body><p>404 Not Found</p></body>\r\n"
-            "</HTML>");
+            utils::ByteVector("<HTML>\r\n"
+                              "<body><p>404 Not Found</p></body>\r\n"
+                              "</HTML>"));
 }
 
 // ========================================================================

@@ -17,7 +17,7 @@ class CgiResponse {
     kLocalRedirect,
     kClientRedirect,
     kClientRedirectWithDocument,
-    kParseError,
+    kParseError
   };
 
  private:
