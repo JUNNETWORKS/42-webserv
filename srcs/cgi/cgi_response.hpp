@@ -5,9 +5,14 @@
 #include <string>
 
 #include "http/http_response.hpp"
+#include "result/result.hpp"
 #include "utils/ByteVector.hpp"
 
 namespace cgi {
+using namespace result;
+
+const std::string kLF = "\n";
+const std::string kCRLF = "\r\n";
 
 class CgiResponse {
  public:
@@ -21,6 +26,11 @@ class CgiResponse {
   };
 
  private:
+  typedef std::vector<std::pair<std::string, std::string> > HeaderVecType;
+
+  // ヘッダー部における改行文字(LF or CRLF)
+  std::string newline_chars_;
+
   ResponseType response_type_;
 
   std::map<std::string, std::string> headers_;
@@ -34,13 +44,53 @@ class CgiResponse {
   ~CgiResponse();
 
   // buffer にはCGIの出力すべてが含まれている必要がある｡
-  void Parse(utils::ByteVector &buffer);
+  Result<void> Parse(utils::ByteVector &buffer);
 
   // ========================================================================
   // Getter and Setter
   ResponseType GetResponseType() const;
   const std::map<std::string, std::string> &GetHeaders();
   const utils::ByteVector &GetBody();
+
+ private:
+  // 改行文字を決定する
+  Result<void> DetermineNewlineChars(utils::ByteVector &buffer);
+
+  ResponseType IdentifyResponseType(utils::ByteVector &buffer);
+
+  Result<void> SetHeadersFromBuffer(utils::ByteVector &buffer);
+
+  Result<void> SetBodyFromBuffer(utils::ByteVector &buffer);
+
+  // buffer からヘッダー部分を取り出す｡
+  // pair->first がヘッダー名, pair->second が値になっている
+  HeaderVecType GetHeaderVecFromBuffer(utils::ByteVector &buffer);
+
+  // document-response = Content-Type [ Status ] *other-field NL response-body
+  bool IsDocumentResponse(const HeaderVecType &headers, bool has_body);
+
+  // local-redir-response = local-Location NL
+  bool IsLocalRedirectResponse(const HeaderVecType &headers, bool has_body);
+
+  // client-redir-response = client-Location *extension-field NL
+  bool IsClientRedirectResponse(const HeaderVecType &headers, bool has_body);
+
+  // client-redirdoc-response = client-Location Status Content-Type *other-field
+  // NL response-body
+  bool IsClientRedirectResponseWithDocument(const HeaderVecType &headers,
+                                            bool has_body);
+
+  // query-string や fragment を構成する uric をチェックする
+  // uric         = reserved | unreserved | escaped
+  bool IsComposedOfUriC(const std::string &str);
+
+  // local-pathquery = abs-path [ "?" query-string ]
+  bool IsLocalPathQuery(const std::string &pathquery);
+
+  bool IsAbsoluteUri(const std::string &uri);
+
+  // fragment-URI    = absoluteURI [ "#" fragment ]
+  bool IsFragmentUri(const std::string &uri);
 };
 
 }  // namespace cgi
