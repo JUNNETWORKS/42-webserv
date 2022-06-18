@@ -126,6 +126,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
       if (IsObsFold(buffer) == false)
         break;
       has_obs_fold_ = true;
+      // TODO has_obs_fold_がtrueの時は、message/http以外エラー
       buffer.erase(buffer.begin(), buffer.begin() + kCrlf.size() + 1);
       field_buffer.push_back(' ');
     }
