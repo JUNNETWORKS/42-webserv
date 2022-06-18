@@ -27,7 +27,8 @@ HttpRequest::HttpRequest()
       parse_status_(OK),
       body_(),
       body_size_(0),
-      is_chunked_(false) {}
+      is_chunked_(false),
+      has_obs_fold(false) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
   *this = rhs;
@@ -44,6 +45,7 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     body_ = rhs.body_;
     body_size_ = rhs.body_size_;
     is_chunked_ = rhs.is_chunked_;
+    has_obs_fold = rhs.has_obs_fold;
   }
   return *this;
 }
