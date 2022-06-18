@@ -515,6 +515,7 @@ void HttpRequest::PrintRequestInfo() {
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
     printf("is_chuked_: %d\n", is_chunked_);
+    printf("has_obs_fold_: %d\n", has_obs_fold_);
     printf("body_size: %ld\n", body_size_);
     for (std::map<std::string, std::vector<std::string> >::iterator it =
              headers_.begin();
