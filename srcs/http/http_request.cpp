@@ -113,14 +113,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     }
 
     Result<size_t> crlf_pos = buffer.FindString(kCrlf);
-    if (crlf_pos.IsErr()) {
-      return kHeaderField;
-    } else {
-      std::string line =
-          buffer.CutSubstrBeforePos(crlf_pos.Ok());  // headerfieldの解釈
-      if (InterpretHeaderField(line) != OK)
-        return kError;
-    }
+
+    std::string line =
+        buffer.CutSubstrBeforePos(crlf_pos.Ok());  // headerfieldの解釈
+    if (InterpretHeaderField(line) != OK)
+      return kError;
   }
 }
 
