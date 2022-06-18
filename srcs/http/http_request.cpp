@@ -14,6 +14,8 @@ bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
 Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
 Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
+std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
+    utils::ByteVector &buffer);
 }  // namespace
 
 HttpRequest::HttpRequest()
@@ -24,7 +26,8 @@ HttpRequest::HttpRequest()
       phase_(kRequestLine),
       parse_status_(OK),
       body_(),
-      body_size_(0) {}
+      body_size_(0),
+      is_chunked_(false) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
   *this = rhs;
@@ -40,6 +43,7 @@ HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     parse_status_ = rhs.parse_status_;
     body_ = rhs.body_;
     body_size_ = rhs.body_size_;
+    is_chunked_ = rhs.is_chunked_;
   }
   return *this;
 }
@@ -124,6 +128,15 @@ HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseBody(utils::ByteVector &buffer) {
+  if (is_chunked_) {
+    return ParseChunkedBody(buffer);
+  } else {
+    return ParsePlainBody(buffer);
+  }
+}
+
+HttpRequest::ParsingPhase HttpRequest::ParsePlainBody(
+    utils::ByteVector &buffer) {
   if (body_size_ == 0)
     return kParsed;
 
@@ -136,6 +149,36 @@ HttpRequest::ParsingPhase HttpRequest::ParseBody(utils::ByteVector &buffer) {
     buffer.erase(buffer.begin(), buffer.begin() + request_size);
   }
   return body_.size() == body_size_ ? kParsed : kBody;
+}
+
+HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
+    utils::ByteVector &buffer) {
+  while (buffer.empty() == false) {
+    std::pair<Chunk::ChunkStatus, Chunk> chunk_pair =
+        CheckChunkReceived(buffer);
+    switch (chunk_pair.first) {
+      case Chunk::kWaiting:  // bufferにchunkが届ききっていない。
+        return phase_;
+      case Chunk::kErrorBadRequest:
+        parse_status_ = BAD_REQUEST;
+        return kError;
+      case Chunk::kErrorLength:  // TODO TOOLARGEじゃないかも
+        parse_status_ = PAYLOAD_TOO_LARGE;
+        return kError;
+      default:
+        break;
+    }
+
+    Chunk chunk = chunk_pair.second;
+    buffer.erase(buffer.begin(),
+                 buffer.begin() + chunk.size_str.size() + kCrlf.size());
+    if (chunk_pair.second.data_size == 0)
+      return kParsed;
+    body_.insert(body_.end(), buffer.begin(), buffer.begin() + chunk.data_size);
+    buffer.erase(buffer.begin(),
+                 buffer.begin() + chunk.data_size + kCrlf.size());
+  }
+  return phase_;
 }
 
 //========================================================================
@@ -228,6 +271,19 @@ HttpStatus HttpRequest::InterpretContentLength(
   return parse_status_ = OK;
 }
 
+HttpStatus HttpRequest::InterpretTransferEncoding(
+    const HeaderMap::mapped_type &encoding_header) {
+  if (encoding_header.size() == 1 && encoding_header.front() == "chunked") {
+    // 最終転送符号法はチャンク化である
+    is_chunked_ = true;
+    return parse_status_ = OK;
+  } else {
+    // 最終転送符号法はチャンク化でない
+    // webservではchunkedのみ許容
+    return parse_status_ = NOT_IMPLEMENTED;
+  }
+}
+
 //========================================================================
 // Is系関数　外部から状態取得
 bool HttpRequest::IsParsed() {
@@ -248,13 +304,15 @@ HttpStatus HttpRequest::GetParseStatus() const {
   return parse_status_;
 }
 
+const utils::ByteVector &HttpRequest::GetBody() {
+  return body_;
+}
+
 //========================================================================
 // Helper関数
 
 HttpStatus HttpRequest::DecideBodySize() {
   // https://triple-underscore.github.io/RFC7230-ja.html#message.body.length
-
-  body_size_ = 0;
 
   HeaderMap::iterator encoding_header_it = headers_.find("TRANSFER-ENCODING");
   HeaderMap::iterator length_header_it = headers_.find("CONTENT-LENGTH");
@@ -262,16 +320,11 @@ HttpStatus HttpRequest::DecideBodySize() {
   bool has_length_header = length_header_it != headers_.end();
 
   if (has_encoding_header && has_length_header) {
-    // TODO ステータスの検証　BAD_Requestは仮
     return parse_status_ = BAD_REQUEST;
   }
 
-  if (has_encoding_header) {
-    // TODO
-    // 最終転送符号法はチャンク化である
-    // 最終転送符号法はチャンク化でない
-    return parse_status_ = OK;
-  }
+  if (has_encoding_header)
+    return InterpretTransferEncoding((*encoding_header_it).second);
 
   if (has_length_header)
     return InterpretContentLength((*length_header_it).second);
@@ -280,6 +333,50 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 namespace {
+
+// Chunk内にCRLFがあること、CRLFがチャンクの末尾についている事を検証する。
+bool ValidateChunkDataFormat(const Chunk &chunk, utils::ByteVector &buffer) {
+  utils::ByteVector chunk_data_bytes = utils::ByteVector(
+      buffer.begin() + chunk.size_str.size() + kCrlf.size(), buffer.end());
+  unsigned long crlf_pos = std::distance(chunk_data_bytes.begin(),
+                                         chunk_data_bytes.FindString(kCrlf));
+  return crlf_pos == chunk.data_size;
+}
+
+std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
+    utils::ByteVector &buffer) {
+  Chunk res;
+
+  utils::ByteVector::iterator pos = buffer.FindString(kCrlf);
+  if (pos == buffer.end())
+    return std::make_pair(Chunk::kWaiting, res);
+  res.size_str = buffer.SubstrBeforePos(pos);
+
+  Result<unsigned long> convert_res =
+      utils::Stoul(res.size_str, utils::kHexadecimal);
+  if (convert_res.IsErr())
+    return std::make_pair(Chunk::kErrorBadRequest, res);
+  res.data_size = convert_res.Ok();
+
+  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
+  if (res.data_size >= kMaxSize) {
+    return std::make_pair(Chunk::kErrorLength, res);
+  }
+
+  if (res.data_size == 0) {
+    return std::make_pair(Chunk::kReceived, res);
+  }
+
+  unsigned long expect_buffer_size =
+      res.size_str.size() + kCrlf.size() + res.data_size + kCrlf.size();
+  if (buffer.size() < expect_buffer_size)
+    return std::make_pair(Chunk::kWaiting, res);
+
+  if (ValidateChunkDataFormat(res, buffer) == false)
+    return std::make_pair(Chunk::kErrorBadRequest, res);
+
+  return std::make_pair(Chunk::kReceived, res);
+}
 
 bool IsTchar(const char c) {
   return std::isalnum(c) || kTcharsWithoutAlnum.find(c) != std::string::npos;
@@ -396,6 +493,7 @@ void HttpRequest::PrintRequestInfo() {
     printf("method_: %s\n", method_.c_str());
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
+    printf("is_chuked_: %d\n", is_chunked_);
     printf("body_size: %ld\n", body_size_);
     for (std::map<std::string, std::vector<std::string> >::iterator it =
              headers_.begin();

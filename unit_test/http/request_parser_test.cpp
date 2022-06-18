@@ -337,4 +337,92 @@ TEST(RequestParserTest, OKVersionMinorUpper) {
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
+TEST(RequestParserTest, KOBodyChunkSizeTooLarge) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOBodyChunkSizeTooLarge.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), PAYLOAD_TOO_LARGE);
+}
+
+TEST(RequestParserTest, KOBodyInvalidChunkSizeLower) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOBodyInvalidChunkSizeLower.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOBodyInvalidChunkSizeUpper) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOBodyInvalidChunkSizeUpper.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOBodyNotExistChunkSize) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOBodyNotExistChunkSize.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
+TEST(RequestParserTest, KOFieldInvalidTransferEncoding) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFieldInvalidTransferEncoding.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
+}
+
+TEST(RequestParserTest, OKBodyChunkSizeZero) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKBodyChunkSizeZero.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+
+  const utils::ByteVector expect_body("");
+  const utils::ByteVector body = req.GetBody();
+  EXPECT_EQ(body, expect_body);
+}
+
+TEST(RequestParserTest, OKBodyCorrectChunkHexadecimal) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKBodyCorrectChunkHexadecimal.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+
+  const utils::ByteVector expect_body(
+      "123456789012345678901234567890123456789012345678901234567890123456789012"
+      "345678901234567890123456789012345678901234567890123456789012345678901234"
+      "567890123456789012345678901123456789012123456789012312345678901234123456"
+      "789012345");
+  const utils::ByteVector body = req.GetBody();
+  EXPECT_EQ(body, expect_body);
+}
+
+TEST(RequestParserTest, OKBodyCorrectChunk) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("OKBodyCorrectChunk.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+
+  const utils::ByteVector expect_body("12345abcde");
+  const utils::ByteVector body = req.GetBody();
+  EXPECT_EQ(body, expect_body);
+}
+
 }  // namespace http

@@ -16,6 +16,10 @@ re: fclean all
 test:
 	python3 test.py
 
+.PHONY: g-test
+g-test:
+	docker exec -it webserv make test
+
 .PHONY: webserv-it
 webserv-it:
 	docker exec -it webserv bash

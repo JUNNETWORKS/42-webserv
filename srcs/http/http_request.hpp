@@ -23,6 +23,17 @@ const std::string kPost = "POST";
 const std::string kDelete = "DELETE";
 }  // namespace method_strs
 
+struct Chunk {
+  enum ChunkStatus {
+    kReceived = 200,
+    kWaiting = 0,
+    kErrorLength = PAYLOAD_TOO_LARGE,
+    kErrorBadRequest = BAD_REQUEST
+  };
+  std::string size_str;
+  unsigned long data_size;
+};
+
 class HttpRequest {
  private:
   enum ParsingPhase {
@@ -42,6 +53,7 @@ class HttpRequest {
   HttpStatus parse_status_;
   utils::ByteVector body_;  // HTTP リクエストのボディ
   unsigned long body_size_;
+  bool is_chunked_;
 
   // buffer内の文字列で処理を完了できない時、current_bufferに文字列を保持して処理を中断
   // 次のbufferが来るのを待つ
@@ -65,6 +77,7 @@ class HttpRequest {
   // ========================================================================
   // Getter and Setter
   const std::vector<std::string> &GetHeader(std::string header);
+  const utils::ByteVector &GetBody();
 
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
@@ -77,6 +90,10 @@ class HttpRequest {
   HttpStatus InterpretHeaderField(std::string &str);
   HttpStatus InterpretContentLength(
       const HeaderMap::mapped_type &length_header);
+  HttpStatus InterpretTransferEncoding(
+      const HeaderMap::mapped_type &encoding_header);
+  ParsingPhase ParsePlainBody(utils::ByteVector &buffer);
+  ParsingPhase ParseChunkedBody(utils::ByteVector &buffer);
 
   HttpStatus DecideBodySize();
   void PrintRequestInfo();
