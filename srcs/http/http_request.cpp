@@ -236,7 +236,8 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
 
   if (collon_pos == std::string::npos || collon_pos == 0 ||
       header_name_pos == collon_pos ||
-      IsTcharString(str.substr(header_name_pos, collon_pos)) == false)
+      IsTcharString(
+          str.substr(header_name_pos, collon_pos - header_name_pos)) == false)
     return parse_status_ = BAD_REQUEST;
 
   std::string header = str.substr(0, collon_pos);
