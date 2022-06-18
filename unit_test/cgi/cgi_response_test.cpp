@@ -94,7 +94,7 @@ TEST(CgiResponseParse, ValidClientRedirectResponse) {
 
   HeadersType expected_headers{
       {"LOCATION", "https://www.google.com/search?q=pikachu"},
-      {"ExtensionField", "hoge"}};
+      {"EXTENSIONFIELD", "hoge"}};
   EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
 }
 
@@ -122,9 +122,9 @@ TEST(CgiResponseParse, ValidClientRedirectResponseWithDocument) {
   HeadersType expected_headers{
       {"LOCATION", "https://www.google.com/search?q=pikachu"},
       {"STATUS", "302 Found"},
-      {"Content-Type", "text/html"},
-      {"ExtensionField", "hoge"},
-      {"ProtocolField", "fuga"}};
+      {"CONTENT-TYPE", "text/html"},
+      {"EXTENSIONFIELD", "hoge"},
+      {"PROTOCOLFIELD", "fuga"}};
   EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
@@ -154,9 +154,9 @@ TEST(CgiResponseParse,
   HeadersType expected_headers{
       {"LOCATION", "https://www.google.com/search?q=pikachu"},
       {"STATUS", "301 Moved Permanently"},
-      {"Content-Type", "text/html"},
-      {"ExtensionField", "hoge"},
-      {"ProtocolField", "fuga"}};
+      {"CONTENT-TYPE", "text/html"},
+      {"EXTENSIONFIELD", "hoge"},
+      {"PROTOCOLFIELD", "fuga"}};
   EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
