@@ -33,9 +33,8 @@ class CgiResponse {
   CgiResponse &operator=(const CgiResponse &rhs);
   ~CgiResponse();
 
+  // buffer にはCGIの出力すべてが含まれている必要がある｡
   void Parse(utils::ByteVector &buffer);
-
-  http::HttpResponse ToHttpResponse();
 
   // ========================================================================
   // Getter and Setter
