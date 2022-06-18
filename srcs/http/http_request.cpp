@@ -240,6 +240,9 @@ HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
           str.substr(header_name_pos, collon_pos - header_name_pos)) == false)
     return parse_status_ = BAD_REQUEST;
 
+  if (header_name_pos != 0)  // TODO http/message以外はエラーにする
+    has_obs_fold_ = true;
+
   std::string header = str.substr(0, collon_pos);
   std::transform(header.begin(), header.end(), header.begin(), toupper);
   str.erase(0, collon_pos + 1);
