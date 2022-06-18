@@ -110,13 +110,9 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     }
 
     utils::ByteVector::iterator it = buffer.FindString(kCrlf);
-    if (it == buffer.end()) {
-      return kHeaderField;  // crlfがbuffer内に存在しない
-    } else {
-      std::string line = buffer.CutSubstrBeforePos(it);  // headerfieldの解釈
-      if (InterpretHeaderField(line) != OK)
-        return kError;
-    }
+    std::string line = buffer.CutSubstrBeforePos(it);  // headerfieldの解釈
+    if (InterpretHeaderField(line) != OK)
+      return kError;
   }
 }
 
