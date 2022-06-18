@@ -35,20 +35,16 @@ bool ByteVector::CompareHead(const std::string& str) {
   return std::strncmp(GetReinterpretedData(), str.c_str(), str.size()) == 0;
 }
 
-ByteVector::iterator ByteVector::FindString(const std::string& str) {
-  push_back('\0');
-
-  const char* start = GetReinterpretedData();
-  const char* char_pos = std::strstr(start, str.c_str());
-  bool find_res = char_pos != NULL;
-  size_t pos;
-
-  if (find_res)
-    pos = char_pos - start;
-
-  pop_back();
-
-  return find_res ? iterator(&((*this)[pos])) : end();
+Result<unsigned long> ByteVector::FindString(const std::string& str) const {
+  for (size_t i = 0; i < size(); i++) {
+    for (size_t j = 0; j < str.size(); j++) {
+      if (str[j] != this->at(i + j))
+        break;
+      if (j + 1 == str.size())
+        return i;
+    }
+  }
+  return Error();
 }
 
 std::string ByteVector::CutSubstrBeforePos(ByteVector::iterator pos) {

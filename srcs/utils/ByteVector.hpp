@@ -5,9 +5,12 @@
 #include <string>
 #include <vector>
 
-#include "http/http_constants.hpp"
+#include "result/result.hpp"
 
 namespace utils {
+
+using namespace result;
+
 typedef unsigned char Byte;
 
 class ByteVector : public std::vector<Byte> {
@@ -22,7 +25,7 @@ class ByteVector : public std::vector<Byte> {
 
   void EraseHead(size_t size);
   bool CompareHead(const std::string& str);
-  iterator FindString(const std::string& str);
+  Result<unsigned long> FindString(const std::string& str) const;
   std::string CutSubstrBeforePos(iterator pos);
   std::string SubstrBeforePos(ByteVector::iterator pos);
 
