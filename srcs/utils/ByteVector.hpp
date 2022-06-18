@@ -13,6 +13,7 @@ typedef unsigned char Byte;
 class ByteVector : public std::vector<Byte> {
  public:
   ByteVector();
+  ByteVector(ByteVector::const_iterator start, ByteVector::const_iterator end);
   ByteVector(ByteVector const& src);
   ByteVector(const std::string& s);
   ~ByteVector();
@@ -23,6 +24,7 @@ class ByteVector : public std::vector<Byte> {
   bool CompareHead(const std::string& str);
   iterator FindString(const std::string& str);
   std::string CutSubstrBeforePos(iterator pos);
+  std::string SubstrBeforePos(ByteVector::iterator pos);
 
   void AppendDataToBuffer(const Byte* buf, size_t size);
 

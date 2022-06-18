@@ -7,6 +7,10 @@ namespace utils {
 ByteVector::ByteVector() {
   reserve(kReserveSize_);
 }
+ByteVector::ByteVector(ByteVector::const_iterator start,
+                       ByteVector::const_iterator end)
+    : std::vector<Byte>(start, end) {}
+
 ByteVector::ByteVector(const std::string& s) {
   AppendDataToBuffer(reinterpret_cast<const unsigned char*>(s.data()),
                      s.size());
@@ -50,6 +54,11 @@ ByteVector::iterator ByteVector::FindString(const std::string& str) {
 std::string ByteVector::CutSubstrBeforePos(ByteVector::iterator pos) {
   std::string res = std::string(begin(), pos);
   erase(begin(), pos);
+  return res;
+}
+
+std::string ByteVector::SubstrBeforePos(ByteVector::iterator pos) {
+  std::string res = std::string(begin(), pos);
   return res;
 }
 
