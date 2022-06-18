@@ -12,7 +12,7 @@ services:
     stop_grace_period: 1s
     command: [ "./webserv", "/root/configurations/sample.conf" ]
     # command: [ "sleep", "infinity" ]
-    # command: [ "valgrind", "./webserv", "/root/configurations/sample.conf" ]
+    # command: [ "valgrind", "./webserv", "/root/configurations/sample.conf" ] # make の オプションからサニタイザー消す必要あり。
 
   nginx:
     image: nginx:latest
