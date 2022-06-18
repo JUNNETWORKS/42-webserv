@@ -280,7 +280,11 @@ std::string GetValueOfHeader(const std::string &header) {
   if (colon_pos == std::string::npos || colon_pos + 1 == header.size()) {
     value = "";
   } else {
-    value = header.substr(colon_pos + 1);
+    std::string::size_type idx = colon_pos + 1;
+    while (idx < header.size() && isspace(header[idx])) {
+      ++idx;
+    }
+    value = header.substr(idx);
   }
   return value;
 }
