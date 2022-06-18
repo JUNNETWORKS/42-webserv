@@ -12,7 +12,7 @@ namespace cgi {
 class CgiResponse {
  public:
   enum ResponseType {
-    kParsing,
+    kNotIdentified,
     kDocumentResponse,
     kLocalRedirect,
     kClientRedirect,
@@ -22,12 +22,9 @@ class CgiResponse {
 
  private:
   ResponseType response_type_;
+
   std::map<std::string, std::string> headers_;
 
-  int status_;
-  std::string status_msg_;
-
-  std::string location_;
   utils::ByteVector body_;
 
  public:
@@ -37,13 +34,14 @@ class CgiResponse {
   ~CgiResponse();
 
   void Parse(utils::ByteVector &buffer);
-  http::HttpResponse ToHttpResponse();
 
-  bool IsParsed();
+  http::HttpResponse ToHttpResponse();
 
   // ========================================================================
   // Getter and Setter
-  ResponseType GetResponseType();
+  ResponseType GetResponseType() const;
+  const std::map<std::string, std::string> &GetHeaders();
+  const utils::ByteVector &GetBody();
 };
 
 }  // namespace cgi
