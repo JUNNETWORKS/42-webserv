@@ -118,8 +118,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
       field_buffer.insert(field_buffer.end(), buffer.begin(),
                           buffer.begin() + crlf_pos.Ok());
       buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
-      if (buffer.CompareHead(kCrlf + " ") == false &&
-          buffer.CompareHead(kCrlf + "\t") == false)
+      if (IsObsFold(buffer) == false)
         break;
       has_obs_fold_ = true;
       buffer.erase(buffer.begin(), buffer.begin() + kCrlf.size() + 1);
@@ -344,6 +343,10 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 namespace {
+
+bool IsObsFold(const utils::ByteVector &buf) {
+  return buf.CompareHead(kCrlf + " ") || buf.CompareHead(kCrlf + "\t");
+}
 
 // Chunk内にCRLFがあること、CRLFがチャンクの末尾についている事を検証する。
 bool ValidateChunkDataFormat(const Chunk &chunk, utils::ByteVector &buffer) {
