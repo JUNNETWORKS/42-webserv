@@ -71,10 +71,11 @@ Result<void> CgiResponse::DetermineNewlineChars(utils::ByteVector &buffer) {
   if (lflf_pos == buffer.end() && crlfcrlf_pos == buffer.end()) {
     return Error();
   }
-  if (lflf_pos != buffer.end()) {
-    newline_chars_ = kLF;
-  } else {
+  if (crlfcrlf_pos != buffer.end() &&
+      (lflf_pos == buffer.end() && crlfcrlf_pos < lflf_pos)) {
     newline_chars_ = kCRLF;
+  } else {
+    newline_chars_ = kLF;
   }
   return Result<void>();
 }
