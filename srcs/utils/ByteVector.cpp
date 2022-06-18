@@ -35,7 +35,7 @@ bool ByteVector::CompareHead(const std::string& str) {
   return std::strncmp(GetReinterpretedData(), str.c_str(), str.size()) == 0;
 }
 
-Result<unsigned long> ByteVector::FindString(const std::string& str) const {
+Result<size_t> ByteVector::FindString(const std::string& str) const {
   for (size_t i = 0; i < size(); i++) {
     for (size_t j = 0; j < str.size(); j++) {
       if (str[j] != this->at(i + j))
