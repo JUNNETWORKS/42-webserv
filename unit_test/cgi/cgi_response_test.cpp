@@ -192,6 +192,33 @@ TEST(CgiResponseParse, NewLineIsCrlf) {
                               "</HTML>"));
 }
 
+// body に LF と CRLF が混ざっているデータがあっても良い
+TEST(CgiResponseParse, DocumentResponsesBodyIncludeLfAndCrlf) {
+  utils::ByteVector cgi_output(
+      "Content-Type: text/html\n"
+      "Status: 404 Not Found\n"
+      "Optional: hoge\n"
+      "\n"
+      "<HTML>\r\n"
+      "<body><p>404 Not Found</p></body>\n"
+      "</HTML>");
+
+  CgiResponse cgi_res;
+  cgi_res.Parse(cgi_output);
+
+  EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
+
+  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
+                               {"STATUS", "404 Not Found"},
+                               {"OPTIONAL", "hoge"}};
+  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+
+  EXPECT_EQ(cgi_res.GetBody(),
+            utils::ByteVector("<HTML>\r\n"
+                              "<body><p>404 Not Found</p></body>\n"
+                              "</HTML>"));
+}
+
 // ========================================================================
 // Error case
 
