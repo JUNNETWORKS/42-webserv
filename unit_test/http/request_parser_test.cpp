@@ -22,14 +22,14 @@ utils::ByteVector OpenFile(const std::string& name) {
   return res;
 }
 
-TEST(RequestParserTest, KOFormatExistOBSfold) {
-  http::HttpRequest req;
-  utils::ByteVector buf = OpenFile("KOFormatExistOBSfold.txt");
+// TEST(RequestParserTest, KOFormatExistOBSfold) {
+//   http::HttpRequest req;
+//   utils::ByteVector buf = OpenFile("KOFormatExistOBSfold.txt");
 
-  req.ParseRequest(buf);
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
-}
+//   req.ParseRequest(buf);
+//   EXPECT_TRUE(req.IsCorrectStatus() == false);
+//   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+// }
 
 TEST(RequestParserTest, KOFormatExistSPAfterVersion) {
   http::HttpRequest req;
