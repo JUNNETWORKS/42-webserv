@@ -100,6 +100,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   if (boundary_pos.IsErr())
     return kHeaderField;
 
+  if (IsObsFold(buffer)) {  //先頭がobs-foldの時
+    parse_status_ = BAD_REQUEST;
+    return kError;
+  }
+
   while (1) {
     if (buffer.CompareHead(kHeaderBoundary)) {
       buffer.EraseHead(kHeaderBoundary.size());
