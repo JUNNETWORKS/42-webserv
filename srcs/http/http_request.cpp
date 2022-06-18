@@ -9,7 +9,7 @@ namespace http {
 namespace {
 
 using namespace result;
-
+bool IsObsFold(const utils::ByteVector &buf);
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
 Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
