@@ -1,5 +1,6 @@
 .PHONY: all
 all:
+	docker run -t -v $(shell cd .. && pwd):/root/workdir --rm --entrypoint make test_webserv
 	docker-compose -f docker-compose.yml up --build
 
 .PHONY: clean
@@ -18,7 +19,7 @@ test:
 
 .PHONY: g-test
 g-test:
-	docker exec -it webserv make test
+	docker run -t -v $(shell cd .. && pwd):/root/workdir --rm --entrypoint make test_webserv test
 
 .PHONY: webserv-it
 webserv-it:

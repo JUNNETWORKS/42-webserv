@@ -1,9 +1,0 @@
-# Object files
-/objs/
-
-# Execution files
-/server
-/client
-/cgi
-
-__pycache__/
