@@ -79,24 +79,24 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
     buffer.EraseHead(kCrlf.size());
   }
 
-  utils::ByteVector::iterator it = buffer.FindString(kCrlf);
-  if (it != buffer.end()) {
-    std::string line = buffer.CutSubstrBeforePos(it);
-    if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
-        InterpretVersion(line) == OK) {
-      return kHeaderField;
-    } else {
-      return kError;
-    }
+  Result<size_t> pos = buffer.FindString(kCrlf);
+  if (pos.IsErr())
+    return kRequestLine;
+
+  std::string line = buffer.CutSubstrBeforePos(pos.Ok());
+  if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
+      InterpretVersion(line) == OK) {
+    return kHeaderField;
+  } else {
+    return kError;
   }
-  return kRequestLine;
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     utils::ByteVector &buffer) {
-  if (buffer.FindString(kHeaderBoundary) == buffer.end()) {
+  Result<size_t> boundary_pos = buffer.FindString(kHeaderBoundary);
+  if (boundary_pos.IsErr())
     return kHeaderField;
-  }
 
   while (1) {
     if (buffer.CompareHead(kHeaderBoundary)) {
@@ -110,11 +110,12 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
       buffer.EraseHead(kCrlf.size());
     }
 
-    utils::ByteVector::iterator it = buffer.FindString(kCrlf);
-    if (it == buffer.end()) {
-      return kHeaderField;  // crlfがbuffer内に存在しない
+    Result<size_t> crlf_pos = buffer.FindString(kCrlf);
+    if (crlf_pos.IsErr()) {
+      return kHeaderField;
     } else {
-      std::string line = buffer.CutSubstrBeforePos(it);  // headerfieldの解釈
+      std::string line =
+          buffer.CutSubstrBeforePos(crlf_pos.Ok());  // headerfieldの解釈
       if (InterpretHeaderField(line) != OK)
         return kError;
     }
@@ -338,19 +339,21 @@ namespace {
 bool ValidateChunkDataFormat(const Chunk &chunk, utils::ByteVector &buffer) {
   utils::ByteVector chunk_data_bytes = utils::ByteVector(
       buffer.begin() + chunk.size_str.size() + kCrlf.size(), buffer.end());
-  unsigned long crlf_pos = std::distance(chunk_data_bytes.begin(),
-                                         chunk_data_bytes.FindString(kCrlf));
-  return crlf_pos == chunk.data_size;
+  Result<size_t> res = chunk_data_bytes.FindString(kCrlf);
+  if (res.IsOk()) {
+    return res.Ok() == chunk.data_size;
+  }
+  return false;
 }
 
 std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     utils::ByteVector &buffer) {
   Chunk res;
 
-  utils::ByteVector::iterator pos = buffer.FindString(kCrlf);
-  if (pos == buffer.end())
+  Result<size_t> pos = buffer.FindString(kCrlf);
+  if (pos.IsErr())
     return std::make_pair(Chunk::kWaiting, res);
-  res.size_str = buffer.SubstrBeforePos(pos);
+  res.size_str = buffer.SubstrBeforePos(pos.Ok());
 
   Result<unsigned long> convert_res =
       utils::Stoul(res.size_str, utils::kHexadecimal);
