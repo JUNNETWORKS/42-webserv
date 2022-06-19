@@ -53,6 +53,17 @@ class CgiResponse {
   const utils::ByteVector &GetBody();
 
  private:
+  // RFC3875(CGI/1.1) 2.2 Bacic Rules で定義されている BNF 規則
+  static const std::string kLowalpha;
+  static const std::string kHialpha;
+  static const std::string kAlpha;
+  static const std::string kDigit;
+  static const std::string kSeparator;
+  static const std::string kCtl;
+  static const std::string kChar;
+  static const std::string kCharExceptCtlAndSeparator;
+  static const std::string kQdtext;
+
   // 改行文字を決定する
   Result<void> DetermineNewlineChars(utils::ByteVector &buffer);
 
@@ -95,6 +106,14 @@ class CgiResponse {
 
   // fragment-URI    = absoluteURI [ "#" fragment ]
   bool IsFragmentUri(const std::string &uri);
+
+  // field-name      = token
+  // token         = 1*<any CHAR except CTLs or separators>
+  bool IsValidHeaderKey(const std::string &key);
+
+  // field-content   = *( token | separator | quoted-string )
+  // quoted-string = <"> *qdtext <">
+  bool IsValidHeaderValue(const std::string &key);
 };
 
 }  // namespace cgi

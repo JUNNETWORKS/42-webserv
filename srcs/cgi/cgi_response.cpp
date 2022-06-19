@@ -6,6 +6,21 @@
 
 namespace cgi {
 
+const std::string CgiResponse::kLowalpha = "abcdefghijklmnopqrstuvwxyz";
+const std::string CgiResponse::kHialpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const std::string CgiResponse::kAlpha = kLowalpha + kHialpha;
+const std::string CgiResponse::kDigit = "0123456789";
+const std::string CgiResponse::kSeparator = "()<>@,;:\\\"/[]?={} \t";
+const std::string CgiResponse::kCtl =
+    "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11"
+    "\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x7f";
+const std::string CgiResponse::kChar =
+    kAlpha + kDigit + kSeparator + "!#$%&'*+-.`^_{|}~" + kCtl;
+const std::string CgiResponse::kCharExceptCtlAndSeparator =
+    kAlpha + kDigit + "!#$%&'*+-.`^_{|}~";
+const std::string CgiResponse::kQdtext =
+    kAlpha + kDigit + "()<>@,;:\\/[]?={} \t" + "!#$%&'*+-.`^_{|}~" + "\r\n";
+
 namespace {
 
 std::string GetKeyOfHeader(const std::string &header);
@@ -42,6 +57,7 @@ Result<void> CgiResponse::Parse(utils::ByteVector &buffer) {
 
   if (SetHeadersFromBuffer(buffer).IsErr() ||
       SetBodyFromBuffer(buffer).IsErr()) {
+    response_type_ = kParseError;
     return Error();
   }
 
@@ -115,6 +131,9 @@ Result<void> CgiResponse::SetHeadersFromBuffer(utils::ByteVector &buffer) {
        it != header_vec.end(); ++it) {
     // 同じヘッダーが2回現れてはいけない
     if (headers_.find(it->first) != headers_.end()) {
+      return Error();
+    }
+    if (!IsValidHeaderKey(it->first) || !IsValidHeaderValue(it->second)) {
       return Error();
     }
     headers_[it->first] = it->second;
@@ -275,6 +294,47 @@ bool CgiResponse::IsFragmentUri(const std::string &uri) {
   }
   return IsAbsoluteUri(uri);
 }
+
+bool CgiResponse::IsValidHeaderKey(const std::string &key) {
+  std::string::size_type i = 0;
+  while (i < key.size()) {
+    if (kCharExceptCtlAndSeparator.find(key[i]) == std::string::npos) {
+      return false;
+    }
+    i++;
+  }
+  return true;
+}
+
+bool CgiResponse::IsValidHeaderValue(const std::string &value) {
+  bool is_quoted = false;
+
+  std::string::size_type i = 0;
+  while (i < value.size()) {
+    if (!is_quoted) {
+      if (kCharExceptCtlAndSeparator.find(value[i]) == std::string::npos &&
+          kSeparator.find(value[i]) == std::string::npos) {
+        return false;
+      }
+      if (value[i] == '"') {
+        is_quoted = true;
+      }
+    } else {
+      if (value[i] == '"') {
+        is_quoted = false;
+      } else if (kQdtext.find(value[i]) == std::string::npos) {
+        return false;
+      }
+    }
+    i++;
+  }
+
+  if (is_quoted) {
+    return false;
+  }
+  return true;
+}
+
 namespace {
 
 std::string GetKeyOfHeader(const std::string &header) {
