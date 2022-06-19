@@ -12,6 +12,9 @@
 
 namespace http {
 using namespace result;
+const std::string kConfigurationDirPath = "unit_test/http/config/";
+const config::Config default_conf =
+    config::ParseConfig((kConfigurationDirPath + "SimpleServer.conf").c_str());
 
 utils::ByteVector OpenFile(const std::string& name) {
   std::ifstream ifs(("./unit_test/http/req/" + name).c_str());
@@ -23,7 +26,7 @@ utils::ByteVector OpenFile(const std::string& name) {
 }
 
 TEST(RequestParserTest, KOFormatExistOBSfold) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatExistOBSfold.txt");
 
   req.ParseRequest(buf);
@@ -32,7 +35,7 @@ TEST(RequestParserTest, KOFormatExistOBSfold) {
 }
 
 TEST(RequestParserTest, KOFormatExistSPAfterVersion) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatExistSPAfterVersion.txt");
 
   req.ParseRequest(buf);
@@ -41,7 +44,7 @@ TEST(RequestParserTest, KOFormatExistSPAfterVersion) {
 }
 
 TEST(RequestParserTest, KOFormatExistSPBeforeSpace) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatExistSPBeforeSpace.txt");
 
   req.ParseRequest(buf);
@@ -50,7 +53,7 @@ TEST(RequestParserTest, KOFormatExistSPBeforeSpace) {
 }
 
 TEST(RequestParserTest, KOFormatExistSPBetWeenMethodAndURL) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatExistSPBetWeenMethodAndURL.txt");
 
   req.ParseRequest(buf);
@@ -59,7 +62,7 @@ TEST(RequestParserTest, KOFormatExistSPBetWeenMethodAndURL) {
 }
 
 TEST(RequestParserTest, KOFormatExistSPBetWeenURLAndVersion) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatExistSPBetWeenURLAndVersion.txt");
 
   req.ParseRequest(buf);
@@ -68,7 +71,7 @@ TEST(RequestParserTest, KOFormatExistSPBetWeenURLAndVersion) {
 }
 
 TEST(RequestParserTest, KOFormatNotExistCRLF) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatNotExistCRLF.txt");
 
   req.ParseRequest(buf);
@@ -77,7 +80,7 @@ TEST(RequestParserTest, KOFormatNotExistCRLF) {
 }
 
 // TEST(RequestParserTest, KOFormatNotExistHostHeader) {
-//   http::HttpRequest req;
+//   http::HttpRequest req(default_conf);
 //   utils::ByteVector buf = OpenFile("KOFormatNotExistHostHeader.txt");
 
 //   req.ParseRequest(buf);
@@ -86,7 +89,7 @@ TEST(RequestParserTest, KOFormatNotExistCRLF) {
 // }
 
 TEST(RequestParserTest, KOFormatNotExistMethod) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatNotExistMethod.txt");
 
   req.ParseRequest(buf);
@@ -95,7 +98,7 @@ TEST(RequestParserTest, KOFormatNotExistMethod) {
 }
 
 TEST(RequestParserTest, KOFormatNotExistRequestLine) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatNotExistRequestLine.txt");
 
   req.ParseRequest(buf);
@@ -104,7 +107,7 @@ TEST(RequestParserTest, KOFormatNotExistRequestLine) {
 }
 
 TEST(RequestParserTest, KOFormatNotExistURL) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatNotExistURL.txt");
 
   req.ParseRequest(buf);
@@ -113,7 +116,7 @@ TEST(RequestParserTest, KOFormatNotExistURL) {
 }
 
 TEST(RequestParserTest, KOFormatNotExistVersion) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatNotExistVersion.txt");
 
   req.ParseRequest(buf);
@@ -122,7 +125,7 @@ TEST(RequestParserTest, KOFormatNotExistVersion) {
 }
 
 TEST(RequestParserTest, KOHeaderExistSPBeforeColon) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOHeaderExistSPBeforeColon.txt");
 
   req.ParseRequest(buf);
@@ -131,7 +134,7 @@ TEST(RequestParserTest, KOHeaderExistSPBeforeColon) {
 }
 
 TEST(RequestParserTest, KOHeaderExistTabBeforeColon) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOHeaderExistTabBeforeColon.txt");
 
   req.ParseRequest(buf);
@@ -140,7 +143,7 @@ TEST(RequestParserTest, KOHeaderExistTabBeforeColon) {
 }
 
 TEST(RequestParserTest, KOHeaderNotExistDquotePair) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOHeaderNotExistDquotePair.txt");
 
   req.ParseRequest(buf);
@@ -149,7 +152,7 @@ TEST(RequestParserTest, KOHeaderNotExistDquotePair) {
 }
 
 // TEST(RequestParserTest, KOMethodNotAllowd) {
-//   http::HttpRequest req;
+//   http::HttpRequest req(default_conf);
 //   utils::ByteVector buf = OpenFile("KOMethodNotAllowd.txt");
 
 //   req.ParseRequest(buf);
@@ -158,7 +161,7 @@ TEST(RequestParserTest, KOHeaderNotExistDquotePair) {
 // }
 
 // TEST(RequestParserTest, KOMethodNotImplemented) {
-//   http::HttpRequest req;
+//   http::HttpRequest req(default_conf);
 //   utils::ByteVector buf = OpenFile("KOMethodNotImplemented.txt");
 
 //   req.ParseRequest(buf);
@@ -167,7 +170,7 @@ TEST(RequestParserTest, KOHeaderNotExistDquotePair) {
 // }
 
 TEST(RequestParserTest, KOUnknownMethod) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOUnknownMethod.txt");
 
   req.ParseRequest(buf);
@@ -176,7 +179,7 @@ TEST(RequestParserTest, KOUnknownMethod) {
 }
 
 // TEST(RequestParserTest, KOURLTooLong) {
-//   http::HttpRequest req;
+//   http::HttpRequest req(default_conf);
 //   utils::ByteVector buf = OpenFile("KOURLTooLong.txt");
 
 //   req.ParseRequest(buf);
@@ -185,7 +188,7 @@ TEST(RequestParserTest, KOUnknownMethod) {
 // }
 
 TEST(RequestParserTest, KOVersioExistMultipleDot) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOVersioExistMultipleDot.txt");
 
   req.ParseRequest(buf);
@@ -194,7 +197,7 @@ TEST(RequestParserTest, KOVersioExistMultipleDot) {
 }
 
 TEST(RequestParserTest, KOVersioInvalidMinorLong) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOVersioInvalidMinorLong.txt");
 
   req.ParseRequest(buf);
@@ -203,7 +206,7 @@ TEST(RequestParserTest, KOVersioInvalidMinorLong) {
 }
 
 TEST(RequestParserTest, KOVersionInvalidMajorLong) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOVersionInvalidMajorLong.txt");
 
   req.ParseRequest(buf);
@@ -212,7 +215,7 @@ TEST(RequestParserTest, KOVersionInvalidMajorLong) {
 }
 
 TEST(RequestParserTest, KOVersionInvalidMajorLower) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOVersionInvalidMajorLower.txt");
 
   req.ParseRequest(buf);
@@ -221,7 +224,7 @@ TEST(RequestParserTest, KOVersionInvalidMajorLower) {
 }
 
 // TEST(RequestParserTest, KOVersionInvalidMajorUpper) {
-//   http::HttpRequest req;
+//   http::HttpRequest req(default_conf);
 //   utils::ByteVector buf = OpenFile("KOVersionInvalidMajorUpper.txt");
 
 //   req.ParseRequest(buf);
@@ -230,7 +233,7 @@ TEST(RequestParserTest, KOVersionInvalidMajorLower) {
 // }
 
 TEST(RequestParserTest, KOVersionInvalidPrefix) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOVersionInvalidPrefix.txt");
 
   req.ParseRequest(buf);
@@ -239,7 +242,7 @@ TEST(RequestParserTest, KOVersionInvalidPrefix) {
 }
 
 TEST(RequestParserTest, KOVersioNotExistDot) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOVersioNotExistDot.txt");
 
   req.ParseRequest(buf);
@@ -248,7 +251,7 @@ TEST(RequestParserTest, KOVersioNotExistDot) {
 }
 
 TEST(RequestParserTest, OKCommaInDquote) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKCommaInDquote.txt");
 
   req.ParseRequest(buf);
@@ -257,7 +260,7 @@ TEST(RequestParserTest, OKCommaInDquote) {
 }
 
 TEST(RequestParserTest, OKCorrectNewLine) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKCorrectNewLine.txt");
 
   req.ParseRequest(buf);
@@ -266,7 +269,7 @@ TEST(RequestParserTest, OKCorrectNewLine) {
 }
 
 TEST(RequestParserTest, OKCorrect) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKCorrect.txt");
 
   req.ParseRequest(buf);
@@ -275,7 +278,7 @@ TEST(RequestParserTest, OKCorrect) {
 }
 
 TEST(RequestParserTest, OKHeaderDquoteStringEscape) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKHeaderDquoteStringEscape.txt");
 
   req.ParseRequest(buf);
@@ -284,7 +287,7 @@ TEST(RequestParserTest, OKHeaderDquoteStringEscape) {
 }
 
 TEST(RequestParserTest, OKHeaderDquoteString) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKHeaderDquoteString.txt");
 
   req.ParseRequest(buf);
@@ -293,7 +296,7 @@ TEST(RequestParserTest, OKHeaderDquoteString) {
 }
 
 TEST(RequestParserTest, OKHeaderExistOWSBeforeValue) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKHeaderExistOWSBeforeValue.txt");
 
   req.ParseRequest(buf);
@@ -302,7 +305,7 @@ TEST(RequestParserTest, OKHeaderExistOWSBeforeValue) {
 }
 
 TEST(RequestParserTest, OKHeaderExistOWSftrerValue) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKHeaderExistOWSftrerValue.txt");
 
   req.ParseRequest(buf);
@@ -311,7 +314,7 @@ TEST(RequestParserTest, OKHeaderExistOWSftrerValue) {
 }
 
 TEST(RequestParserTest, OKHeaderListMultipleLine) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKHeaderListMultipleLine.txt");
 
   req.ParseRequest(buf);
@@ -320,7 +323,7 @@ TEST(RequestParserTest, OKHeaderListMultipleLine) {
 }
 
 TEST(RequestParserTest, OKHeaderList) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKHeaderList.txt");
 
   req.ParseRequest(buf);
@@ -329,7 +332,7 @@ TEST(RequestParserTest, OKHeaderList) {
 }
 
 TEST(RequestParserTest, OKVersionMinorUpper) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKVersionMinorUpper.txt");
 
   req.ParseRequest(buf);
@@ -338,7 +341,7 @@ TEST(RequestParserTest, OKVersionMinorUpper) {
 }
 
 TEST(RequestParserTest, KOBodyChunkSizeTooLarge) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOBodyChunkSizeTooLarge.txt");
 
   req.ParseRequest(buf);
@@ -347,7 +350,7 @@ TEST(RequestParserTest, KOBodyChunkSizeTooLarge) {
 }
 
 TEST(RequestParserTest, KOBodyInvalidChunkSizeLower) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOBodyInvalidChunkSizeLower.txt");
 
   req.ParseRequest(buf);
@@ -356,7 +359,7 @@ TEST(RequestParserTest, KOBodyInvalidChunkSizeLower) {
 }
 
 TEST(RequestParserTest, KOBodyInvalidChunkSizeUpper) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOBodyInvalidChunkSizeUpper.txt");
 
   req.ParseRequest(buf);
@@ -365,7 +368,7 @@ TEST(RequestParserTest, KOBodyInvalidChunkSizeUpper) {
 }
 
 TEST(RequestParserTest, KOBodyNotExistChunkSize) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOBodyNotExistChunkSize.txt");
 
   req.ParseRequest(buf);
@@ -374,7 +377,7 @@ TEST(RequestParserTest, KOBodyNotExistChunkSize) {
 }
 
 TEST(RequestParserTest, KOFieldInvalidTransferEncoding) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFieldInvalidTransferEncoding.txt");
 
   req.ParseRequest(buf);
@@ -383,7 +386,7 @@ TEST(RequestParserTest, KOFieldInvalidTransferEncoding) {
 }
 
 TEST(RequestParserTest, OKBodyChunkSizeZero) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKBodyChunkSizeZero.txt");
 
   req.ParseRequest(buf);
@@ -396,7 +399,7 @@ TEST(RequestParserTest, OKBodyChunkSizeZero) {
 }
 
 TEST(RequestParserTest, OKBodyCorrectChunkHexadecimal) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKBodyCorrectChunkHexadecimal.txt");
 
   req.ParseRequest(buf);
@@ -413,7 +416,7 @@ TEST(RequestParserTest, OKBodyCorrectChunkHexadecimal) {
 }
 
 TEST(RequestParserTest, OKBodyCorrectChunk) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKBodyCorrectChunk.txt");
 
   req.ParseRequest(buf);

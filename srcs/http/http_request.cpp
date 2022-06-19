@@ -18,8 +18,9 @@ std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     utils::ByteVector &buffer);
 }  // namespace
 
-HttpRequest::HttpRequest()
-    : method_(""),
+HttpRequest::HttpRequest(const config::Config &config)
+    : config_(config),
+      method_(""),
       path_(""),
       minor_version_(-1),
       headers_(),
@@ -29,7 +30,7 @@ HttpRequest::HttpRequest()
       body_size_(0),
       is_chunked_(false) {}
 
-HttpRequest::HttpRequest(const HttpRequest &rhs) {
+HttpRequest::HttpRequest(const HttpRequest &rhs) : config_(rhs.config_) {
   *this = rhs;
 }
 
