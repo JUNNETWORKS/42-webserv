@@ -5,6 +5,7 @@ FROM	debian:buster
 RUN			set -eux; \
 			apt-get update && apt-get install -y \
 				clang \
+				cppcheck \
 				curl \
 				doxygen \
 				gcc \

@@ -42,3 +42,4 @@
 /google_test/
 /tester
 /test/diff.html
+/test/cppcheck-err-list

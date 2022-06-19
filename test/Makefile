@@ -21,6 +21,12 @@ test:
 g-test:
 	docker run -t -v $(shell cd .. && pwd):/root/workdir --rm --entrypoint make test_webserv test
 
+.PHONY: cppcheck
+cppcheck:
+	docker run -t -v $(shell cd .. && pwd):/root/workdir --rm --entrypoint cppcheck test_webserv --enable=all --output-file=test/cppcheck-err-list srcs
+	@echo
+	cat cppcheck-err-list
+
 .PHONY: webserv-it
 webserv-it:
 	docker exec -it webserv bash
