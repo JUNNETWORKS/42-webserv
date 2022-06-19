@@ -157,7 +157,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
       case Chunk::kErrorBadRequest:
         parse_status_ = BAD_REQUEST;
         return kError;
-      case Chunk::kErrorLength:  // TODO TOOLARGEじゃないかも
+      case Chunk::kErrorLength:
         parse_status_ = PAYLOAD_TOO_LARGE;
         return kError;
       default:
