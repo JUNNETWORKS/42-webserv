@@ -201,7 +201,7 @@ HttpStatus HttpRequest::InterpretPath(std::string &str) {
   }
   path_ = result.Ok();
 
-  if (str.size > kMaxUriLength) {
+  if (str.size() > kMaxUriLength) {
     return parse_status_ = URI_TOO_LONG;
   } else {
     return parse_status_ = OK;
