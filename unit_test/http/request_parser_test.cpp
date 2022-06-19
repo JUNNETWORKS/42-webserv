@@ -178,14 +178,14 @@ TEST(RequestParserTest, KOUnknownMethod) {
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
-// TEST(RequestParserTest, KOURLTooLong) {
-//   http::HttpRequest req(default_conf);
-//   utils::ByteVector buf = OpenFile("KOURLTooLong.txt");
+TEST(RequestParserTest, KOURLTooLong) {
+  http::HttpRequest req(default_conf);
+  utils::ByteVector buf = OpenFile("KOURLTooLong.txt");
 
-//   req.ParseRequest(buf);
-//   EXPECT_TRUE(req.IsCorrectStatus() == false);
-//   EXPECT_EQ(req.GetParseStatus(), URI_TOO_LONG);
-// }
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), URI_TOO_LONG);
+}
 
 TEST(RequestParserTest, KOVersioExistMultipleDot) {
   http::HttpRequest req(default_conf);
