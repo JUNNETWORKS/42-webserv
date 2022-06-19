@@ -100,6 +100,7 @@ class CgiResponse {
   bool IsComposedOfUriC(const std::string &str);
 
   // local-pathquery = abs-path [ "?" query-string ]
+  // query-string    = *uric
   bool IsLocalPathQuery(const std::string &pathquery);
 
   bool IsAbsoluteUri(const std::string &uri);
@@ -108,7 +109,7 @@ class CgiResponse {
   bool IsFragmentUri(const std::string &uri);
 
   // field-name      = token
-  // token         = 1*<any CHAR except CTLs or separators>
+  // token           = 1*<any CHAR except CTLs or separators>
   bool IsValidHeaderKey(const std::string &key);
 
   // field-content   = *( token | separator | quoted-string )
