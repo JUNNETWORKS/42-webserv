@@ -1,6 +1,8 @@
 #ifndef HTTP_HTTP_STATUS_HPP
 #define HTTP_HTTP_STATUS_HPP
 
+#include <map>
+
 namespace http {
 
 enum HttpStatus {
@@ -26,6 +28,20 @@ enum HttpStatus {
   NOT_IMPLEMENTED = 501,
   SERVICE_UNAVAILABLE = 503,
   HTTP_VERSION_NOT_SUPPORTED = 505
+};
+
+class StatusMessages {
+ public:
+  StatusMessages();
+  StatusMessages(const StatusMessages &rhs);
+  StatusMessages &operator=(const StatusMessages &rhs);
+  ~StatusMessages();
+
+  static const std::map<unsigned long, std::string> status_messages;
+
+ private:
+  // https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+  static std::map<unsigned long, std::string> CreateStatusMessages();
 };
 
 }  // namespace http
