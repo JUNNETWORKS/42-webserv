@@ -119,9 +119,6 @@ class ClassWithReferenceVar {
   Result<int&> GetError() {
     return Error();
   }
-
- private:
-  ClassWithReferenceVar();
 };
 
 TEST(ResultTest, ResultOfReference) {
@@ -130,6 +127,13 @@ TEST(ResultTest, ResultOfReference) {
   Result<int&> result_ok = obj.GetN();
   EXPECT_TRUE(result_ok.IsOk());
   EXPECT_EQ(result_ok.Ok(), 10);
+
+  // 変更が反映されているか
+  int& n = result_ok.Ok();
+  n = 20;
+  Result<int&> result_ok2 = obj.GetN();
+  EXPECT_TRUE(result_ok2.IsOk());
+  EXPECT_EQ(result_ok2.Ok(), 20);
 
   Result<int&> result_err = obj.GetError();
   EXPECT_TRUE(result_err.IsErr());
