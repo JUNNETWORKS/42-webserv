@@ -201,7 +201,9 @@ HttpStatus HttpRequest::InterpretPath(std::string &str) {
   }
   path_ = result.Ok();
 
-  if (true) {  // TODO 長いURLの時414(URI Too Long)を判定する
+  if (str.size > kMaxUriLength) {
+    return parse_status_ = URI_TOO_LONG;
+  } else {
     return parse_status_ = OK;
   }
   return parse_status_ = BAD_REQUEST;
