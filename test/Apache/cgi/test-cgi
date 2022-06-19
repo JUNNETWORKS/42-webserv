@@ -1,4 +1,4 @@
-#!/bin/bash
+#
 
 # To permit this cgi, replace # on the first line above with the
 # appropriate #!/path/to/sh shebang, and set this script executable
