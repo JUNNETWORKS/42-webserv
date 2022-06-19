@@ -105,4 +105,34 @@ TEST(ResultTest, ErrorDefaultConstructor) {
   EXPECT_TRUE(result.IsErr());
 }
 
+class ClassWithReferenceVar {
+ private:
+  int n_;
+
+ public:
+  ClassWithReferenceVar(int n) : n_(n) {}
+
+  Result<int&> GetN() {
+    return n_;
+  }
+
+  Result<int&> GetError() {
+    return Error();
+  }
+
+ private:
+  ClassWithReferenceVar();
+};
+
+TEST(ResultTest, ResultOfReference) {
+  ClassWithReferenceVar obj = ClassWithReferenceVar(10);
+
+  Result<int&> result_ok = obj.GetN();
+  EXPECT_TRUE(result_ok.IsOk());
+  EXPECT_EQ(result_ok.Ok(), 10);
+
+  Result<int&> result_err = obj.GetError();
+  EXPECT_TRUE(result_err.IsErr());
+}
+
 }  // namespace result

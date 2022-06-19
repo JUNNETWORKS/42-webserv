@@ -4,6 +4,8 @@
 #include <cassert>
 #include <string>
 
+#include "utils/type_traits.hpp"
+
 namespace result {
 
 // Result でエラーを表すためのクラス
@@ -72,6 +74,41 @@ class Result {
 
   // デフォルトコンストラクタが存在しない場合は使えない
   Result(const Error &err) : val_(), err_(err) {}
+
+  bool IsOk() {
+    return !err_.IsErr();
+  }
+  T Ok() {
+    assert(IsOk());
+    return val_;
+  }
+  bool IsErr() {
+    return err_.IsErr();
+  }
+  Error Err() {
+    assert(IsErr());
+    return err_;
+  }
+};
+
+// 返り値が参照
+template <typename T>
+class Result<T &> {
+ private:
+  // Error を返すときに参照である val_ に lvalue
+  // をセットする必要があるのでそのための変数
+  typename utils::remove_reference<T>::type tmp_lval_;
+  T val_;
+  Error err_;
+
+ public:
+  // デフォルトコンストラクタが存在しない場合にエラーを通知したい場合はこのコンストラクタを使う｡
+  Result(const T &val, const Error &err) : val_(val), err_(err) {}
+
+  Result(const T &val) : val_(val), err_(false) {}
+
+  // デフォルトコンストラクタが存在しない場合は使えない
+  Result(const Error &err) : tmp_lval_(), val_(tmp_lval_), err_(err) {}
 
   bool IsOk() {
     return !err_.IsErr();
