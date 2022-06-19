@@ -26,8 +26,6 @@ class HttpResponse {
 
   HttpResponse(const HttpResponse &rhs);
 
-  HttpResponse &operator=(const HttpResponse &rhs);
-
   ~HttpResponse();
 
   void SetStatusLine(const std::string &status_line);
@@ -48,6 +46,7 @@ class HttpResponse {
   void Clear();
 
  private:
+  HttpResponse &operator=(const HttpResponse &rhs);
   void WriteStatusLine(int fd) const;
   void WriteHeaders(int fd) const;
   void WriteBody(int fd) const;
