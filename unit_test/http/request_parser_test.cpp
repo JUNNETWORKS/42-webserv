@@ -175,7 +175,7 @@ TEST(RequestParserTest, KOUnknownMethod) {
 
   req.ParseRequest(buf);
   EXPECT_TRUE(req.IsCorrectStatus() == false);
-  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+  EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
 }
 
 TEST(RequestParserTest, KOURLTooLong) {
