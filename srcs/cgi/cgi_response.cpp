@@ -218,7 +218,8 @@ bool CgiResponse::IsClientRedirectResponseWithDocument(
   bool is_valid_location =
       headers[0].first == "LOCATION" && IsFragmentUri(headers[0].second);
   bool is_valid_status = headers[1].first == "STATUS" &&
-                         IsValidStatusHeaderValue(headers[1].second);
+                         IsValidStatusHeaderValue(headers[1].second) &&
+                         headers[1].second[0] == '3';
   bool is_valid_content_type = headers[2].first == "CONTENT-TYPE";
   return is_valid_location && is_valid_status && is_valid_content_type;
 }
