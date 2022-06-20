@@ -188,10 +188,10 @@ HttpStatus HttpRequest::InterpretMethod(std::string &str) {
 
   if (method_ == method_strs::kGet || method_ == method_strs::kDelete ||
       method_ == method_strs::kPost) {
-    // TODO 501 (Not Implemented)を判定する
     return parse_status_ = OK;
+  } else {
+    return parse_status_ = NOT_IMPLEMENTED;
   }
-  return parse_status_ = BAD_REQUEST;
 }
 
 HttpStatus HttpRequest::InterpretPath(std::string &str) {
