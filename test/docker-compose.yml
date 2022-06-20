@@ -10,7 +10,9 @@ services:
       - ./public:/public
       - ./webserv_configurations:/root/configurations
     stop_grace_period: 1s
-    command: [ "/root/configurations/sample.conf" ]
+    command: [ "./webserv", "/root/configurations/sample.conf" ]
+    # command: [ "sleep", "infinity" ]
+    # command: [ "valgrind", "./webserv", "/root/configurations/sample.conf" ] # make の オプションからサニタイザー消す必要あり。
 
   nginx:
     image: nginx:latest
@@ -28,3 +30,5 @@ services:
       - 49202:80
     volumes:
       - ./public:/public
+      - ./Apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
+      - ./Apache/cgi/test-cgi:/usr/local/apache2/cgi-bin/test-cgi

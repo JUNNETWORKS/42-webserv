@@ -1,5 +1,6 @@
 .PHONY: all
 all:
+	docker run -t -v $(shell cd .. && pwd):/root/workdir --rm --entrypoint make test_webserv
 	docker-compose -f docker-compose.yml up --build
 
 .PHONY: clean
@@ -18,7 +19,13 @@ test:
 
 .PHONY: g-test
 g-test:
-	docker exec -it webserv make test
+	docker run -t -v $(shell cd .. && pwd):/root/workdir --rm --entrypoint make test_webserv test
+
+.PHONY: cppcheck
+cppcheck:
+	docker run -t -v $(shell cd .. && pwd):/root/workdir --rm --entrypoint cppcheck test_webserv --enable=all --output-file=test/cppcheck-err-list srcs
+	@echo
+	cat cppcheck-err-list
 
 .PHONY: webserv-it
 webserv-it:

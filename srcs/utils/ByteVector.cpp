@@ -29,36 +29,32 @@ void ByteVector::EraseHead(size_t size) {
   erase(begin(), begin() + size);
 }
 
-bool ByteVector::CompareHead(const std::string& str) {
+bool ByteVector::CompareHead(const std::string& str) const {
   if (size() < str.size())
     return false;
   return std::strncmp(GetReinterpretedData(), str.c_str(), str.size()) == 0;
 }
 
-ByteVector::iterator ByteVector::FindString(const std::string& str) {
-  push_back('\0');
-
-  const char* start = GetReinterpretedData();
-  const char* char_pos = std::strstr(start, str.c_str());
-  bool find_res = char_pos != NULL;
-  size_t pos;
-
-  if (find_res)
-    pos = char_pos - start;
-
-  pop_back();
-
-  return find_res ? iterator(&((*this)[pos])) : end();
+Result<size_t> ByteVector::FindString(const std::string& str) const {
+  for (size_t i = 0; i < size(); i++) {
+    for (size_t j = 0; j < str.size(); j++) {
+      if (str[j] != this->at(i + j))
+        break;
+      if (j + 1 == str.size())
+        return i;
+    }
+  }
+  return Error();
 }
 
-std::string ByteVector::CutSubstrBeforePos(ByteVector::iterator pos) {
-  std::string res = std::string(begin(), pos);
-  erase(begin(), pos);
+std::string ByteVector::CutSubstrBeforePos(size_t pos) {
+  std::string res = std::string(begin(), begin() + pos);
+  erase(begin(), begin() + pos);
   return res;
 }
 
-std::string ByteVector::SubstrBeforePos(ByteVector::iterator pos) {
-  std::string res = std::string(begin(), pos);
+std::string ByteVector::SubstrBeforePos(size_t pos) const {
+  std::string res = std::string(begin(), begin() + pos);
   return res;
 }
 
@@ -67,7 +63,7 @@ void ByteVector::AppendDataToBuffer(const Byte* buf, size_t size) {
   printf("current buf len: %lu\n", this->size());
 }
 
-const char* ByteVector::GetReinterpretedData() {
+const char* ByteVector::GetReinterpretedData() const {
   return reinterpret_cast<const char*>(data());
 }
 

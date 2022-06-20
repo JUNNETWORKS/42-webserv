@@ -89,6 +89,45 @@ class Result {
   }
 };
 
+// 返り値が参照
+template <typename T>
+class Result<T &> {
+ public:
+  typedef T ValueType;
+  typedef ValueType &Reference;
+
+ private:
+  // Error を返すときに参照である val_ に lvalue
+  // をセットする必要があるのでそのための変数
+  ValueType tmp_lval_;
+  Reference val_;
+  Error err_;
+
+ public:
+  // デフォルトコンストラクタが存在しない場合にエラーを通知したい場合はこのコンストラクタを使う｡
+  Result(Reference val, const Error &err) : val_(val), err_(err) {}
+
+  Result(Reference val) : val_(val), err_(false) {}
+
+  // デフォルトコンストラクタが存在しない場合は使えない
+  Result(const Error &err) : tmp_lval_(), val_(tmp_lval_), err_(err) {}
+
+  bool IsOk() {
+    return !err_.IsErr();
+  }
+  Reference Ok() {
+    assert(IsOk());
+    return val_;
+  }
+  bool IsErr() {
+    return err_.IsErr();
+  }
+  Error Err() {
+    assert(IsErr());
+    return err_;
+  }
+};
+
 // T = void の場合はメンバー変数 val_ を保持することはできない｡
 //   Ok() も利用できない｡ エラーチェックのみ行うことができる｡
 //
