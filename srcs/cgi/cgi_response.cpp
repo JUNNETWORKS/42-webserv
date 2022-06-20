@@ -83,33 +83,48 @@ const utils::ByteVector &CgiResponse::GetBody() {
 }
 
 Result<void> CgiResponse::DetermineNewlineChars(utils::ByteVector &buffer) {
-  utils::ByteVector::iterator lflf_pos = buffer.FindString(kLF + kLF);
-  utils::ByteVector::iterator crlfcrlf_pos = buffer.FindString(kCRLF + kCRLF);
-  if (lflf_pos == buffer.end() && crlfcrlf_pos == buffer.end()) {
-    return Error();
-  }
-  if (crlfcrlf_pos != buffer.end() &&
-      (lflf_pos == buffer.end() && crlfcrlf_pos < lflf_pos)) {
+  Result<size_t> lflf_res = buffer.FindString(kLF + kLF);
+  Result<size_t> crlfcrlf_res = buffer.FindString(kCRLF + kCRLF);
+
+  if (lflf_res.IsOk() && crlfcrlf_res.IsOk()) {
+    size_t lflf_idx = lflf_res.Ok();
+    size_t crlfcrlf_idx = crlfcrlf_res.Ok();
+    if (lflf_idx < crlfcrlf_idx) {
+      newline_chars_ = kLF;
+    } else {
+      newline_chars_ = kCRLF;
+    }
+  } else if (lflf_res.IsOk()) {
+    newline_chars_ = kLF;
+  } else if (crlfcrlf_res.IsOk()) {
     newline_chars_ = kCRLF;
   } else {
-    newline_chars_ = kLF;
+    return Error();
   }
   return Result<void>();
 }
 
 CgiResponse::ResponseType CgiResponse::IdentifyResponseType(
     utils::ByteVector &buffer) {
-  if (newline_chars_.empty()) {
-    DetermineNewlineChars(buffer);
-  }
+  assert(newline_chars_.size() > 0);
 
   // ヘッダー部の取得
-  HeaderVecType headers = GetHeaderVecFromBuffer(buffer);
+  Result<HeaderVecType> headers_res = GetHeaderVecFromBuffer(buffer);
+  if (headers_res.IsErr()) {
+    return CgiResponse::kParseError;
+  }
+  HeaderVecType headers = headers_res.Ok();
+
+  Result<size_t> headers_boundary_res =
+      buffer.FindString(newline_chars_ + newline_chars_);
+  if (headers_boundary_res.IsErr()) {
+    return CgiResponse::kParseError;
+  }
+  size_t headers_boundary = headers_boundary_res.Ok();
 
   bool has_body = false;
-  if (buffer.FindString(newline_chars_ + newline_chars_) +
-          (newline_chars_ + newline_chars_).size() !=
-      buffer.end()) {
+  if (headers_boundary + (newline_chars_ + newline_chars_).size() !=
+      buffer.size()) {
     has_body = true;
   }
 
@@ -127,7 +142,11 @@ CgiResponse::ResponseType CgiResponse::IdentifyResponseType(
 }
 
 Result<void> CgiResponse::SetHeadersFromBuffer(utils::ByteVector &buffer) {
-  HeaderVecType header_vec = GetHeaderVecFromBuffer(buffer);
+  Result<HeaderVecType> header_vec_res = GetHeaderVecFromBuffer(buffer);
+  if (header_vec_res.IsErr()) {
+    return Error();
+  }
+  HeaderVecType header_vec = header_vec_res.Ok();
   for (HeaderVecType::const_iterator it = header_vec.begin();
        it != header_vec.end(); ++it) {
     // 同じヘッダーが2回現れてはいけない
@@ -143,14 +162,16 @@ Result<void> CgiResponse::SetHeadersFromBuffer(utils::ByteVector &buffer) {
 }
 
 Result<void> CgiResponse::SetBodyFromBuffer(utils::ByteVector &buffer) {
-  utils::ByteVector::iterator headers_boundary =
+  Result<size_t> headers_boundary_res =
       buffer.FindString(newline_chars_ + newline_chars_);
-  if (headers_boundary == buffer.end()) {
+  if (headers_boundary_res.IsErr()) {
     return Error();
   }
-  body_ = utils::ByteVector(
-      headers_boundary + (newline_chars_ + newline_chars_).size(),
-      buffer.end());
+  size_t headers_boundary = headers_boundary_res.Ok();
+
+  body_ = utils::ByteVector(buffer.begin() + headers_boundary +
+                                (newline_chars_ + newline_chars_).size(),
+                            buffer.end());
   return Result<void>();
 }
 
@@ -165,11 +186,17 @@ void CgiResponse::AdjustHeadersBasedOnResponseType() {
   }
 }
 
-std::vector<std::pair<std::string, std::string> >
-CgiResponse::GetHeaderVecFromBuffer(utils::ByteVector &buffer) {
-  utils::ByteVector::iterator headers_boundary =
+Result<CgiResponse::HeaderVecType> CgiResponse::GetHeaderVecFromBuffer(
+    utils::ByteVector &buffer) {
+  Result<size_t> headers_boundary_res =
       buffer.FindString(newline_chars_ + newline_chars_);
-  std::string headers_str = std::string(buffer.begin(), headers_boundary);
+  if (headers_boundary_res.IsErr()) {
+    return Error();
+  }
+  size_t headers_boundary = headers_boundary_res.Ok();
+
+  std::string headers_str =
+      std::string(buffer.begin(), buffer.begin() + headers_boundary);
 
   std::vector<std::string> header_strs =
       utils::SplitString(headers_str, newline_chars_);

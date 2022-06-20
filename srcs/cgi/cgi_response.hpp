@@ -79,7 +79,7 @@ class CgiResponse {
 
   // buffer からヘッダー部分を取り出す｡
   // pair->first がヘッダー名, pair->second が値になっている
-  HeaderVecType GetHeaderVecFromBuffer(utils::ByteVector &buffer);
+  Result<HeaderVecType> GetHeaderVecFromBuffer(utils::ByteVector &buffer);
 
   // document-response = Content-Type [ Status ] *other-field NL response-body
   bool IsDocumentResponse(const HeaderVecType &headers, bool has_body);
