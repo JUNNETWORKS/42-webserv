@@ -180,9 +180,6 @@ void CgiResponse::AdjustHeadersBasedOnResponseType() {
     if (headers_.find("STATUS") == headers_.end()) {
       headers_["STATUS"] = "200 OK";
     }
-  } else if (response_type_ == kLocalRedirect) {
-  } else if (response_type_ == kClientRedirect) {
-  } else if (response_type_ == kClientRedirectWithDocument) {
   }
 }
 
