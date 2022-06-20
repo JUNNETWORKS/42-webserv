@@ -47,6 +47,7 @@ class HttpRequest {
   };
 
   const config::Config &config_;
+  int listen_fd_;
   std::string method_;
   std::string path_;
   int minor_version_;
@@ -63,7 +64,7 @@ class HttpRequest {
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
  public:
-  HttpRequest(const config::Config &config);
+  HttpRequest(const config::Config &config, const int listen_fd_);
   HttpRequest(const HttpRequest &rhs);
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
