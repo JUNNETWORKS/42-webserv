@@ -186,7 +186,15 @@ CgiResponse::GetHeaderVecFromBuffer(utils::ByteVector &buffer) {
 bool CgiResponse::IsDocumentResponse(const HeaderVecType &headers,
                                      bool has_body) {
   (void)has_body;
-  return headers.size() >= 1 && headers[0].first == "CONTENT-TYPE";
+  if (headers.size() < 1) {
+    return false;
+  }
+  bool is_valid_content_type = headers[0].first == "CONTENT-TYPE";
+  bool is_valid_status = true;
+  if (headers[1].first == "STATUS") {
+    is_valid_status = IsValidStatusHeaderValue(headers[1].second);
+  }
+  return is_valid_content_type && is_valid_status;
 }
 
 bool CgiResponse::IsLocalRedirectResponse(const HeaderVecType &headers,
@@ -204,9 +212,15 @@ bool CgiResponse::IsClientRedirectResponse(const HeaderVecType &headers,
 bool CgiResponse::IsClientRedirectResponseWithDocument(
     const HeaderVecType &headers, bool has_body) {
   (void)has_body;
-  return headers.size() >= 3 && headers[0].first == "LOCATION" &&
-         IsFragmentUri(headers[0].second) && headers[1].first == "STATUS" &&
-         headers[2].first == "CONTENT-TYPE";
+  if (headers.size() < 3) {
+    return false;
+  }
+  bool is_valid_location =
+      headers[0].first == "LOCATION" && IsFragmentUri(headers[0].second);
+  bool is_valid_status = headers[1].first == "STATUS" &&
+                         IsValidStatusHeaderValue(headers[1].second);
+  bool is_valid_content_type = headers[2].first == "CONTENT-TYPE";
+  return is_valid_location && is_valid_status && is_valid_content_type;
 }
 
 bool CgiResponse::IsValidStatusHeaderValue(const std::string &val) {
