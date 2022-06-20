@@ -53,7 +53,7 @@ TEST_DEPENDENCIES \
 -include $(TEST_DEPENDENCIES)
 
 .PHONY: test
-test: fclean
+test: fclean all
 test: CXXFLAGS := -I$(SRCS_DIR) -I$(TEST_DIR) --std=c++11 -I$(GTEST_DIR) -g3 -fsanitize=address
 test: $(GTEST) $(TEST_OBJS)
 	# Google Test require C++11
