@@ -181,7 +181,8 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
 
 HttpStatus HttpRequest::InterpretMethod(std::string &str) {
   Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
-  if (result.IsErr()) {
+  if (result.IsErr() || result.Ok().empty() ||
+      IsTcharString(result.Ok()) == false) {
     return parse_status_ = BAD_REQUEST;
   }
   method_ = result.Ok();
