@@ -3,7 +3,7 @@ CXX := c++
 CXXFLAGS := -Wall -Wextra -Werror --std=c++98 -pedantic -MMD -MP
 # コマンドライン上で DEBUGFLAGS を上書き したいので、CXXFLAGS から分離
 DEBUGFLAGS := -g3 -fsanitize=address
-INCLUDE := -I srcs
+INCLUDE := -Isrcs
 
 CXXFLAGS += $(DEBUGFLAGS)
 
