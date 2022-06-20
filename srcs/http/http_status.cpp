@@ -4,20 +4,31 @@
 
 namespace http {
 
-const std::map<unsigned long, std::string> StatusMessages::status_messages =
-    StatusMessages::CreateStatusMessages();
+const std::map<unsigned long, std::string> StatusCodes::status_messages_ =
+    StatusCodes::CreateStatusMessages();
 
-StatusMessages::StatusMessages() {}
+StatusCodes::StatusCodes() {}
 
-StatusMessages::StatusMessages(const StatusMessages &rhs) {}
+StatusCodes::StatusCodes(const StatusCodes &rhs) {}
 
-StatusMessages &StatusMessages::operator=(const StatusMessages &rhs) {
+StatusCodes &StatusCodes::operator=(const StatusCodes &rhs) {
   return *this;
 }
 
-StatusMessages::~StatusMessages() {}
+StatusCodes::~StatusCodes() {}
 
-std::map<unsigned long, std::string> StatusMessages::CreateStatusMessages() {
+bool StatusCodes::IsHttpStatus(unsigned long status) {
+  return status_messages_.find(status) != status_messages_.end();
+}
+
+std::string StatusCodes::GetMessage(unsigned long status) {
+  if (!IsHttpStatus(status)) {
+    return "";
+  }
+  return status_messages_.at(status);
+}
+
+std::map<unsigned long, std::string> StatusCodes::CreateStatusMessages() {
   std::map<unsigned long, std::string> status_messages;
   status_messages[100] = "Continue";
   status_messages[101] = "Switching Protocols";

@@ -2,6 +2,7 @@
 #define HTTP_HTTP_STATUS_HPP
 
 #include <map>
+#include <string>
 
 namespace http {
 
@@ -30,14 +31,18 @@ enum HttpStatus {
   HTTP_VERSION_NOT_SUPPORTED = 505
 };
 
-class StatusMessages {
- public:
-  StatusMessages();
-  StatusMessages(const StatusMessages &rhs);
-  StatusMessages &operator=(const StatusMessages &rhs);
-  ~StatusMessages();
+class StatusCodes {
+ private:
+  static const std::map<unsigned long, std::string> status_messages_;
 
-  static const std::map<unsigned long, std::string> status_messages;
+ public:
+  StatusCodes();
+  StatusCodes(const StatusCodes &rhs);
+  StatusCodes &operator=(const StatusCodes &rhs);
+  ~StatusCodes();
+
+  static bool IsHttpStatus(unsigned long status);
+  static std::string GetMessage(unsigned long status);
 
  private:
   // https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml

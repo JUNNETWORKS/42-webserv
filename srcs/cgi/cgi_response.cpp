@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "http/http_status.hpp"
 #include "utils/string.hpp"
 
 namespace cgi {
@@ -208,7 +209,16 @@ bool CgiResponse::IsClientRedirectResponseWithDocument(
          headers[2].first == "CONTENT-TYPE";
 }
 
-// query-string や fragment を構成する文字として正しいか
+bool CgiResponse::IsValidStatusHeaderValue(const std::string &val) {
+  std::string::size_type sp_pos = val.find(" ");
+  std::string status = val.substr(0, sp_pos);
+  Result<unsigned long> result = utils::Stoul(status);
+  if (result.IsErr()) {
+    return false;
+  }
+  return http::StatusCodes::IsHttpStatus(result.Ok());
+}
+
 bool CgiResponse::IsComposedOfUriC(const std::string &str) {
   const char *reserved_marks = ";/?:@&=+$,[]";
   const char *unreserved_marks = "-_.!~*'()";

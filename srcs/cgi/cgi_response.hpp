@@ -95,6 +95,12 @@ class CgiResponse {
   bool IsClientRedirectResponseWithDocument(const HeaderVecType &headers,
                                             bool has_body);
 
+  // Status         = "Status:" status-code SP reason-phrase NL
+  // status-code    = "200" | "302" | "400" | "501" | extension-code
+  // extension-code = 3digit
+  // reason-phrase  = *TEXT
+  bool IsValidStatusHeaderValue(const std::string &value);
+
   // query-string や fragment を構成する uric をチェックする
   // uric         = reserved | unreserved | escaped
   bool IsComposedOfUriC(const std::string &str);
