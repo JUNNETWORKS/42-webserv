@@ -1,26 +1,28 @@
-CXX := c++
 NAME := webserv
+CXX := c++
+CXXFLAGS := -Wall -Wextra -Werror --std=c++98 -pedantic -MMD -MP
+# コマンドライン上で DEBUGFLAGS を上書き したいので、CXXFLAGS から分離
+DEBUGFLAGS := -g3 -fsanitize=address
+INCLUDE := -I srcs
+
+CXXFLAGS += $(DEBUGFLAGS)
 
 SRCS_DIR := srcs
 SRCS := $(shell find srcs -type f -name '*.cpp')
 OBJS_DIR := objs
 OBJS := $(SRCS:%.cpp=$(OBJS_DIR)/%.o)
-DEPENDENCIES := $(OBJS:.o=.d)
-
-CXXFLAGS := -I$(SRCS_DIR) --std=c++98 -Wall -Wextra -Werror -pedantic -g3 -fsanitize=address
+DEPENDENCIES := $(SRCS:%.cpp=$(OBJS_DIR)/%.d)
 
 .PHONY: all
 all: $(NAME)
+$(NAME): $(OBJS)
+	$(CXX) $(INCLUDE) $(CXXFLAGS) -o $(NAME) $^
 
 $(OBJS_DIR)/%.o: %.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -c $< -MMD -MP -o $@
+	$(CXX) $(INCLUDE) $(CXXFLAGS) -c $< -o $@
 
 -include $(DEPENDENCIES)
-
-
-$(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(NAME) $^
 
 .PHONY: clean
 clean:
@@ -31,8 +33,11 @@ clean:
 fclean: clean
 	$(RM) $(NAME)
 
+# make -j 実行時、fclean と all が同時に実行されないようにするため
 .PHONY: re
-re: fclean all
+re:
+	$(MAKE) fclean
+	$(MAKE) all
 
 ############ GooleTest ############
 
