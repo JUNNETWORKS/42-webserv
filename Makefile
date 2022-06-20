@@ -58,7 +58,7 @@ TEST_DEPENDENCIES := $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.d)
 -include $(TEST_DEPENDENCIES)
 
 .PHONY: test
-test: CXXFLAGS := -I$(SRCS_DIR) -I$(TEST_DIR) --std=c++11 -I$(GTEST_DIR) -g3 -fsanitize=address
+test: CXXFLAGS := -I$(TEST_DIR) --std=c++11 -I$(GTEST_DIR) -g3 -fsanitize=address -MMD -MP
 test: $(GTEST) $(TEST_OBJS)
 	# Google Test require C++11
 	$(CXX) $(CXXFLAGS) $(GTEST_MAIN) $(GTEST_ALL) \
