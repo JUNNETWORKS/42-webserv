@@ -7,16 +7,6 @@ namespace http {
 const std::map<unsigned long, std::string> StatusCodes::status_messages_ =
     StatusCodes::CreateStatusMessages();
 
-StatusCodes::StatusCodes() {}
-
-StatusCodes::StatusCodes(const StatusCodes &rhs) {}
-
-StatusCodes &StatusCodes::operator=(const StatusCodes &rhs) {
-  return *this;
-}
-
-StatusCodes::~StatusCodes() {}
-
 bool StatusCodes::IsHttpStatus(unsigned long status) {
   return status_messages_.find(status) != status_messages_.end();
 }
