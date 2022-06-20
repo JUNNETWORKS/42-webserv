@@ -18,9 +18,9 @@
 namespace http {
 
 namespace method_strs {
-const std::string kGet = "GET";
-const std::string kPost = "POST";
-const std::string kDelete = "DELETE";
+extern const std::string kGet;
+extern const std::string kPost;
+extern const std::string kDelete;
 }  // namespace method_strs
 
 struct Chunk {
