@@ -63,7 +63,7 @@ test: $(TESTER_NAME)
 
 $(TESTER_NAME): CXXFLAGS := -I$(SRCS_DIR) -I$(TEST_DIR) --std=c++11 -MMD -MP -I$(GTEST_DIR) $(DEBUGFLAGS)
 $(TESTER_NAME): $(GTEST) $(TEST_OBJS)
-# Google Test require C++11
+	# Google Test require C++11
 	$(CXX) $(CXXFLAGS) $(GTEST_MAIN) $(GTEST_ALL) \
 		-I$(GTEST_DIR) -lpthread \
 		$(TEST_OBJS) \
