@@ -191,7 +191,7 @@ bool CgiResponse::IsDocumentResponse(const HeaderVecType &headers,
   }
   bool is_valid_content_type = headers[0].first == "CONTENT-TYPE";
   bool is_valid_status = true;
-  if (headers[1].first == "STATUS") {
+  if (headers.size() >= 2 && headers[1].first == "STATUS") {
     is_valid_status = IsValidStatusHeaderValue(headers[1].second);
   }
   return is_valid_content_type && is_valid_status;
