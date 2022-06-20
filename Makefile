@@ -49,9 +49,8 @@ GTEST_DIR   := ./google_test
 GTEST       := $(GTEST_DIR)/gtest $(GTEST_DIR)/googletest-release-1.11.0
 GTEST_MAIN  := $(GTEST_DIR)/googletest-release-1.11.0/googletest/src/gtest_main.cc
 GTEST_ALL   := $(GTEST_DIR)/gtest/gtest-all.cc
-TEST_SRCS   := $(shell find unit_test -type f -name '*.cpp')
 # main() がかぶらないようにmain.cppのみ取り除く
-TEST_SRCS   += $(filter-out srcs/server/main.cpp, $(SRCS))
+TEST_SRCS   := $(shell find unit_test -type f -name '*.cpp') $(filter-out srcs/server/main.cpp, $(SRCS))
 TEST_OBJS   := $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
 TEST_DEPENDENCIES := $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.d)
 
