@@ -65,7 +65,7 @@ test: $(GTEST) $(TEST_OBJS)
 		-I$(GTEST_DIR) -lpthread \
 		$(TEST_OBJS) \
 		-o $(TESTER_NAME)
-	$(TESTER_NAME)
+	GTEST_FILTER='CgiResponseParse*' $(TESTER_NAME)
 
 $(GTEST):
 	mkdir -p $(GTEST_DIR)
