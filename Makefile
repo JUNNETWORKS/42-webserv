@@ -61,7 +61,7 @@ TEST_DEPENDENCIES := $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.d)
 test: CXXFLAGS := -I$(TEST_DIR) --std=c++11 -I$(GTEST_DIR) -g3 -fsanitize=address -MMD -MP
 test: $(GTEST) $(TEST_OBJS)
 	# Google Test require C++11
-	$(CXX) $(CXXFLAGS) $(GTEST_MAIN) $(GTEST_ALL) \
+	$(CXX) $(INCLUDE) $(CXXFLAGS) $(GTEST_MAIN) $(GTEST_ALL) \
 		-I$(GTEST_DIR) -lpthread \
 		$(TEST_OBJS) \
 		-o $(TESTER_NAME)
