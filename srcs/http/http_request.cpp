@@ -53,6 +53,10 @@ HttpRequest::~HttpRequest() {}
 //========================================================================
 // getter
 
+const std::string &HttpRequest::GetMethod() const {
+  return method_;
+}
+
 const std::string &HttpRequest::GetPath() const {
   return path_;
 }
