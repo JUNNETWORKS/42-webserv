@@ -427,6 +427,36 @@ TEST(CgiResponseParse, MixedNewLineIsError) {
   EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
+// ヘッダー名が無い
+TEST(CgiResponseParse, HeaderNameIsNone) {
+  utils::ByteVector cgi_output(
+      ": text/html\n"
+      "Status: 200 OK\n"
+      "Optional: hoge\n"
+      "\n"
+      "<HTML>\n"
+      "<body><p>200 OK</p></body>\n"
+      "</HTML>");
+
+  CgiResponse cgi_res;
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
+}
+
+// ヘッダーにコロンが無い
+TEST(CgiResponseParse, NoColonAfterHeaderName) {
+  utils::ByteVector cgi_output(
+      "Content-Type text/html\n"
+      "Status: 200 OK\n"
+      "Optional: hoge\n"
+      "\n"
+      "<HTML>\n"
+      "<body><p>200 OK</p></body>\n"
+      "</HTML>");
+
+  CgiResponse cgi_res;
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
+}
+
 // レスポンスタイプ判別不能
 TEST(CgiResponseParse, UnknownResponseType) {
   utils::ByteVector cgi_output(

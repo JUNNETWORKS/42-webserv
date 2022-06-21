@@ -24,8 +24,10 @@ const std::string CgiResponse::kQdtext =
 
 namespace {
 
-std::string GetKeyOfHeader(const std::string &header);
-std::string GetValueOfHeader(const std::string &header);
+// generic-field   = field-name ":" [ field-value ] NL
+// field-name が空文字列､もしくは ':' がない場合はエラー
+Result<std::string> GetKeyOfHeader(const std::string &header);
+Result<std::string> GetValueOfHeader(const std::string &header);
 
 }  // namespace
 
@@ -205,9 +207,12 @@ Result<CgiResponse::HeaderVecType> CgiResponse::GetHeaderVecFromBuffer(
   HeaderVecType headers;
   for (std::vector<std::string>::const_iterator it = header_strs.begin();
        it != header_strs.end(); ++it) {
-    std::string key = GetKeyOfHeader(*it);
-    std::string value = GetValueOfHeader(*it);
-    headers.push_back(HeaderPairType(key, value));
+    Result<std::string> key_res = GetKeyOfHeader(*it);
+    Result<std::string> value_res = GetValueOfHeader(*it);
+    if (key_res.IsErr() || value_res.IsErr()) {
+      return Error();
+    }
+    headers.push_back(HeaderPairType(key_res.Ok(), value_res.Ok()));
   }
   return headers;
 }
@@ -385,11 +390,11 @@ bool CgiResponse::IsValidHeaderValue(const std::string &value) const {
 
 namespace {
 
-std::string GetKeyOfHeader(const std::string &header) {
+Result<std::string> GetKeyOfHeader(const std::string &header) {
   std::string key;
   std::string::size_type colon_pos = header.find(":");
   if (colon_pos == std::string::npos) {
-    key = header;
+    return Error();
   } else {
     key = header.substr(0, colon_pos);
   }
@@ -397,10 +402,12 @@ std::string GetKeyOfHeader(const std::string &header) {
   return key;
 }
 
-std::string GetValueOfHeader(const std::string &header) {
+Result<std::string> GetValueOfHeader(const std::string &header) {
   std::string value;
   std::string::size_type colon_pos = header.find(":");
-  if (colon_pos == std::string::npos || colon_pos + 1 == header.size()) {
+  if (colon_pos == std::string::npos) {
+    return Error();
+  } else if (colon_pos + 1 == header.size()) {
     value = "";
   } else {
     std::string::size_type idx = colon_pos + 1;
