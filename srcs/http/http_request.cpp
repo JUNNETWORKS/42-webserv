@@ -211,7 +211,7 @@ HttpStatus HttpRequest::InterpretMethod(const std::string &token) {
 }
 
 HttpStatus HttpRequest::InterpretPath(const std::string &token) {
-  if (path_.size() > kMaxUriLength) {
+  if (token.size() > kMaxUriLength) {
     return parse_status_ = URI_TOO_LONG;
   } else {
     path_ = token;
