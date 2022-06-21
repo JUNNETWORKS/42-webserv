@@ -205,16 +205,11 @@ HttpStatus HttpRequest::InterpretMethod(const std::string &token) {
   }
 }
 
-HttpStatus HttpRequest::InterpretPath(std::string &str) {
-  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
-  if (result.IsErr()) {
-    return parse_status_ = BAD_REQUEST;
-  }
-  path_ = result.Ok();
-
+HttpStatus HttpRequest::InterpretPath(const std::string &token) {
   if (path_.size() > kMaxUriLength) {
     return parse_status_ = URI_TOO_LONG;
   } else {
+    path_ = token;
     return parse_status_ = OK;
   }
 }
