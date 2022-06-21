@@ -40,6 +40,7 @@ CgiResponse::CgiResponse(const CgiResponse &rhs) {
 
 CgiResponse &CgiResponse::operator=(const CgiResponse &rhs) {
   if (this != &rhs) {
+    newline_chars_ = rhs.newline_chars_;
     response_type_ = rhs.response_type_;
     headers_ = rhs.headers_;
     body_ = rhs.body_;
