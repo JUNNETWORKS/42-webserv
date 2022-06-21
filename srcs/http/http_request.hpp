@@ -40,7 +40,7 @@ class HttpRequest {
   enum ParsingPhase {
     kRequestLine,
     kHeaderField,
-    kBodySize,
+    kValidationHeader,
     kBody,
     kParsed,
     kError
@@ -86,7 +86,7 @@ class HttpRequest {
   HttpRequest();
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
-  ParsingPhase ParseBodySize();
+  ParsingPhase ValidationHeaderField();
   ParsingPhase ParseBody(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(std::string &str);
   HttpStatus InterpretPath(std::string &str);

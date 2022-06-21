@@ -62,8 +62,8 @@ void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
     phase_ = ParseRequestLine(buffer);
   if (phase_ == kHeaderField)
     phase_ = ParseHeaderField(buffer);
-  if (phase_ == kBodySize)
-    phase_ = ParseBodySize();
+  if (phase_ == kValidationHeader)
+    phase_ = ValidationHeaderField();
   if (phase_ == kBody)
     phase_ = ParseBody(buffer);
   PrintRequestInfo();
@@ -98,7 +98,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     if (buffer.CompareHead(kHeaderBoundary)) {
       buffer.EraseHead(kHeaderBoundary.size());
       //先頭が\r\n\r\nなので終了処理
-      return kBodySize;
+      return kValidationHeader;
     }
 
     if (buffer.CompareHead(kCrlf)) {
@@ -118,7 +118,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   }
 }
 
-HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
+HttpRequest::ParsingPhase HttpRequest::ValidationHeaderField() {
   if (DecideBodySize() != OK)
     return kError;
   return kBody;
