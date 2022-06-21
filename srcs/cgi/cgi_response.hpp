@@ -69,9 +69,11 @@ class CgiResponse {
 
   ResponseType IdentifyResponseType(utils::ByteVector &buffer);
 
+  // パースが完了したらヘッダー文+ヘッダー区切りを buffer から削除する
   Result<void> SetHeadersFromBuffer(utils::ByteVector &buffer);
 
-  Result<void> SetBodyFromBuffer(utils::ByteVector &buffer);
+  // buffer の中身は body_ に移された後削除される
+  void SetBodyFromBuffer(utils::ByteVector &buffer);
 
   // response-type
   // によってはヘッダーにデフォルト値が設定されていたりするので､設定する
@@ -82,18 +84,17 @@ class CgiResponse {
   Result<HeaderVecType> GetHeaderVecFromBuffer(utils::ByteVector &buffer);
 
   // document-response = Content-Type [ Status ] *other-field NL response-body
-  bool IsDocumentResponse(const HeaderVecType &headers, bool has_body);
+  bool IsDocumentResponse(const HeaderVecType &headers);
 
   // local-redir-response = local-Location NL
-  bool IsLocalRedirectResponse(const HeaderVecType &headers, bool has_body);
+  bool IsLocalRedirectResponse(const HeaderVecType &headers);
 
   // client-redir-response = client-Location *extension-field NL
-  bool IsClientRedirectResponse(const HeaderVecType &headers, bool has_body);
+  bool IsClientRedirectResponse(const HeaderVecType &headers);
 
   // client-redirdoc-response = client-Location Status Content-Type *other-field
   // NL response-body
-  bool IsClientRedirectResponseWithDocument(const HeaderVecType &headers,
-                                            bool has_body);
+  bool IsClientRedirectResponseWithDocument(const HeaderVecType &headers);
 
   // Status         = "Status:" status-code SP reason-phrase NL
   // status-code    = "200" | "302" | "400" | "501" | extension-code

@@ -48,21 +48,32 @@ CgiResponse &CgiResponse::operator=(const CgiResponse &rhs) {
 CgiResponse::~CgiResponse() {}
 
 CgiResponse::ResponseType CgiResponse::Parse(utils::ByteVector &buffer) {
-  if (DetermineNewlineChars(buffer).IsErr()) {
-    return response_type_ = kParseError;
-  }
+  if (response_type_ == kNotIdentified) {
+    // まだ response_type が決まっていない場合
+    if (newline_chars_.empty() && DetermineNewlineChars(buffer).IsErr()) {
+      // ヘッダーとボディの区切りが見つからない場合は kNotIdentified
+      return response_type_ = kNotIdentified;
+    }
 
-  response_type_ = IdentifyResponseType(buffer);
-  if (response_type_ == kParseError) {
-    return response_type_;
-  }
+    response_type_ = IdentifyResponseType(buffer);
+    if (response_type_ == kParseError) {
+      return response_type_;
+    }
 
-  if (SetHeadersFromBuffer(buffer).IsErr() ||
-      SetBodyFromBuffer(buffer).IsErr()) {
-    return response_type_ = kParseError;
-  }
+    if (SetHeadersFromBuffer(buffer).IsErr()) {
+      return response_type_ = kParseError;
+    }
 
-  AdjustHeadersBasedOnResponseType();
+    AdjustHeadersBasedOnResponseType();
+  }
+  if (response_type_ != kNotIdentified && response_type_ != kParseError) {
+    if (buffer.size() && (response_type_ == kLocalRedirect ||
+                          response_type_ == kClientRedirect)) {
+      // response-body を保持することが許可されていないレスポンスタイプ
+      return response_type_ = kParseError;
+    }
+    SetBodyFromBuffer(buffer);
+  }
 
   return response_type_;
 }
@@ -115,27 +126,14 @@ CgiResponse::ResponseType CgiResponse::IdentifyResponseType(
   }
   HeaderVecType headers = headers_res.Ok();
 
-  Result<size_t> headers_boundary_res =
-      buffer.FindString(newline_chars_ + newline_chars_);
-  if (headers_boundary_res.IsErr()) {
-    return CgiResponse::kParseError;
-  }
-  size_t headers_boundary = headers_boundary_res.Ok();
-
-  bool has_body = false;
-  if (headers_boundary + (newline_chars_ + newline_chars_).size() !=
-      buffer.size()) {
-    has_body = true;
-  }
-
-  if (IsDocumentResponse(headers, has_body)) {
+  if (IsDocumentResponse(headers)) {
     return CgiResponse::kDocumentResponse;
-  } else if (IsLocalRedirectResponse(headers, has_body)) {
+  } else if (IsLocalRedirectResponse(headers)) {
     return CgiResponse::kLocalRedirect;
-  } else if (IsClientRedirectResponse(headers, has_body)) {
-    return CgiResponse::kClientRedirect;
-  } else if (IsClientRedirectResponseWithDocument(headers, has_body)) {
+  } else if (IsClientRedirectResponseWithDocument(headers)) {
     return CgiResponse::kClientRedirectWithDocument;
+  } else if (IsClientRedirectResponse(headers)) {
+    return CgiResponse::kClientRedirect;
   } else {
     return CgiResponse::kParseError;
   }
@@ -158,21 +156,22 @@ Result<void> CgiResponse::SetHeadersFromBuffer(utils::ByteVector &buffer) {
     }
     headers_[it->first] = it->second;
   }
-  return Result<void>();
-}
 
-Result<void> CgiResponse::SetBodyFromBuffer(utils::ByteVector &buffer) {
+  // ヘッダー部を削除
   Result<size_t> headers_boundary_res =
       buffer.FindString(newline_chars_ + newline_chars_);
   if (headers_boundary_res.IsErr()) {
     return Error();
   }
   size_t headers_boundary = headers_boundary_res.Ok();
+  buffer.EraseHead(headers_boundary + (newline_chars_ + newline_chars_).size());
 
-  body_ = utils::ByteVector(buffer.begin() + headers_boundary +
-                                (newline_chars_ + newline_chars_).size(),
-                            buffer.end());
   return Result<void>();
+}
+
+void CgiResponse::SetBodyFromBuffer(utils::ByteVector &buffer) {
+  body_.insert(body_.end(), buffer.begin(), buffer.end());
+  buffer.clear();
 }
 
 void CgiResponse::AdjustHeadersBasedOnResponseType() {
@@ -207,9 +206,7 @@ Result<CgiResponse::HeaderVecType> CgiResponse::GetHeaderVecFromBuffer(
   return headers;
 }
 
-bool CgiResponse::IsDocumentResponse(const HeaderVecType &headers,
-                                     bool has_body) {
-  (void)has_body;
+bool CgiResponse::IsDocumentResponse(const HeaderVecType &headers) {
   if (headers.size() < 1) {
     return false;
   }
@@ -221,21 +218,18 @@ bool CgiResponse::IsDocumentResponse(const HeaderVecType &headers,
   return is_valid_content_type && is_valid_status;
 }
 
-bool CgiResponse::IsLocalRedirectResponse(const HeaderVecType &headers,
-                                          bool has_body) {
-  return !has_body && headers.size() == 1 && headers[0].first == "LOCATION" &&
+bool CgiResponse::IsLocalRedirectResponse(const HeaderVecType &headers) {
+  return headers.size() == 1 && headers[0].first == "LOCATION" &&
          IsLocalPathQuery(headers[0].second);
 }
 
-bool CgiResponse::IsClientRedirectResponse(const HeaderVecType &headers,
-                                           bool has_body) {
-  return !has_body && headers.size() >= 1 && headers[0].first == "LOCATION" &&
+bool CgiResponse::IsClientRedirectResponse(const HeaderVecType &headers) {
+  return headers.size() >= 1 && headers[0].first == "LOCATION" &&
          IsFragmentUri(headers[0].second);
 }
 
 bool CgiResponse::IsClientRedirectResponseWithDocument(
-    const HeaderVecType &headers, bool has_body) {
-  (void)has_body;
+    const HeaderVecType &headers) {
   if (headers.size() < 3) {
     return false;
   }
