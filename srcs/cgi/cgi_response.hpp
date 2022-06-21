@@ -86,6 +86,7 @@ class CgiResponse {
   void AdjustHeadersBasedOnResponseType();
 
   // buffer からヘッダー部分を取り出す｡
+  // ヘッダーの値が不正である場合やヘッダー部の検出が出来ない場合はエラー
   Result<HeaderVecType> GetHeaderVecFromBuffer(utils::ByteVector &buffer) const;
 
   // document-response = Content-Type [ Status ] *other-field NL response-body

@@ -457,6 +457,22 @@ TEST(CgiResponseParse, NoColonAfterHeaderName) {
   EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
+// 同じ名前のヘッダーが2つある
+TEST(CgiResponseParse, HeaderDuplication) {
+  utils::ByteVector cgi_output(
+      "Content-Type: text/html\n"
+      "Status: 200 OK\n"
+      "Status: 404 Not Found\n"
+      "Optional: hoge\n"
+      "\n"
+      "<HTML>\n"
+      "<body><p>200 OK</p></body>\n"
+      "</HTML>");
+
+  CgiResponse cgi_res;
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
+}
+
 // レスポンスタイプ判別不能
 TEST(CgiResponseParse, UnknownResponseType) {
   utils::ByteVector cgi_output(

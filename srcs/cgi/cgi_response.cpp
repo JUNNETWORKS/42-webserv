@@ -149,22 +149,7 @@ Result<void> CgiResponse::SetHeadersFromBuffer(utils::ByteVector &buffer) {
   if (header_vec_res.IsErr()) {
     return Error();
   }
-
-  std::set<std::string> used_headers;
-  HeaderVecType header_vec = header_vec_res.Ok();
-  for (HeaderVecType::const_iterator it = header_vec.begin();
-       it != header_vec.end(); ++it) {
-    // 同じヘッダーが2回現れてはいけない
-    if (used_headers.find(it->first) != used_headers.end()) {
-      return Error();
-    }
-    // ヘッダーとして利用不可能な文字が含まれていないか
-    if (!IsValidHeaderKey(it->first) || !IsValidHeaderValue(it->second)) {
-      return Error();
-    }
-  }
-
-  headers_ = header_vec;
+  headers_ = header_vec_res.Ok();
 
   // ヘッダー部を削除
   Result<size_t> headers_boundary_res =
@@ -205,6 +190,7 @@ Result<CgiResponse::HeaderVecType> CgiResponse::GetHeaderVecFromBuffer(
 
   std::vector<std::string> header_strs =
       utils::SplitString(headers_str, newline_chars_);
+  std::set<std::string> used_headers;
   HeaderVecType headers;
   for (std::vector<std::string>::const_iterator it = header_strs.begin();
        it != header_strs.end(); ++it) {
@@ -213,7 +199,20 @@ Result<CgiResponse::HeaderVecType> CgiResponse::GetHeaderVecFromBuffer(
     if (key_res.IsErr() || value_res.IsErr()) {
       return Error();
     }
-    headers.push_back(HeaderPairType(key_res.Ok(), value_res.Ok()));
+    std::string key = key_res.Ok();
+    std::string value = value_res.Ok();
+
+    // 同じヘッダーが2回現れてはいけない
+    if (used_headers.find(key) != used_headers.end()) {
+      return Error();
+    }
+    // ヘッダーとして利用不可能な文字が含まれていないか
+    if (!IsValidHeaderKey(key) || !IsValidHeaderValue(value)) {
+      return Error();
+    }
+
+    headers.push_back(HeaderPairType(key, value));
+    used_headers.insert(key);
   }
   return headers;
 }
