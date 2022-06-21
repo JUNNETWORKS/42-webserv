@@ -9,7 +9,7 @@ namespace http {
 namespace {
 
 using namespace result;
-
+bool IsObsFold(const utils::ByteVector &buf);
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
 Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
@@ -28,7 +28,8 @@ HttpRequest::HttpRequest(const config::Config &config)
       parse_status_(OK),
       body_(),
       body_size_(0),
-      is_chunked_(false) {}
+      is_chunked_(false),
+      has_obs_fold_(false) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs)
     : config_(rhs.config_),
@@ -40,7 +41,8 @@ HttpRequest::HttpRequest(const HttpRequest &rhs)
       parse_status_(rhs.parse_status_),
       body_(rhs.body_),
       body_size_(rhs.body_size_),
-      is_chunked_(rhs.is_chunked_) {}
+      is_chunked_(rhs.is_chunked_),
+      has_obs_fold_(rhs.has_obs_fold_) {}
 
 HttpRequest::~HttpRequest() {}
 
@@ -92,6 +94,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   if (boundary_pos.IsErr())
     return kHeaderField;
 
+  if (IsObsFold(buffer)) {  //先頭がobs-foldの時
+    parse_status_ = BAD_REQUEST;
+    return kError;
+  }
+
   while (1) {
     if (buffer.CompareHead(kHeaderBoundary)) {
       buffer.EraseHead(kHeaderBoundary.size());
@@ -104,15 +111,23 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
       buffer.EraseHead(kCrlf.size());
     }
 
-    Result<size_t> crlf_pos = buffer.FindString(kCrlf);
-    if (crlf_pos.IsErr()) {
-      return kHeaderField;
-    } else {
-      std::string line =
-          buffer.CutSubstrBeforePos(crlf_pos.Ok());  // headerfieldの解釈
-      if (InterpretHeaderField(line) != OK)
-        return kError;
+    utils::ByteVector field_buffer;
+    while (1) {
+      Result<size_t> crlf_pos = buffer.FindString(kCrlf);
+      field_buffer.insert(field_buffer.end(), buffer.begin(),
+                          buffer.begin() + crlf_pos.Ok());
+      buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
+      if (IsObsFold(buffer) == false)
+        break;
+      has_obs_fold_ = true;
+      // TODO has_obs_fold_がtrueの時は、message/http以外エラー
+      buffer.erase(buffer.begin(), buffer.begin() + kCrlf.size() + 1);
+      field_buffer.push_back(' ');
     }
+    std::string field_buffer_str =
+        field_buffer.SubstrBeforePos(field_buffer.size());
+    if (InterpretHeaderField(field_buffer_str) != OK)
+      return kError;
   }
 }
 
@@ -157,7 +172,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
       case Chunk::kErrorBadRequest:
         parse_status_ = BAD_REQUEST;
         return kError;
-      case Chunk::kErrorLength:  // TODO TOOLARGEじゃないかも
+      case Chunk::kErrorLength:
         parse_status_ = PAYLOAD_TOO_LARGE;
         return kError;
       default:
@@ -181,17 +196,18 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
 
 HttpStatus HttpRequest::InterpretMethod(std::string &str) {
   Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
-  if (result.IsErr()) {
+  if (result.IsErr() || result.Ok().empty() ||
+      IsTcharString(result.Ok()) == false) {
     return parse_status_ = BAD_REQUEST;
   }
   method_ = result.Ok();
 
   if (method_ == method_strs::kGet || method_ == method_strs::kDelete ||
       method_ == method_strs::kPost) {
-    // TODO 501 (Not Implemented)を判定する
     return parse_status_ = OK;
+  } else {
+    return parse_status_ = NOT_IMPLEMENTED;
   }
-  return parse_status_ = BAD_REQUEST;
 }
 
 HttpStatus HttpRequest::InterpretPath(std::string &str) {
@@ -201,10 +217,11 @@ HttpStatus HttpRequest::InterpretPath(std::string &str) {
   }
   path_ = result.Ok();
 
-  if (true) {  // TODO 長いURLの時414(URI Too Long)を判定する
+  if (path_.size() > kMaxUriLength) {
+    return parse_status_ = URI_TOO_LONG;
+  } else {
     return parse_status_ = OK;
   }
-  return parse_status_ = BAD_REQUEST;
 }
 
 HttpStatus HttpRequest::InterpretVersion(std::string &str) {
@@ -328,6 +345,10 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 namespace {
+
+bool IsObsFold(const utils::ByteVector &buf) {
+  return buf.CompareHead(kCrlf + " ") || buf.CompareHead(kCrlf + "\t");
+}
 
 // Chunk内にCRLFがあること、CRLFがチャンクの末尾についている事を検証する。
 bool ValidateChunkDataFormat(const Chunk &chunk, utils::ByteVector &buffer) {
@@ -491,6 +512,7 @@ void HttpRequest::PrintRequestInfo() {
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
     printf("is_chuked_: %d\n", is_chunked_);
+    printf("has_obs_fold_: %d\n", has_obs_fold_);
     printf("body_size: %ld\n", body_size_);
     for (std::map<std::string, std::vector<std::string> >::iterator it =
              headers_.begin();
