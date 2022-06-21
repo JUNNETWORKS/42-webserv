@@ -226,10 +226,9 @@ HttpStatus HttpRequest::InterpretVersion(const std::string &token) {
       // HTTP2.0とかHTTP/2hogeとか
       return parse_status_ = HTTP_VERSION_NOT_SUPPORTED;
     }
-  } else {
-    // 0.9とかHTTP/hogeとか
-    return parse_status_ = BAD_REQUEST;
   }
+  // 0.9とかHTTP/hogeとかHTTP/ 1.1とかHTTP/1. 1とか
+  return parse_status_ = BAD_REQUEST;
 }
 
 HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
