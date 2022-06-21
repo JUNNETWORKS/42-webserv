@@ -221,6 +221,186 @@ TEST(CgiResponseParse, DocumentResponsesBodyIncludeLfAndCrlf) {
                               "</HTML>"));
 }
 
+TEST(CgiResponseParse, ChoppedBuffer) {
+  CgiResponse cgi_res;
+
+  utils::ByteVector buffer;
+
+  const char *cgi_output1(
+      "Content-Type: text/html\n"
+      "Status: 404 Not Found\n"
+      "Optional: ho");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output1),
+                            strlen(cgi_output1));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kNotIdentified);
+
+  const char *cgi_output2(
+      "ge\n"
+      "\n"
+      "<HTML>\n"
+      "<body><p>4");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output2),
+                            strlen(cgi_output2));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kDocumentResponse);
+
+  const char *cgi_output3(
+      "04 Not Found</p></body>\n"
+      "</HTML>");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output3),
+                            strlen(cgi_output3));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kDocumentResponse);
+
+  // Parse後にbufferにデータは残っていないはず
+  EXPECT_TRUE(buffer.empty());
+
+  EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
+
+  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
+                               {"STATUS", "404 Not Found"},
+                               {"OPTIONAL", "hoge"}};
+  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+
+  EXPECT_EQ(cgi_res.GetBody(),
+            utils::ByteVector("<HTML>\n"
+                              "<body><p>404 Not Found</p></body>\n"
+                              "</HTML>"));
+}
+
+// buffer の切れ目がヘッダーとボディのの区切りの手前
+TEST(CgiResponseParse, ChoppedBufferThatIsSplitedBeforeHeaderBoundary) {
+  CgiResponse cgi_res;
+
+  utils::ByteVector buffer;
+
+  const char *cgi_output1(
+      "Content-Type: text/html\n"
+      "Status: 404 Not Found\n"
+      "Optional: hoge\n\n");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output1),
+                            strlen(cgi_output1));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kDocumentResponse);
+
+  const char *cgi_output2(
+      "<HTML>\n"
+      "<body><p>4");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output2),
+                            strlen(cgi_output2));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kDocumentResponse);
+
+  const char *cgi_output3(
+      "04 Not Found</p></body>\n"
+      "</HTML>");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output3),
+                            strlen(cgi_output3));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kDocumentResponse);
+
+  // Parse後にbufferにデータは残っていないはず
+  EXPECT_TRUE(buffer.empty());
+
+  EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
+
+  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
+                               {"STATUS", "404 Not Found"},
+                               {"OPTIONAL", "hoge"}};
+  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+
+  EXPECT_EQ(cgi_res.GetBody(),
+            utils::ByteVector("<HTML>\n"
+                              "<body><p>404 Not Found</p></body>\n"
+                              "</HTML>"));
+}
+
+// buffer の切れ目がヘッダーとボディのの区切りの間
+TEST(CgiResponseParse, ChoppedBufferThatIsSplitedInMiddleHeaderBoundary) {
+  CgiResponse cgi_res;
+
+  utils::ByteVector buffer;
+
+  const char *cgi_output1(
+      "Content-Type: text/html\n"
+      "Status: 404 Not Found\n"
+      "Optional: hoge\n");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output1),
+                            strlen(cgi_output1));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kNotIdentified);
+
+  const char *cgi_output2(
+      "\n"
+      "<HTML>\n"
+      "<body><p>4");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output2),
+                            strlen(cgi_output2));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kDocumentResponse);
+
+  const char *cgi_output3(
+      "04 Not Found</p></body>\n"
+      "</HTML>");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output3),
+                            strlen(cgi_output3));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kDocumentResponse);
+
+  // Parse後にbufferにデータは残っていないはず
+  EXPECT_TRUE(buffer.empty());
+
+  EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
+
+  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
+                               {"STATUS", "404 Not Found"},
+                               {"OPTIONAL", "hoge"}};
+  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+
+  EXPECT_EQ(cgi_res.GetBody(),
+            utils::ByteVector("<HTML>\n"
+                              "<body><p>404 Not Found</p></body>\n"
+                              "</HTML>"));
+}
+
+// buffer の切れ目がヘッダーとボディのの区切りの後
+TEST(CgiResponseParse, ChoppedBufferThatIsSplitedAftertHeaderBoundary) {
+  CgiResponse cgi_res;
+
+  utils::ByteVector buffer;
+
+  const char *cgi_output1(
+      "Content-Type: text/html\n"
+      "Status: 404 Not Found\n"
+      "Optional: hoge");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output1),
+                            strlen(cgi_output1));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kNotIdentified);
+
+  const char *cgi_output2(
+      "\n"
+      "\n"
+      "<HTML>\n"
+      "<body><p>4");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output2),
+                            strlen(cgi_output2));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kDocumentResponse);
+
+  const char *cgi_output3(
+      "04 Not Found</p></body>\n"
+      "</HTML>");
+  buffer.AppendDataToBuffer(reinterpret_cast<const utils::Byte *>(cgi_output3),
+                            strlen(cgi_output3));
+  EXPECT_EQ(cgi_res.Parse(buffer), CgiResponse::kDocumentResponse);
+
+  // Parse後にbufferにデータは残っていないはず
+  EXPECT_TRUE(buffer.empty());
+
+  EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
+
+  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
+                               {"STATUS", "404 Not Found"},
+                               {"OPTIONAL", "hoge"}};
+  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+
+  EXPECT_EQ(cgi_res.GetBody(),
+            utils::ByteVector("<HTML>\n"
+                              "<body><p>404 Not Found</p></body>\n"
+                              "</HTML>"));
+}
+
 // ========================================================================
 // Error case
 
