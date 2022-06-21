@@ -26,7 +26,7 @@ utils::ByteVector OpenFile(const std::string& name) {
 }
 
 TEST(RequestParserTest, KOFormatExistOBSfoldFirstHeader) {
-  http::HttpRequest req;
+  http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatExistOBSfoldFirstHeader.txt");
 
   req.ParseRequest(buf);
