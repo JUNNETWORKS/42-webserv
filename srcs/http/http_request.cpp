@@ -221,7 +221,6 @@ HttpStatus HttpRequest::InterpretPath(std::string &str) {
   } else {
     return parse_status_ = OK;
   }
-  return parse_status_ = BAD_REQUEST;
 }
 
 HttpStatus HttpRequest::InterpretVersion(std::string &str) {
