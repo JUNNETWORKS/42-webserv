@@ -214,20 +214,18 @@ HttpStatus HttpRequest::InterpretPath(const std::string &token) {
   }
 }
 
-HttpStatus HttpRequest::InterpretVersion(std::string &str) {
-  if (!utils::ForwardMatch(str, kHttpVersionPrefix))
-    return parse_status_ = BAD_REQUEST;
-
-  str.erase(0, kHttpVersionPrefix.size());
-
-  if (IsCorrectHTTPVersion(str)) {
-    // HTTP1.~ が保証される
-    str.erase(0, kExpectMajorVersion.size());
-    minor_version_ = std::atoi(str.c_str());
-    return parse_status_ = OK;
-  } else if (std::isdigit(str[0]) == true && str[0] != '0' && str[0] != '1') {
-    // HTTP2.0とかHTTP/2hogeとか
-    return parse_status_ = HTTP_VERSION_NOT_SUPPORTED;
+HttpStatus HttpRequest::InterpretVersion(const std::string &token) {
+  if (utils::ForwardMatch(token, kHttpVersionPrefix)) {
+    const std::string str = token.substr(kHttpVersionPrefix.size());
+    if (IsCorrectHTTPVersion(str)) {
+      // HTTP1.~ が保証される
+      minor_version_ =
+          std::atoi(str.substr(kExpectMajorVersion.size()).c_str());
+      return parse_status_ = OK;
+    } else if (str.empty() == false && '2' <= str[0] && str[0] <= '9') {
+      // HTTP2.0とかHTTP/2hogeとか
+      return parse_status_ = HTTP_VERSION_NOT_SUPPORTED;
+    }
   } else {
     // 0.9とかHTTP/hogeとか
     return parse_status_ = BAD_REQUEST;
@@ -465,22 +463,10 @@ Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str) {
 }
 
 bool IsCorrectHTTPVersion(const std::string &str) {
-  if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
-    return false;
-  std::string minor_ver = str.substr(kExpectMajorVersion.size(),
-                                     str.size() - kExpectMajorVersion.size());
-
-  if (minor_ver.size() == 0 ||
-      minor_ver.size() >
-          kMinorVersionDigitLimit)  // nginxだと 999はOK 1000はだめ
-    return false;                   // "HTTP/1."を弾く
-
-  for (std::string::iterator it = minor_ver.begin(); it != minor_ver.end();
-       it++) {  // HTTP/1.hogeとかを弾く
-    if (std::isdigit(*it) == false)
-      return false;
-  }
-  return true;
+  return str.size() > kExpectMajorVersion.size() &&
+         str.size() <= kExpectMajorVersion.size() + kMinorVersionDigitLimit &&
+         utils::ForwardMatch(str, kExpectMajorVersion) &&
+         utils::IsDigits(str.substr(kExpectMajorVersion.size()));
 }
 
 Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer) {

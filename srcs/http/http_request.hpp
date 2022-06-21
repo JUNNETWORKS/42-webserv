@@ -90,7 +90,7 @@ class HttpRequest {
   ParsingPhase ParseBody(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(const std::string &method);
   HttpStatus InterpretPath(const std::string &path);
-  HttpStatus InterpretVersion(std::string &str);
+  HttpStatus InterpretVersion(const std::string &version);
   HttpStatus InterpretHeaderField(std::string &str);
   HttpStatus InterpretContentLength(
       const HeaderMap::mapped_type &length_header);
