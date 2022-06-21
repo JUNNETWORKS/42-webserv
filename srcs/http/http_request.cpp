@@ -79,13 +79,18 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
   if (pos.IsErr())
     return kRequestLine;
 
-  std::string line = buffer.CutSubstrBeforePos(pos.Ok());
-  if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
-      InterpretVersion(line) == OK) {
-    return kHeaderField;
+  std::vector<std::string> tokens =
+      utils::SplitString(buffer.SubstrBeforePos(pos.Ok()), " ");
+
+  if (tokens.size() == 3) {
+    if (InterpretMethod(tokens[0]) == OK && InterpretPath(tokens[1]) == OK &&
+        InterpretVersion(tokens[2]) == OK) {
+      return kHeaderField;
+    }
   } else {
-    return kError;
+    parse_status_ = BAD_REQUEST;
   }
+  return kError;
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
