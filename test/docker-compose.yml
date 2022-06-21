@@ -10,7 +10,8 @@ services:
       - ./public:/public
       - ./webserv_configurations:/root/configurations
     stop_grace_period: 1s
-    command: [ "./webserv", "/root/configurations/sample.conf" ]
+    # command: [ "./webserv", "/root/configurations/sample.conf" ]
+    command: [ "./webserv", "/root/configurations/sample-cgi.conf" ]
     # command: [ "sleep", "infinity" ]
     # command: [ "valgrind", "./webserv", "/root/configurations/sample.conf" ] # make の オプションからサニタイザー消す必要あり。
 
