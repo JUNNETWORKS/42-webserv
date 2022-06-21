@@ -18,8 +18,9 @@ std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     utils::ByteVector &buffer);
 }  // namespace
 
-HttpRequest::HttpRequest()
-    : method_(""),
+HttpRequest::HttpRequest(const config::Config &config)
+    : config_(config),
+      method_(""),
       path_(""),
       minor_version_(-1),
       headers_(),
@@ -30,25 +31,17 @@ HttpRequest::HttpRequest()
       is_chunked_(false),
       has_obs_fold_(false) {}
 
-HttpRequest::HttpRequest(const HttpRequest &rhs) {
-  *this = rhs;
-}
-
-HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
-  if (this != &rhs) {
-    method_ = rhs.method_;
-    path_ = rhs.path_;
-    minor_version_ = rhs.minor_version_;
-    headers_ = rhs.headers_;
-    phase_ = rhs.phase_;
-    parse_status_ = rhs.parse_status_;
-    body_ = rhs.body_;
-    body_size_ = rhs.body_size_;
-    is_chunked_ = rhs.is_chunked_;
-    has_obs_fold_ = rhs.has_obs_fold_;
-  }
-  return *this;
-}
+HttpRequest::HttpRequest(const HttpRequest &rhs)
+    : config_(rhs.config_),
+      method_(rhs.method_),
+      path_(rhs.path_),
+      minor_version_(rhs.minor_version_),
+      headers_(rhs.headers_),
+      phase_(rhs.phase_),
+      parse_status_(rhs.parse_status_),
+      body_(rhs.body_),
+      body_size_(rhs.body_size_),
+      is_chunked_(rhs.is_chunked_) {}
 
 HttpRequest::~HttpRequest() {}
 
