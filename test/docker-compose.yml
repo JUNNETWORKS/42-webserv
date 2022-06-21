@@ -31,4 +31,4 @@ services:
     volumes:
       - ./public:/public
       - ./Apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
-      - ./Apache/cgi/test-cgi:/usr/local/apache2/cgi-bin/test-cgi
+      - ./public/cgi-bin/test-cgi:/usr/local/apache2/cgi-bin/test-cgi
