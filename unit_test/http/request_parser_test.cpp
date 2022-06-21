@@ -25,9 +25,9 @@ utils::ByteVector OpenFile(const std::string& name) {
   return res;
 }
 
-TEST(RequestParserTest, KOFormatExistOBSfold) {
+TEST(RequestParserTest, KOFormatExistOBSfoldFirstHeader) {
   http::HttpRequest req(default_conf);
-  utils::ByteVector buf = OpenFile("KOFormatExistOBSfold.txt");
+  utils::ByteVector buf = OpenFile("KOFormatExistOBSfoldFirstHeader.txt");
 
   req.ParseRequest(buf);
   EXPECT_TRUE(req.IsCorrectStatus() == false);
@@ -427,5 +427,23 @@ TEST(RequestParserTest, OKBodyCorrectChunk) {
   const utils::ByteVector body = req.GetBody();
   EXPECT_EQ(body, expect_body);
 }
+
+// TEST(RequestParserTest, KOFormatExistOBSfold) {
+//   http::HttpRequest req;
+//   utils::ByteVector buf = OpenFile("KOFormatExistOBSfold.txt");
+
+//   req.ParseRequest(buf);
+//   EXPECT_TRUE(req.IsCorrectStatus() == false);
+//   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+// }
+
+// TEST(RequestParserTest, OKExistAcceptableOBSfold) {
+//   http::HttpRequest req;
+//   utils::ByteVector buf = OpenFile("OKExistAcceptableOBSfold.txt");
+
+//   req.ParseRequest(buf);
+//   EXPECT_TRUE(req.IsCorrectStatus() == true);
+//   EXPECT_EQ(req.GetParseStatus(), OK);
+// }
 
 }  // namespace http

@@ -36,7 +36,10 @@ bool ByteVector::CompareHead(const std::string& str) const {
 }
 
 Result<size_t> ByteVector::FindString(const std::string& str) const {
-  for (size_t i = 0; i < size(); i++) {
+  if (str.size() > size()) {
+    return Error();
+  }
+  for (size_t i = 0; i < (size() - str.size() + 1); i++) {
     for (size_t j = 0; j < str.size(); j++) {
       if (str[j] != this->at(i + j))
         break;

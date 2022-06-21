@@ -9,7 +9,7 @@ namespace http {
 namespace {
 
 using namespace result;
-
+bool IsObsFold(const utils::ByteVector &buf);
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
 Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
@@ -28,7 +28,8 @@ HttpRequest::HttpRequest(const config::Config &config)
       parse_status_(OK),
       body_(),
       body_size_(0),
-      is_chunked_(false) {}
+      is_chunked_(false),
+      has_obs_fold_(false) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs)
     : config_(rhs.config_),
@@ -92,6 +93,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   if (boundary_pos.IsErr())
     return kHeaderField;
 
+  if (IsObsFold(buffer)) {  //先頭がobs-foldの時
+    parse_status_ = BAD_REQUEST;
+    return kError;
+  }
+
   while (1) {
     if (buffer.CompareHead(kHeaderBoundary)) {
       buffer.EraseHead(kHeaderBoundary.size());
@@ -104,15 +110,23 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
       buffer.EraseHead(kCrlf.size());
     }
 
-    Result<size_t> crlf_pos = buffer.FindString(kCrlf);
-    if (crlf_pos.IsErr()) {
-      return kHeaderField;
-    } else {
-      std::string line =
-          buffer.CutSubstrBeforePos(crlf_pos.Ok());  // headerfieldの解釈
-      if (InterpretHeaderField(line) != OK)
-        return kError;
+    utils::ByteVector field_buffer;
+    while (1) {
+      Result<size_t> crlf_pos = buffer.FindString(kCrlf);
+      field_buffer.insert(field_buffer.end(), buffer.begin(),
+                          buffer.begin() + crlf_pos.Ok());
+      buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
+      if (IsObsFold(buffer) == false)
+        break;
+      has_obs_fold_ = true;
+      // TODO has_obs_fold_がtrueの時は、message/http以外エラー
+      buffer.erase(buffer.begin(), buffer.begin() + kCrlf.size() + 1);
+      field_buffer.push_back(' ');
     }
+    std::string field_buffer_str =
+        field_buffer.SubstrBeforePos(field_buffer.size());
+    if (InterpretHeaderField(field_buffer_str) != OK)
+      return kError;
   }
 }
 
@@ -332,6 +346,10 @@ HttpStatus HttpRequest::DecideBodySize() {
 
 namespace {
 
+bool IsObsFold(const utils::ByteVector &buf) {
+  return buf.CompareHead(kCrlf + " ") || buf.CompareHead(kCrlf + "\t");
+}
+
 // Chunk内にCRLFがあること、CRLFがチャンクの末尾についている事を検証する。
 bool ValidateChunkDataFormat(const Chunk &chunk, utils::ByteVector &buffer) {
   utils::ByteVector chunk_data_bytes = utils::ByteVector(
@@ -494,6 +512,7 @@ void HttpRequest::PrintRequestInfo() {
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
     printf("is_chuked_: %d\n", is_chunked_);
+    printf("has_obs_fold_: %d\n", has_obs_fold_);
     printf("body_size: %ld\n", body_size_);
     for (std::map<std::string, std::vector<std::string> >::iterator it =
              headers_.begin();
