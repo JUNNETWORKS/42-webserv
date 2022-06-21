@@ -9,6 +9,7 @@ namespace http {
 namespace {
 
 using namespace result;
+bool IsMethod(const std::string &token);
 bool IsObsFold(const utils::ByteVector &buf);
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
@@ -193,17 +194,12 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
 //========================================================================
 // Interpret系関数　文字列を解釈する関数　主にparse_statusで動作管理(OKじゃなくなったら次は実行されない)
 
-HttpStatus HttpRequest::InterpretMethod(std::string &str) {
-  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
-  if (result.IsErr() || result.Ok().empty() ||
-      IsTcharString(result.Ok()) == false) {
-    return parse_status_ = BAD_REQUEST;
-  }
-  method_ = result.Ok();
-
-  if (method_ == method_strs::kGet || method_ == method_strs::kDelete ||
-      method_ == method_strs::kPost) {
+HttpStatus HttpRequest::InterpretMethod(const std::string &token) {
+  if (IsMethod(token)) {
+    method_ = token;
     return parse_status_ = OK;
+  } else if (token.empty() || IsTcharString(token) == false) {
+    return parse_status_ = BAD_REQUEST;
   } else {
     return parse_status_ = NOT_IMPLEMENTED;
   }
@@ -344,6 +340,11 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 namespace {
+
+bool IsMethod(const std::string &token) {
+  return token == method_strs::kGet || token == method_strs::kDelete ||
+         token == method_strs::kPost;
+}
 
 bool IsObsFold(const utils::ByteVector &buf) {
   return buf.CompareHead(kCrlf + " ") || buf.CompareHead(kCrlf + "\t");
