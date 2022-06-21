@@ -25,7 +25,9 @@ class CgiResponse {
     kParseError
   };
 
+  // pair->first がヘッダー名, pair->second が値になっている
   typedef std::pair<std::string, std::string> HeaderPairType;
+
   typedef std::vector<HeaderPairType> HeaderVecType;
 
  private:
@@ -34,6 +36,7 @@ class CgiResponse {
 
   ResponseType response_type_;
 
+  // CGIレスポンスタイプの判定にはヘッダーの順序も関係するのでベクターで保持する
   HeaderVecType headers_;
 
   utils::ByteVector body_;
@@ -44,7 +47,6 @@ class CgiResponse {
   CgiResponse &operator=(const CgiResponse &rhs);
   ~CgiResponse();
 
-  // buffer にはCGIの出力すべてが含まれている必要がある｡
   ResponseType Parse(utils::ByteVector &buffer);
 
   // ========================================================================
@@ -72,7 +74,8 @@ class CgiResponse {
   // headers_ を元にレスポンスタイプを決定する｡
   ResponseType IdentifyResponseType() const;
 
-  // パースが完了したらヘッダー文+ヘッダー区切りを buffer から削除する
+  // ヘッダー部からヘッダーをセットし､
+  // ヘッダーとボディの区切りまでを buffer から削除する
   Result<void> SetHeadersFromBuffer(utils::ByteVector &buffer);
 
   // buffer の中身は body_ に移された後削除される
@@ -83,7 +86,6 @@ class CgiResponse {
   void AdjustHeadersBasedOnResponseType();
 
   // buffer からヘッダー部分を取り出す｡
-  // pair->first がヘッダー名, pair->second が値になっている
   Result<HeaderVecType> GetHeaderVecFromBuffer(utils::ByteVector &buffer) const;
 
   // document-response = Content-Type [ Status ] *other-field NL response-body
