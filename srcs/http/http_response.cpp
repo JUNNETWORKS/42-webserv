@@ -1,8 +1,11 @@
 #include "http/http_response.hpp"
 
+#include <unistd.h>
+
 #include <algorithm>
 #include <vector>
 
+#include "cgi/cgi_request.hpp"
 #include "http/http_constants.hpp"
 #include "http/http_request.hpp"
 #include "utils/io.hpp"
@@ -156,11 +159,58 @@ bool HttpResponse::MakeRedirectResponse(const config::LocationConf &location,
   return true;
 }
 
+std::string read_child(int fd) {
+  char buf[1024 + 1];
+
+  std::string s;
+  while (1) {
+    ssize_t read_ret;
+    // std::cout << "into read " << read_ret << std::endl;
+    read_ret = read(fd, buf, 1024);
+    // std::cout << "read_ret " << read_ret << std::endl;
+    if (read_ret < 0) {
+      std::cerr << "MakeCgiReponse read err" << std::endl;
+      exit(1);
+    }
+    if (read_ret == 0) {
+      break;
+    }
+    buf[read_ret] = '\0';
+    s += std::string(buf);
+  }
+  // std::cout << "CGI" << std::endl;
+  // std::cout << "--- --- ---" << std::endl;
+  // std::cout << "body" << std::endl;
+  // std::cout << body_ << std::endl;
+  return s;
+}
+
 bool HttpResponse::MakeCgiReponse(const config::LocationConf &location,
                                   const HttpRequest &request) {
   // TODO: 実装する
-  (void)location;
-  (void)request;
+  // (void)location;
+  // (void)request;
+  std::string req_path = request.GetPath();
+  std::string abs_path =
+      location.GetRootDir() + "/" +
+      req_path.replace(0, location.GetPathPattern().length(), "");
+
+  std::cout << "--- cgi ---" << std::endl;
+  std::cout << "request.GetPath() : " << request.GetPath() << std::endl;
+  std::cout << "abs_path          : " << request.GetPath() << std::endl;
+  std::cout << "--- --- ---" << std::endl;
+
+  cgi::CgiRequest cgi(abs_path, request, location);
+
+  int parentsock = cgi.ForkAndExecuteCgi();
+
+  std::string cgi_res = read_child(parentsock);
+  close(parentsock);
+
+  // とりあえず返せるように
+  SetStatusLine("HTTP/1.1 200 OK");
+  SetBody(cgi_res);
+  AppendHeader("Content-Type", "text/plain");
   return true;
 }
 
