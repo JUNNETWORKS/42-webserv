@@ -7,7 +7,15 @@
 
 namespace cgi {
 
-typedef std::map<std::string, std::string> HeadersType;
+// HeaderVecType
+// はベクターなので一度Mapに変換することによって順番によるFAILが発生しないようにする
+void EXPECT_EQ_HEADERS(const CgiResponse::HeaderVecType &actual,
+                       const CgiResponse::HeaderVecType &expected) {
+  std::map<std::string, std::string> actual_map(actual.begin(), actual.end());
+  std::map<std::string, std::string> expected_map(expected.begin(),
+                                                  expected.end());
+  EXPECT_EQ(actual_map, expected_map);
+}
 
 // Status 付きのドキュメントレスポンス
 // document-response = Content-Type [ Status ] *other-field NL response-body
@@ -26,10 +34,10 @@ TEST(CgiResponseParse, DocumentResponseWithStatus) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
-  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
-                               {"STATUS", "404 Not Found"},
-                               {"OPTIONAL", "hoge"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  CgiResponse::HeaderVecType expected_headers{{"CONTENT-TYPE", "text/html"},
+                                              {"STATUS", "404 Not Found"},
+                                              {"OPTIONAL", "hoge"}};
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
             utils::ByteVector("<HTML>\n"
@@ -53,10 +61,10 @@ TEST(CgiResponseParse, ValidDocumentResponseWithoutStatus) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
-  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
-                               {"STATUS", "200 OK"},
-                               {"OPTIONAL", "hoge"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  CgiResponse::HeaderVecType expected_headers{{"CONTENT-TYPE", "text/html"},
+                                              {"STATUS", "200 OK"},
+                                              {"OPTIONAL", "hoge"}};
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(), utils::ByteVector("<HTML>\n"
                                                  "<body><p>200 OK</p></body>\n"
@@ -75,8 +83,8 @@ TEST(CgiResponseParse, ValidLocalRedirectResponse) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kLocalRedirect);
 
-  HeadersType expected_headers{{"LOCATION", "/users?q=jun"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  CgiResponse::HeaderVecType expected_headers{{"LOCATION", "/users?q=jun"}};
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 }
 
 // クライアントリダイレクト
@@ -92,10 +100,10 @@ TEST(CgiResponseParse, ValidClientRedirectResponse) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kClientRedirect);
 
-  HeadersType expected_headers{
+  CgiResponse::HeaderVecType expected_headers{
       {"LOCATION", "https://www.google.com/search?q=pikachu"},
       {"EXTENSIONFIELD", "hoge"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 }
 
 // ドキュメント付きクライアントリダイレクト
@@ -120,13 +128,13 @@ TEST(CgiResponseParse, ValidClientRedirectResponseWithDocument) {
   EXPECT_EQ(cgi_res.GetResponseType(),
             CgiResponse::kClientRedirectWithDocument);
 
-  HeadersType expected_headers{
+  CgiResponse::HeaderVecType expected_headers{
       {"LOCATION", "https://www.google.com/search?q=pikachu"},
       {"STATUS", "302 Found"},
       {"CONTENT-TYPE", "text/html"},
       {"EXTENSIONFIELD", "hoge"},
       {"PROTOCOLFIELD", "fuga"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
             utils::ByteVector("<HTML>\n"
@@ -153,13 +161,13 @@ TEST(CgiResponseParse,
   EXPECT_EQ(cgi_res.Parse(cgi_output),
             CgiResponse::kClientRedirectWithDocument);
 
-  HeadersType expected_headers{
+  CgiResponse::HeaderVecType expected_headers{
       {"LOCATION", "https://www.google.com/search?q=pikachu"},
       {"STATUS", "301 Moved Permanently"},
       {"CONTENT-TYPE", "text/html"},
       {"EXTENSIONFIELD", "hoge"},
       {"PROTOCOLFIELD", "fuga"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
             utils::ByteVector("<HTML>\n"
@@ -183,10 +191,10 @@ TEST(CgiResponseParse, NewLineIsCrlf) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
-  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
-                               {"STATUS", "404 Not Found"},
-                               {"OPTIONAL", "hoge"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  CgiResponse::HeaderVecType expected_headers{{"CONTENT-TYPE", "text/html"},
+                                              {"STATUS", "404 Not Found"},
+                                              {"OPTIONAL", "hoge"}};
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
             utils::ByteVector("<HTML>\r\n"
@@ -210,10 +218,10 @@ TEST(CgiResponseParse, DocumentResponsesBodyIncludeLfAndCrlf) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
-  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
-                               {"STATUS", "404 Not Found"},
-                               {"OPTIONAL", "hoge"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  CgiResponse::HeaderVecType expected_headers{{"CONTENT-TYPE", "text/html"},
+                                              {"STATUS", "404 Not Found"},
+                                              {"OPTIONAL", "hoge"}};
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
             utils::ByteVector("<HTML>\r\n"
@@ -255,10 +263,10 @@ TEST(CgiResponseParse, ChoppedBuffer) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
-  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
-                               {"STATUS", "404 Not Found"},
-                               {"OPTIONAL", "hoge"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  CgiResponse::HeaderVecType expected_headers{{"CONTENT-TYPE", "text/html"},
+                                              {"STATUS", "404 Not Found"},
+                                              {"OPTIONAL", "hoge"}};
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
             utils::ByteVector("<HTML>\n"
@@ -299,10 +307,10 @@ TEST(CgiResponseParse, ChoppedBufferThatIsSplitedBeforeHeaderBoundary) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
-  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
-                               {"STATUS", "404 Not Found"},
-                               {"OPTIONAL", "hoge"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  CgiResponse::HeaderVecType expected_headers{{"CONTENT-TYPE", "text/html"},
+                                              {"STATUS", "404 Not Found"},
+                                              {"OPTIONAL", "hoge"}};
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
             utils::ByteVector("<HTML>\n"
@@ -344,10 +352,10 @@ TEST(CgiResponseParse, ChoppedBufferThatIsSplitedInMiddleHeaderBoundary) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
-  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
-                               {"STATUS", "404 Not Found"},
-                               {"OPTIONAL", "hoge"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  CgiResponse::HeaderVecType expected_headers{{"CONTENT-TYPE", "text/html"},
+                                              {"STATUS", "404 Not Found"},
+                                              {"OPTIONAL", "hoge"}};
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
             utils::ByteVector("<HTML>\n"
@@ -390,10 +398,10 @@ TEST(CgiResponseParse, ChoppedBufferThatIsSplitedAftertHeaderBoundary) {
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
-  HeadersType expected_headers{{"CONTENT-TYPE", "text/html"},
-                               {"STATUS", "404 Not Found"},
-                               {"OPTIONAL", "hoge"}};
-  EXPECT_EQ(cgi_res.GetHeaders(), expected_headers);
+  CgiResponse::HeaderVecType expected_headers{{"CONTENT-TYPE", "text/html"},
+                                              {"STATUS", "404 Not Found"},
+                                              {"OPTIONAL", "hoge"}};
+  EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
   EXPECT_EQ(cgi_res.GetBody(),
             utils::ByteVector("<HTML>\n"

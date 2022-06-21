@@ -55,13 +55,13 @@ CgiResponse::ResponseType CgiResponse::Parse(utils::ByteVector &buffer) {
       return response_type_ = kNotIdentified;
     }
 
+    if (SetHeadersFromBuffer(buffer).IsErr()) {
+      return response_type_ = kParseError;
+    }
+
     response_type_ = IdentifyResponseType(buffer);
     if (response_type_ == kParseError) {
       return response_type_;
-    }
-
-    if (SetHeadersFromBuffer(buffer).IsErr()) {
-      return response_type_ = kParseError;
     }
 
     AdjustHeadersBasedOnResponseType();
@@ -85,8 +85,18 @@ CgiResponse::ResponseType CgiResponse::GetResponseType() const {
   return response_type_;
 }
 
-const std::map<std::string, std::string> &CgiResponse::GetHeaders() {
+const CgiResponse::HeaderVecType &CgiResponse::GetHeaders() {
   return headers_;
+}
+
+Result<std::string> CgiResponse::GetHeader(const std::string key) const {
+  for (HeaderVecType::const_iterator it = headers_.begin();
+       it != headers_.end(); ++it) {
+    if (it->first == key) {
+      return it->second;
+    }
+  }
+  return Error();
 }
 
 const utils::ByteVector &CgiResponse::GetBody() {
@@ -119,20 +129,13 @@ CgiResponse::ResponseType CgiResponse::IdentifyResponseType(
     utils::ByteVector &buffer) {
   assert(newline_chars_.size() > 0);
 
-  // ヘッダー部の取得
-  Result<HeaderVecType> headers_res = GetHeaderVecFromBuffer(buffer);
-  if (headers_res.IsErr()) {
-    return CgiResponse::kParseError;
-  }
-  HeaderVecType headers = headers_res.Ok();
-
-  if (IsDocumentResponse(headers)) {
+  if (IsDocumentResponse(headers_)) {
     return CgiResponse::kDocumentResponse;
-  } else if (IsLocalRedirectResponse(headers)) {
+  } else if (IsLocalRedirectResponse(headers_)) {
     return CgiResponse::kLocalRedirect;
-  } else if (IsClientRedirectResponseWithDocument(headers)) {
+  } else if (IsClientRedirectResponseWithDocument(headers_)) {
     return CgiResponse::kClientRedirectWithDocument;
-  } else if (IsClientRedirectResponse(headers)) {
+  } else if (IsClientRedirectResponse(headers_)) {
     return CgiResponse::kClientRedirect;
   } else {
     return CgiResponse::kParseError;
@@ -144,18 +147,22 @@ Result<void> CgiResponse::SetHeadersFromBuffer(utils::ByteVector &buffer) {
   if (header_vec_res.IsErr()) {
     return Error();
   }
+
+  std::set<std::string> used_headers;
   HeaderVecType header_vec = header_vec_res.Ok();
   for (HeaderVecType::const_iterator it = header_vec.begin();
        it != header_vec.end(); ++it) {
     // 同じヘッダーが2回現れてはいけない
-    if (headers_.find(it->first) != headers_.end()) {
+    if (used_headers.find(it->first) != used_headers.end()) {
       return Error();
     }
+    // ヘッダーとして利用不可能な文字が含まれていないか
     if (!IsValidHeaderKey(it->first) || !IsValidHeaderValue(it->second)) {
       return Error();
     }
-    headers_[it->first] = it->second;
   }
+
+  headers_ = header_vec;
 
   // ヘッダー部を削除
   Result<size_t> headers_boundary_res =
@@ -176,8 +183,8 @@ void CgiResponse::SetBodyFromBuffer(utils::ByteVector &buffer) {
 
 void CgiResponse::AdjustHeadersBasedOnResponseType() {
   if (response_type_ == kDocumentResponse) {
-    if (headers_.find("STATUS") == headers_.end()) {
-      headers_["STATUS"] = "200 OK";
+    if (GetHeader("STATUS").IsErr()) {
+      headers_.push_back(HeaderPairType("STATUS", "200 OK"));
     }
   }
 }
@@ -196,12 +203,12 @@ Result<CgiResponse::HeaderVecType> CgiResponse::GetHeaderVecFromBuffer(
 
   std::vector<std::string> header_strs =
       utils::SplitString(headers_str, newline_chars_);
-  std::vector<std::pair<std::string, std::string> > headers;
+  HeaderVecType headers;
   for (std::vector<std::string>::const_iterator it = header_strs.begin();
        it != header_strs.end(); ++it) {
     std::string key = GetKeyOfHeader(*it);
     std::string value = GetValueOfHeader(*it);
-    headers.push_back(std::pair<std::string, std::string>(key, value));
+    headers.push_back(HeaderPairType(key, value));
   }
   return headers;
 }

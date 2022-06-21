@@ -25,15 +25,16 @@ class CgiResponse {
     kParseError
   };
 
- private:
-  typedef std::vector<std::pair<std::string, std::string> > HeaderVecType;
+  typedef std::pair<std::string, std::string> HeaderPairType;
+  typedef std::vector<HeaderPairType> HeaderVecType;
 
+ private:
   // ヘッダー部における改行文字(LF or CRLF)
   std::string newline_chars_;
 
   ResponseType response_type_;
 
-  std::map<std::string, std::string> headers_;
+  HeaderVecType headers_;
 
   utils::ByteVector body_;
 
@@ -49,7 +50,8 @@ class CgiResponse {
   // ========================================================================
   // Getter and Setter
   ResponseType GetResponseType() const;
-  const std::map<std::string, std::string> &GetHeaders();
+  const HeaderVecType &GetHeaders();
+  Result<std::string> GetHeader(const std::string key) const;
   const utils::ByteVector &GetBody();
 
  private:
