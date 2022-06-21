@@ -69,7 +69,8 @@ class CgiResponse {
   // 改行文字を決定する
   Result<void> DetermineNewlineChars(utils::ByteVector &buffer);
 
-  ResponseType IdentifyResponseType(utils::ByteVector &buffer);
+  // headers_ を元にレスポンスタイプを決定する｡
+  ResponseType IdentifyResponseType() const;
 
   // パースが完了したらヘッダー文+ヘッダー区切りを buffer から削除する
   Result<void> SetHeadersFromBuffer(utils::ByteVector &buffer);
@@ -83,47 +84,47 @@ class CgiResponse {
 
   // buffer からヘッダー部分を取り出す｡
   // pair->first がヘッダー名, pair->second が値になっている
-  Result<HeaderVecType> GetHeaderVecFromBuffer(utils::ByteVector &buffer);
+  Result<HeaderVecType> GetHeaderVecFromBuffer(utils::ByteVector &buffer) const;
 
   // document-response = Content-Type [ Status ] *other-field NL response-body
-  bool IsDocumentResponse(const HeaderVecType &headers);
+  bool IsDocumentResponse() const;
 
   // local-redir-response = local-Location NL
-  bool IsLocalRedirectResponse(const HeaderVecType &headers);
+  bool IsLocalRedirectResponse() const;
 
   // client-redir-response = client-Location *extension-field NL
-  bool IsClientRedirectResponse(const HeaderVecType &headers);
+  bool IsClientRedirectResponse() const;
 
   // client-redirdoc-response = client-Location Status Content-Type *other-field
   // NL response-body
-  bool IsClientRedirectResponseWithDocument(const HeaderVecType &headers);
+  bool IsClientRedirectResponseWithDocument() const;
 
   // Status         = "Status:" status-code SP reason-phrase NL
   // status-code    = "200" | "302" | "400" | "501" | extension-code
   // extension-code = 3digit
   // reason-phrase  = *TEXT
-  bool IsValidStatusHeaderValue(const std::string &value);
+  bool IsValidStatusHeaderValue(const std::string &value) const;
 
   // query-string や fragment を構成する uric をチェックする
   // uric         = reserved | unreserved | escaped
-  bool IsComposedOfUriC(const std::string &str);
+  bool IsComposedOfUriC(const std::string &str) const;
 
   // local-pathquery = abs-path [ "?" query-string ]
   // query-string    = *uric
-  bool IsLocalPathQuery(const std::string &pathquery);
+  bool IsLocalPathQuery(const std::string &pathquery) const;
 
-  bool IsAbsoluteUri(const std::string &uri);
+  bool IsAbsoluteUri(const std::string &uri) const;
 
   // fragment-URI    = absoluteURI [ "#" fragment ]
-  bool IsFragmentUri(const std::string &uri);
+  bool IsFragmentUri(const std::string &uri) const;
 
   // field-name      = token
   // token           = 1*<any CHAR except CTLs or separators>
-  bool IsValidHeaderKey(const std::string &key);
+  bool IsValidHeaderKey(const std::string &key) const;
 
   // field-content   = *( token | separator | quoted-string )
   // quoted-string = <"> *qdtext <">
-  bool IsValidHeaderValue(const std::string &key);
+  bool IsValidHeaderValue(const std::string &key) const;
 };
 
 }  // namespace cgi

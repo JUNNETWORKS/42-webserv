@@ -59,7 +59,7 @@ CgiResponse::ResponseType CgiResponse::Parse(utils::ByteVector &buffer) {
       return response_type_ = kParseError;
     }
 
-    response_type_ = IdentifyResponseType(buffer);
+    response_type_ = IdentifyResponseType();
     if (response_type_ == kParseError) {
       return response_type_;
     }
@@ -125,17 +125,16 @@ Result<void> CgiResponse::DetermineNewlineChars(utils::ByteVector &buffer) {
   return Result<void>();
 }
 
-CgiResponse::ResponseType CgiResponse::IdentifyResponseType(
-    utils::ByteVector &buffer) {
+CgiResponse::ResponseType CgiResponse::IdentifyResponseType() const {
   assert(newline_chars_.size() > 0);
 
-  if (IsDocumentResponse(headers_)) {
+  if (IsDocumentResponse()) {
     return CgiResponse::kDocumentResponse;
-  } else if (IsLocalRedirectResponse(headers_)) {
+  } else if (IsLocalRedirectResponse()) {
     return CgiResponse::kLocalRedirect;
-  } else if (IsClientRedirectResponseWithDocument(headers_)) {
+  } else if (IsClientRedirectResponseWithDocument()) {
     return CgiResponse::kClientRedirectWithDocument;
-  } else if (IsClientRedirectResponse(headers_)) {
+  } else if (IsClientRedirectResponse()) {
     return CgiResponse::kClientRedirect;
   } else {
     return CgiResponse::kParseError;
@@ -190,7 +189,7 @@ void CgiResponse::AdjustHeadersBasedOnResponseType() {
 }
 
 Result<CgiResponse::HeaderVecType> CgiResponse::GetHeaderVecFromBuffer(
-    utils::ByteVector &buffer) {
+    utils::ByteVector &buffer) const {
   Result<size_t> headers_boundary_res =
       buffer.FindString(newline_chars_ + newline_chars_);
   if (headers_boundary_res.IsErr()) {
@@ -213,43 +212,42 @@ Result<CgiResponse::HeaderVecType> CgiResponse::GetHeaderVecFromBuffer(
   return headers;
 }
 
-bool CgiResponse::IsDocumentResponse(const HeaderVecType &headers) {
-  if (headers.size() < 1) {
+bool CgiResponse::IsDocumentResponse() const {
+  if (headers_.size() < 1) {
     return false;
   }
-  bool is_valid_content_type = headers[0].first == "CONTENT-TYPE";
+  bool is_valid_content_type = headers_[0].first == "CONTENT-TYPE";
   bool is_valid_status = true;
-  if (headers.size() >= 2 && headers[1].first == "STATUS") {
-    is_valid_status = IsValidStatusHeaderValue(headers[1].second);
+  if (headers_.size() >= 2 && headers_[1].first == "STATUS") {
+    is_valid_status = IsValidStatusHeaderValue(headers_[1].second);
   }
   return is_valid_content_type && is_valid_status;
 }
 
-bool CgiResponse::IsLocalRedirectResponse(const HeaderVecType &headers) {
-  return headers.size() == 1 && headers[0].first == "LOCATION" &&
-         IsLocalPathQuery(headers[0].second);
+bool CgiResponse::IsLocalRedirectResponse() const {
+  return headers_.size() == 1 && headers_[0].first == "LOCATION" &&
+         IsLocalPathQuery(headers_[0].second);
 }
 
-bool CgiResponse::IsClientRedirectResponse(const HeaderVecType &headers) {
-  return headers.size() >= 1 && headers[0].first == "LOCATION" &&
-         IsFragmentUri(headers[0].second);
+bool CgiResponse::IsClientRedirectResponse() const {
+  return headers_.size() >= 1 && headers_[0].first == "LOCATION" &&
+         IsFragmentUri(headers_[0].second);
 }
 
-bool CgiResponse::IsClientRedirectResponseWithDocument(
-    const HeaderVecType &headers) {
-  if (headers.size() < 3) {
+bool CgiResponse::IsClientRedirectResponseWithDocument() const {
+  if (headers_.size() < 3) {
     return false;
   }
   bool is_valid_location =
-      headers[0].first == "LOCATION" && IsFragmentUri(headers[0].second);
-  bool is_valid_status = headers[1].first == "STATUS" &&
-                         IsValidStatusHeaderValue(headers[1].second) &&
-                         headers[1].second[0] == '3';
-  bool is_valid_content_type = headers[2].first == "CONTENT-TYPE";
+      headers_[0].first == "LOCATION" && IsFragmentUri(headers_[0].second);
+  bool is_valid_status = headers_[1].first == "STATUS" &&
+                         IsValidStatusHeaderValue(headers_[1].second) &&
+                         headers_[1].second[0] == '3';
+  bool is_valid_content_type = headers_[2].first == "CONTENT-TYPE";
   return is_valid_location && is_valid_status && is_valid_content_type;
 }
 
-bool CgiResponse::IsValidStatusHeaderValue(const std::string &val) {
+bool CgiResponse::IsValidStatusHeaderValue(const std::string &val) const {
   std::string::size_type sp_pos = val.find(" ");
   std::string status = val.substr(0, sp_pos);
   Result<unsigned long> result = utils::Stoul(status);
@@ -259,7 +257,7 @@ bool CgiResponse::IsValidStatusHeaderValue(const std::string &val) {
   return http::StatusCodes::IsHttpStatus(result.Ok());
 }
 
-bool CgiResponse::IsComposedOfUriC(const std::string &str) {
+bool CgiResponse::IsComposedOfUriC(const std::string &str) const {
   const char *reserved_marks = ";/?:@&=+$,[]";
   const char *unreserved_marks = "-_.!~*'()";
 
@@ -282,7 +280,7 @@ bool CgiResponse::IsComposedOfUriC(const std::string &str) {
   return true;
 }
 
-bool CgiResponse::IsLocalPathQuery(const std::string &pathquery) {
+bool CgiResponse::IsLocalPathQuery(const std::string &pathquery) const {
   if (pathquery.empty() || pathquery[0] != '/') {
     return false;
   }
@@ -326,7 +324,7 @@ bool CgiResponse::IsLocalPathQuery(const std::string &pathquery) {
   return true;
 }
 
-bool CgiResponse::IsAbsoluteUri(const std::string &uri) {
+bool CgiResponse::IsAbsoluteUri(const std::string &uri) const {
   std::string::size_type scheme_end = uri.find("://");
   if (scheme_end == std::string::npos || scheme_end == 0 ||
       scheme_end + 3 >= uri.size()) {
@@ -335,7 +333,7 @@ bool CgiResponse::IsAbsoluteUri(const std::string &uri) {
   return true;
 }
 
-bool CgiResponse::IsFragmentUri(const std::string &uri) {
+bool CgiResponse::IsFragmentUri(const std::string &uri) const {
   std::string::size_type sharp_idx = uri.find("#");
   if (sharp_idx != std::string::npos) {
     std::string abs_uri = uri.substr(0, sharp_idx);
@@ -345,7 +343,7 @@ bool CgiResponse::IsFragmentUri(const std::string &uri) {
   return IsAbsoluteUri(uri);
 }
 
-bool CgiResponse::IsValidHeaderKey(const std::string &key) {
+bool CgiResponse::IsValidHeaderKey(const std::string &key) const {
   std::string::size_type i = 0;
   while (i < key.size()) {
     if (kCharExceptCtlAndSeparator.find(key[i]) == std::string::npos) {
@@ -356,7 +354,7 @@ bool CgiResponse::IsValidHeaderKey(const std::string &key) {
   return true;
 }
 
-bool CgiResponse::IsValidHeaderValue(const std::string &value) {
+bool CgiResponse::IsValidHeaderValue(const std::string &value) const {
   bool is_quoted = false;
 
   std::string::size_type i = 0;
