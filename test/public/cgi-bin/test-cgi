@@ -30,6 +30,11 @@ echo 'pwd    :' $(pwd)
 echo '$PWD   :' $(echo $PWD)
 echo 'ls     :' $(ls)
 echo
+echo '--- EXPORT ---'
+export
+echo
+
+echo "--- Apache ---"
 
 echo SERVER_SOFTWARE = $SERVER_SOFTWARE
 echo SERVER_NAME = $SERVER_NAME
