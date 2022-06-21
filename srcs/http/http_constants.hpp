@@ -11,6 +11,7 @@ const std::string kExpectMajorVersion = "1.";
 const int kMinorVersionDigitLimit = 3;
 const std::string kOWS = "\t ";
 const std::string kTcharsWithoutAlnum = "!#$%&'*+-.^_`|~";
+const int kMaxUriLength = 2000;
 }  // namespace http
 
 #endif

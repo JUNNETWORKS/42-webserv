@@ -171,7 +171,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
       case Chunk::kErrorBadRequest:
         parse_status_ = BAD_REQUEST;
         return kError;
-      case Chunk::kErrorLength:  // TODO TOOLARGEじゃないかも
+      case Chunk::kErrorLength:
         parse_status_ = PAYLOAD_TOO_LARGE;
         return kError;
       default:
@@ -195,17 +195,18 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
 
 HttpStatus HttpRequest::InterpretMethod(std::string &str) {
   Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
-  if (result.IsErr()) {
+  if (result.IsErr() || result.Ok().empty() ||
+      IsTcharString(result.Ok()) == false) {
     return parse_status_ = BAD_REQUEST;
   }
   method_ = result.Ok();
 
   if (method_ == method_strs::kGet || method_ == method_strs::kDelete ||
       method_ == method_strs::kPost) {
-    // TODO 501 (Not Implemented)を判定する
     return parse_status_ = OK;
+  } else {
+    return parse_status_ = NOT_IMPLEMENTED;
   }
-  return parse_status_ = BAD_REQUEST;
 }
 
 HttpStatus HttpRequest::InterpretPath(std::string &str) {
@@ -215,10 +216,11 @@ HttpStatus HttpRequest::InterpretPath(std::string &str) {
   }
   path_ = result.Ok();
 
-  if (true) {  // TODO 長いURLの時414(URI Too Long)を判定する
+  if (path_.size() > kMaxUriLength) {
+    return parse_status_ = URI_TOO_LONG;
+  } else {
     return parse_status_ = OK;
   }
-  return parse_status_ = BAD_REQUEST;
 }
 
 HttpStatus HttpRequest::InterpretVersion(std::string &str) {
