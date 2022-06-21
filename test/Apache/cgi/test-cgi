@@ -21,6 +21,14 @@ echo CGI/1.0 test script report:
 echo
 
 echo argc is $#. argv is "$*".
+
+echo
+echo 'argv 0 :' "$0"
+echo 'argv 1 :' "$1"
+echo
+echo 'pwd    :' $(pwd)
+echo '$PWD   :' $(echo $PWD)
+echo 'ls     :' $(ls)
 echo
 
 echo SERVER_SOFTWARE = $SERVER_SOFTWARE
