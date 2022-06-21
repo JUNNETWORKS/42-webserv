@@ -22,7 +22,7 @@ TEST(CgiResponseParse, DocumentResponseWithStatus) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsOk());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kDocumentResponse);
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
@@ -49,7 +49,7 @@ TEST(CgiResponseParse, ValidDocumentResponseWithoutStatus) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsOk());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kDocumentResponse);
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
@@ -71,7 +71,7 @@ TEST(CgiResponseParse, ValidLocalRedirectResponse) {
       "\n");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsOk());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kLocalRedirect);
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kLocalRedirect);
 
@@ -88,7 +88,7 @@ TEST(CgiResponseParse, ValidClientRedirectResponse) {
       "\n");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsOk());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kClientRedirect);
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kClientRedirect);
 
@@ -114,7 +114,8 @@ TEST(CgiResponseParse, ValidClientRedirectResponseWithDocument) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsOk());
+  EXPECT_EQ(cgi_res.Parse(cgi_output),
+            CgiResponse::kClientRedirectWithDocument);
 
   EXPECT_EQ(cgi_res.GetResponseType(),
             CgiResponse::kClientRedirectWithDocument);
@@ -134,7 +135,7 @@ TEST(CgiResponseParse, ValidClientRedirectResponseWithDocument) {
 }
 
 // ドキュメント付きクライアントリダイレクトの Status は､
-// 302以外でもリダイレクトを表す3桁のHTTPステータスコードならOK
+// 302以外でもリダイレクトを表す300番台のHTTPステータスコードならOK
 TEST(CgiResponseParse,
      ValidClientRedirectResponseWithDocumentAndCustomRedirectCode) {
   utils::ByteVector cgi_output(
@@ -149,7 +150,8 @@ TEST(CgiResponseParse,
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsOk());
+  EXPECT_EQ(cgi_res.Parse(cgi_output),
+            CgiResponse::kClientRedirectWithDocument);
 
   HeadersType expected_headers{
       {"LOCATION", "https://www.google.com/search?q=pikachu"},
@@ -177,7 +179,7 @@ TEST(CgiResponseParse, NewLineIsCrlf) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsOk());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kDocumentResponse);
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
@@ -204,7 +206,7 @@ TEST(CgiResponseParse, DocumentResponsesBodyIncludeLfAndCrlf) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsOk());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kDocumentResponse);
 
   EXPECT_EQ(cgi_res.GetResponseType(), CgiResponse::kDocumentResponse);
 
@@ -234,7 +236,7 @@ TEST(CgiResponseParse, MixedNewLineIsError) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsErr());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
 // レスポンスタイプ判別不能
@@ -247,7 +249,7 @@ TEST(CgiResponseParse, UnknownResponseType) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsErr());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
 // ドキュメントレスポンスのStatusが不正
@@ -262,7 +264,7 @@ TEST(CgiResponseParse, DocumentResponseWithInvalidStatusIsError) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsErr());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
 // ローカルリダイレクトはLocation以外のフィールドを持てない
@@ -273,7 +275,7 @@ TEST(CgiResponseParse, LocalRedirectResponseWithOtherFields) {
       "\n");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsErr());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
 // ローカルリダイレクトは response-body を持てない
@@ -284,7 +286,7 @@ TEST(CgiResponseParse, LocalRedirectResponseWithBody) {
       "Local redirect can't hold body.");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsErr());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
 // クライアントリダイレクトのURIの形式が間違っている
@@ -303,7 +305,7 @@ TEST(CgiResponseParse, ClientRedirectResponseWithDocumentHasInvalidUri) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsErr());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
 // ドキュメント付きクライアントリダイレクトにStatusが無い
@@ -319,7 +321,7 @@ TEST(CgiResponseParse, ClientRedirectResponseWithDocumentWithoutStatus) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsErr());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
 // ドキュメント付きクライアントリダイレクトにContent-Typeが無い
@@ -335,7 +337,7 @@ TEST(CgiResponseParse, ClientRedirectResponseWithDocumentWioutContentType) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsErr());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
 // ドキュメント付きクライアントリダイレクトで
@@ -353,7 +355,7 @@ TEST(CgiResponseParse, ClientRedirectResponseWithDocumentsStatusCodeIsInvalid) {
       "</HTML>");
 
   CgiResponse cgi_res;
-  EXPECT_TRUE(cgi_res.Parse(cgi_output).IsErr());
+  EXPECT_EQ(cgi_res.Parse(cgi_output), CgiResponse::kParseError);
 }
 
 }  // namespace cgi

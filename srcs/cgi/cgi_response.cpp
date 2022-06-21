@@ -47,24 +47,24 @@ CgiResponse &CgiResponse::operator=(const CgiResponse &rhs) {
 
 CgiResponse::~CgiResponse() {}
 
-Result<void> CgiResponse::Parse(utils::ByteVector &buffer) {
+CgiResponse::ResponseType CgiResponse::Parse(utils::ByteVector &buffer) {
   if (DetermineNewlineChars(buffer).IsErr()) {
-    return Error();
+    return response_type_ = kParseError;
   }
+
   response_type_ = IdentifyResponseType(buffer);
   if (response_type_ == kParseError) {
-    return Error();
+    return response_type_;
   }
 
   if (SetHeadersFromBuffer(buffer).IsErr() ||
       SetBodyFromBuffer(buffer).IsErr()) {
-    response_type_ = kParseError;
-    return Error();
+    return response_type_ = kParseError;
   }
 
   AdjustHeadersBasedOnResponseType();
 
-  return Result<void>();
+  return response_type_;
 }
 
 // ========================================================================

@@ -44,7 +44,7 @@ class CgiResponse {
   ~CgiResponse();
 
   // buffer にはCGIの出力すべてが含まれている必要がある｡
-  Result<void> Parse(utils::ByteVector &buffer);
+  ResponseType Parse(utils::ByteVector &buffer);
 
   // ========================================================================
   // Getter and Setter
