@@ -83,12 +83,11 @@ Result<unsigned long> Stoul(const std::string &str, BaseDigit base) {
   return num;
 }
 
-Result<std::string> PercentEncode(const ByteVector &to_encode) {
+Result<std::string> PercentEncode(const std::string &to_encode) {
   std::stringstream ss;
 
-  for (ByteVector::const_iterator it = to_encode.begin(); it != to_encode.end();
-       it++) {
-    // TODO : 条件の確認
+  for (std::string::const_iterator it = to_encode.begin();
+       it != to_encode.end(); it++) {
     if (!std::isalnum(*it) && *it != '-' && *it != '_' && *it != '.' &&
         *it != '~') {
       int n = *it;
@@ -101,20 +100,26 @@ Result<std::string> PercentEncode(const ByteVector &to_encode) {
   return ss.str();
 }
 
-Result<std::string> PercentDecode(const ByteVector &to_decode) {
+Result<std::string> PercentDecode(const std::string &to_decode) {
   std::string decoded;
   unsigned char c;
 
-  for (ByteVector::const_iterator it = to_decode.begin(); it != to_decode.end();
-       it++) {
-    if (*it == '%' && std::distance(it, to_decode.end()) >= 3) {
-      std::string s = std::string(it + 1, it + 3);
-      Result<unsigned long> res = Stoul(s, kDecimal);
+  for (std::string::const_iterator it = to_decode.begin();
+       it != to_decode.end(); it++) {
+    if (*it == '%') {
+      if (std::distance(it, to_decode.end()) < 3) {
+        return Error();
+      }
+      std::string hex = std::string(it + 1, it + 3);
+      Result<unsigned long> res = Stoul(hex, kHexadecimal);
       if (res.IsErr()) {
         return Error();
       }
       c = res.Ok();
       decoded.insert(decoded.end(), c);
+      it += 2;
+    } else {
+      decoded.insert(decoded.end(), *it);
     }
   }
   return decoded;

@@ -43,9 +43,9 @@ bool IsHexadecimals(const std::string &str);
 // e.g. "42hoge", "hoge42", "+42" -> false   "42" -> true
 Result<unsigned long> Stoul(const std::string &str, BaseDigit base = kDecimal);
 
-Result<std::string> PercentEncode(const ByteVector &to_decode);
+Result<std::string> PercentEncode(const std::string &to_decode);
 
-Result<std::string> PercentDecode(const ByteVector &to_encode);
+Result<std::string> PercentDecode(const std::string &to_encode);
 
 // str を delim で区切った文字列vectorを返す｡
 // e.g. SplitString("a,bc,,d", ",") return ["a", "bc", ,"", "d"]
