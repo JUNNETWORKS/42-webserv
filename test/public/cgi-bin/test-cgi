@@ -23,6 +23,7 @@ echo
 echo argc is $#. argv is "$*".
 
 echo
+echo 'argv' '0' ':' ${0}
 for i in `seq $#`
 do
 	eval echo 'argv' ${i} ':' '$'${i}
