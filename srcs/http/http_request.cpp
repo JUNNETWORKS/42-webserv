@@ -28,8 +28,7 @@ HttpRequest::HttpRequest(const config::Config &config)
       parse_status_(OK),
       body_(),
       body_size_(0),
-      is_chunked_(false),
-      has_obs_fold_(false) {}
+      is_chunked_(false) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs)
     : config_(rhs.config_),
@@ -41,8 +40,7 @@ HttpRequest::HttpRequest(const HttpRequest &rhs)
       parse_status_(rhs.parse_status_),
       body_(rhs.body_),
       body_size_(rhs.body_size_),
-      is_chunked_(rhs.is_chunked_),
-      has_obs_fold_(rhs.has_obs_fold_) {}
+      is_chunked_(rhs.is_chunked_) {}
 
 HttpRequest::~HttpRequest() {}
 
@@ -468,7 +466,6 @@ void HttpRequest::PrintRequestInfo() {
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
     printf("is_chuked_: %d\n", is_chunked_);
-    printf("has_obs_fold_: %d\n", has_obs_fold_);
     printf("body_size: %ld\n", body_size_);
     for (std::map<std::string, std::vector<std::string> >::iterator it =
              headers_.begin();
