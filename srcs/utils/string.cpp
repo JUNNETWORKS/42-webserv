@@ -102,7 +102,7 @@ std::string PercentEncode(const utils::ByteVector &to_encode) {
 
 Result<std::string> PercentDecode(const utils::ByteVector &to_decode) {
   std::string decoded;
-  unsigned char c;
+  char c;
 
   for (utils::ByteVector::const_iterator it = to_decode.begin();
        it != to_decode.end(); it++) {
@@ -115,12 +115,12 @@ Result<std::string> PercentDecode(const utils::ByteVector &to_decode) {
       if (res.IsErr()) {
         return Error();
       }
-      c = res.Ok();
-      decoded.insert(decoded.end(), c);
+      c = static_cast<char>(res.Ok());
       it += 2;
     } else {
-      decoded.insert(decoded.end(), *it);
+      c = static_cast<char>(*it);
     }
+    decoded.push_back(c);
   }
   return decoded;
 }
