@@ -112,9 +112,10 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     }
 
     Result<size_t> crlf_pos = buffer.FindString(kCrlf);
-    std::string field_buffer_str = buffer.CutSubstrBeforePos(crlf_pos.Ok());
-    if (InterpretHeaderField(field_buffer_str) != OK)
+    if (InterpretHeaderField(buffer.SubstrBeforePos(crlf_pos.Ok())) != OK)
       return kError;
+    else
+      buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
   }
 }
 
