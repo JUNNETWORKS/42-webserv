@@ -99,13 +99,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   if (boundary_pos.IsErr())
     return kHeaderField;
 
-  if (IsObsFold(buffer)) {  //先頭がobs-foldの時
-    parse_status_ = BAD_REQUEST;
-    return kError;
-  }
-
   while (1) {
-    if (buffer.CompareHead(kHeaderBoundary)) {
+    if (IsObsFold(buffer)) {  //先頭がobs-foldの時
+      parse_status_ = BAD_REQUEST;
+      return kError;
+    } else if (buffer.CompareHead(kHeaderBoundary)) {
       //先頭が\r\n\r\nなので終了処理
       buffer.EraseHead(kHeaderBoundary.size());
       return kBodySize;
@@ -113,21 +111,8 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
       buffer.EraseHead(kCrlf.size());
     }
 
-    utils::ByteVector field_buffer;
-    while (1) {
-      Result<size_t> crlf_pos = buffer.FindString(kCrlf);
-      field_buffer.insert(field_buffer.end(), buffer.begin(),
-                          buffer.begin() + crlf_pos.Ok());
-      buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
-      if (IsObsFold(buffer) == false)
-        break;
-      has_obs_fold_ = true;
-      // TODO has_obs_fold_がtrueの時は、message/http以外エラー
-      buffer.erase(buffer.begin(), buffer.begin() + kCrlf.size() + 1);
-      field_buffer.push_back(' ');
-    }
-    std::string field_buffer_str =
-        field_buffer.SubstrBeforePos(field_buffer.size());
+    Result<size_t> crlf_pos = buffer.FindString(kCrlf);
+    std::string field_buffer_str = buffer.CutSubstrBeforePos(crlf_pos.Ok());
     if (InterpretHeaderField(field_buffer_str) != OK)
       return kError;
   }
