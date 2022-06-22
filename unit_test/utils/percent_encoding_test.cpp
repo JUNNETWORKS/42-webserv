@@ -73,9 +73,12 @@ TEST(PercentDecodeTest, ErrCase) {
   // expect = "あいうえお";
   EXPECT_RESULT_IS_ERR(PercentDecode(s));
 
-  EXPECT_RESULT_IS_ERR(PercentDecode("%"));
-  EXPECT_RESULT_IS_ERR(PercentDecode("%%"));
-  EXPECT_RESULT_IS_ERR(PercentDecode("% 1"));
+  s = "%";
+  EXPECT_RESULT_IS_ERR(PercentDecode(s));
+  s = "%%";
+  EXPECT_RESULT_IS_ERR(PercentDecode(s));
+  s = "% 1";
+  EXPECT_RESULT_IS_ERR(PercentDecode(s));
 }
 
 TEST(PercentDecodeTest, Isprint) {

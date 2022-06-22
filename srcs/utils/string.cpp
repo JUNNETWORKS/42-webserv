@@ -83,10 +83,10 @@ Result<unsigned long> Stoul(const std::string &str, BaseDigit base) {
   return num;
 }
 
-Result<std::string> PercentEncode(const std::string &to_encode) {
+Result<std::string> PercentEncode(const utils::ByteVector &to_encode) {
   std::stringstream ss;
 
-  for (std::string::const_iterator it = to_encode.begin();
+  for (utils::ByteVector::const_iterator it = to_encode.begin();
        it != to_encode.end(); it++) {
     if (!std::isalnum(*it) && *it != '-' && *it != '_' && *it != '.' &&
         *it != '~') {
@@ -100,11 +100,11 @@ Result<std::string> PercentEncode(const std::string &to_encode) {
   return ss.str();
 }
 
-Result<std::string> PercentDecode(const std::string &to_decode) {
+Result<std::string> PercentDecode(const utils::ByteVector &to_decode) {
   std::string decoded;
   unsigned char c;
 
-  for (std::string::const_iterator it = to_decode.begin();
+  for (utils::ByteVector::const_iterator it = to_decode.begin();
        it != to_decode.end(); it++) {
     if (*it == '%') {
       if (std::distance(it, to_decode.end()) < 3) {
