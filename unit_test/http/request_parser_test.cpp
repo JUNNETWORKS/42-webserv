@@ -34,6 +34,15 @@ TEST(RequestParserTest, KOFormatExistOBSfoldFirstHeader) {
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
+TEST(RequestParserTest, KOFormatExistOBSfold) {
+  http::HttpRequest req(default_conf);
+  utils::ByteVector buf = OpenFile("KOFormatExistOBSfold.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
 TEST(RequestParserTest, KOFormatExistSPAfterVersion) {
   http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("KOFormatExistSPAfterVersion.txt");
@@ -427,23 +436,5 @@ TEST(RequestParserTest, OKBodyCorrectChunk) {
   const utils::ByteVector body = req.GetBody();
   EXPECT_EQ(body, expect_body);
 }
-
-// TEST(RequestParserTest, KOFormatExistOBSfold) {
-//   http::HttpRequest req;
-//   utils::ByteVector buf = OpenFile("KOFormatExistOBSfold.txt");
-
-//   req.ParseRequest(buf);
-//   EXPECT_TRUE(req.IsCorrectStatus() == false);
-//   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
-// }
-
-// TEST(RequestParserTest, OKExistAcceptableOBSfold) {
-//   http::HttpRequest req;
-//   utils::ByteVector buf = OpenFile("OKExistAcceptableOBSfold.txt");
-
-//   req.ParseRequest(buf);
-//   EXPECT_TRUE(req.IsCorrectStatus() == true);
-//   EXPECT_EQ(req.GetParseStatus(), OK);
-// }
 
 }  // namespace http
