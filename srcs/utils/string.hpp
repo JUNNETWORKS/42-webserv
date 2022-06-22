@@ -43,7 +43,7 @@ bool IsHexadecimals(const std::string &str);
 // e.g. "42hoge", "hoge42", "+42" -> false   "42" -> true
 Result<unsigned long> Stoul(const std::string &str, BaseDigit base = kDecimal);
 
-Result<std::string> PercentEncode(const utils::ByteVector &to_encode);
+std::string PercentEncode(const utils::ByteVector &to_encode);
 
 Result<std::string> PercentDecode(const utils::ByteVector &to_encode);
 

@@ -83,7 +83,7 @@ Result<unsigned long> Stoul(const std::string &str, BaseDigit base) {
   return num;
 }
 
-Result<std::string> PercentEncode(const utils::ByteVector &to_encode) {
+std::string PercentEncode(const utils::ByteVector &to_encode) {
   std::stringstream ss;
 
   for (utils::ByteVector::const_iterator it = to_encode.begin();
