@@ -13,7 +13,6 @@ bool IsMethod(const std::string &token);
 bool IsObsFold(const utils::ByteVector &buf);
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
-Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
 Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
 std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     utils::ByteVector &buffer);
@@ -472,16 +471,6 @@ bool IsCorrectHTTPVersion(const std::string &str) {
          str.size() <= kExpectMajorVersion.size() + kMinorVersionDigitLimit &&
          utils::ForwardMatch(str, kExpectMajorVersion) &&
          utils::IsDigits(str.substr(kExpectMajorVersion.size()));
-}
-
-Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer) {
-  size_t white_space_pos = buffer.find_first_of(" ");
-  if (white_space_pos == std::string::npos) {
-    return Error();
-  }
-  std::string res = buffer.substr(0, white_space_pos);
-  buffer.erase(0, white_space_pos + 1);
-  return res;
 }
 
 }  // namespace
