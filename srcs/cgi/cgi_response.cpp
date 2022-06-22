@@ -106,7 +106,8 @@ const utils::ByteVector &CgiResponse::GetBody() {
   return body_;
 }
 
-Result<void> CgiResponse::DetermineNewlineChars(utils::ByteVector &buffer) {
+Result<void> CgiResponse::DetermineNewlineChars(
+    const utils::ByteVector &buffer) {
   Result<size_t> lflf_res = buffer.FindString(kLF + kLF);
   Result<size_t> crlfcrlf_res = buffer.FindString(kCRLF + kCRLF);
 
@@ -177,7 +178,7 @@ void CgiResponse::AdjustHeadersBasedOnResponseType() {
 }
 
 Result<CgiResponse::HeaderVecType> CgiResponse::GetHeaderVecFromBuffer(
-    utils::ByteVector &buffer) const {
+    const utils::ByteVector &buffer) const {
   Result<size_t> headers_boundary_res =
       buffer.FindString(newline_chars_ + newline_chars_);
   if (headers_boundary_res.IsErr()) {

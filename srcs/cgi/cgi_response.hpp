@@ -69,7 +69,7 @@ class CgiResponse {
   static const std::string kQdtext;
 
   // 改行文字を決定する
-  Result<void> DetermineNewlineChars(utils::ByteVector &buffer);
+  Result<void> DetermineNewlineChars(const utils::ByteVector &buffer);
 
   // headers_ を元にレスポンスタイプを決定する｡
   ResponseType IdentifyResponseType() const;
@@ -87,7 +87,8 @@ class CgiResponse {
 
   // buffer からヘッダー部分を取り出す｡
   // ヘッダーの値が不正である場合やヘッダー部の検出が出来ない場合はエラー
-  Result<HeaderVecType> GetHeaderVecFromBuffer(utils::ByteVector &buffer) const;
+  Result<HeaderVecType> GetHeaderVecFromBuffer(
+      const utils::ByteVector &buffer) const;
 
   // document-response = Content-Type [ Status ] *other-field NL response-body
   bool IsDocumentResponse() const;
