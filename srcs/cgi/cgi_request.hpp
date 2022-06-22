@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <vector>
 
 #include "config/location_conf.hpp"
 #include "http/http_request.hpp"
@@ -13,6 +14,7 @@ class CgiRequest {
  private:
   std::string cgi_path_;
   std::string query_string_;
+  std::vector<std::string> cgi_args_;
   std::map<std::string, std::string> cgi_variables_;
 
  public:
@@ -24,6 +26,7 @@ class CgiRequest {
 
   const std::string &GetCgiPath() const;
   const std::string &GetQueryString() const;
+  const std::vector <std::string> &GetCgiArgs() const;
 
   // 返り値は無名ドメインソケットのfd
   // TODO: 第二引数はhttprequestじゃなくてcgirequestとかのほうがよいかも

@@ -17,6 +17,8 @@ TEST(CgiRequestTest, DefaultTest) {
   EXPECT_EQ(request_path, cgi.GetCgiPath());
 }
 
+// QueryStringTest
+//  ------------------------------------------------------------------------------------------
 TEST(CgiRequestTest, QueryStringTest) {
   http::HttpRequest req;
   config::LocationConf location;
@@ -47,6 +49,70 @@ TEST(CgiRequestTest, QueryStringTest) {
 
     EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
     EXPECT_EQ(expect_query_string, cgi.GetQueryString());
+  }
+}
+
+// ArgsTest
+//  ------------------------------------------------------------------------------------------
+TEST(CgiRequestTest, ArgsTest) {
+  http::HttpRequest req;
+  config::LocationConf location;
+
+  {
+    std::string expect_cgi_path_ = "/cgi-bin/test-cgi";
+    std::string expect_query_string = "";
+    std::vector<std::string> expect_cgi_args = {};
+    std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
+    cgi::CgiRequest cgi(request_path, req, location);
+
+    EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
+    EXPECT_EQ(expect_query_string, cgi.GetQueryString());
+    EXPECT_EQ(expect_cgi_args, cgi.GetCgiArgs());
+  }
+  {
+    std::string expect_cgi_path_ = "/cgi-bin/test-cgi";
+    std::string expect_query_string = "hoge+fuga";
+    std::vector<std::string> expect_cgi_args = {"hoge", "fuga"};
+    std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
+    cgi::CgiRequest cgi(request_path, req, location);
+
+    EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
+    EXPECT_EQ(expect_query_string, cgi.GetQueryString());
+    EXPECT_EQ(expect_cgi_args, cgi.GetCgiArgs());
+  }
+  {
+    // = があると argv を 設定しない
+    std::string expect_cgi_path_ = "/cgi-bin/test-cgi";
+    std::string expect_query_string = "hoge+fuga=hoge+fuga";
+    std::vector<std::string> expect_cgi_args = {};
+    std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
+    cgi::CgiRequest cgi(request_path, req, location);
+
+    EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
+    EXPECT_EQ(expect_query_string, cgi.GetQueryString());
+    EXPECT_EQ(expect_cgi_args, cgi.GetCgiArgs());
+  }
+  {
+    std::string expect_cgi_path_ = "/cgi-bin/test-cgi";
+    std::string expect_query_string = "+";
+    std::vector<std::string> expect_cgi_args = {"", ""};
+    std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
+    cgi::CgiRequest cgi(request_path, req, location);
+
+    EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
+    EXPECT_EQ(expect_query_string, cgi.GetQueryString());
+    EXPECT_EQ(expect_cgi_args, cgi.GetCgiArgs());
+  }
+  {
+    std::string expect_cgi_path_ = "/cgi-bin/test-cgi";
+    std::string expect_query_string = "++";
+    std::vector<std::string> expect_cgi_args = {"", "", ""};
+    std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
+    cgi::CgiRequest cgi(request_path, req, location);
+
+    EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
+    EXPECT_EQ(expect_query_string, cgi.GetQueryString());
+    EXPECT_EQ(expect_cgi_args, cgi.GetCgiArgs());
   }
 }
 

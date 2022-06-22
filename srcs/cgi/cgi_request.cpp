@@ -18,10 +18,19 @@ CgiRequest::CgiRequest(const std::string &request_path,
   std::string::size_type pos = request_path.find("?");
 
   if (pos != std::string::npos) {
-    cgi_path_ = request_path.substr(0, pos);
+    cgi_path_ = request_path.substr(0, pos);  // decode
     query_string_ = request_path.substr(pos + 1);
+    if (query_string_ != "" && query_string_.find('=') == std::string::npos) {
+      // TODO : argv の 最大数でリミットかける必要ある？
+      // TODO : cig_args は パーセントデコーディングされる
+      // この時 + は split されない
+      cgi_args_ = utils::SplitString(query_string_, "+");
+      if (query_string_[query_string_.length() - 1] == '+') {
+        cgi_args_.push_back("");
+      }
+    }
   } else {
-    cgi_path_ = request_path;
+    cgi_path_ = request_path;  // decode
     query_string_ = "";
   }
   CreateCgiMetaVariablesFromHttpRequest(request, location);
@@ -35,6 +44,7 @@ CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
   if (this != &rhs) {
     cgi_path_ = rhs.cgi_path_;
     query_string_ = rhs.query_string_;
+    cgi_args_ = rhs.cgi_args_;
     cgi_variables_ = rhs.cgi_variables_;
   }
   return *this;
@@ -48,6 +58,10 @@ const std::string &CgiRequest::GetCgiPath() const {
 
 const std::string &CgiRequest::GetQueryString() const {
   return query_string_;
+}
+
+const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
+  return cgi_args_;
 }
 
 int CgiRequest::ForkAndExecuteCgi() {
@@ -125,10 +139,16 @@ void CgiRequest::ExecuteCgi() {
   SetMetaVariables();
   // TODO : stdin
   // TODO : chdir 必要？
-  char **argv = new char *[2];
+  // args_ に argv[0] の分が含まれてないので、+ 1
+  char **argv = new char *[cgi_args_.size() + 1 + 1];
   argv[0] = strdup(cgi_path_.c_str());  // TODO : req の pathにする必要あいr
-  argv[1] = NULL;
+  size_t i = 0;
+  for (; i < cgi_args_.size(); i++) {
+    argv[i + 1] = strdup(cgi_args_[i].c_str());
+  }
+  argv[i + 1] = NULL;
   execve(cgi_path_.c_str(), argv, environ);
+  // TODO : 失敗時のdelete処理
 }
 
 }  // namespace cgi
