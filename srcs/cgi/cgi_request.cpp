@@ -12,10 +12,18 @@
 
 namespace cgi {
 
-CgiRequest::CgiRequest(const std::string &cgi_path,
+CgiRequest::CgiRequest(const std::string &request_path,
                        const http::HttpRequest &request,
-                       const config::LocationConf &location)
-    : cgi_path_(cgi_path) {
+                       const config::LocationConf &location) {
+  std::string::size_type pos = request_path.find("?");
+
+  if (pos != std::string::npos) {
+    cgi_path_ = request_path.substr(0, pos);
+    query_string_ = request_path.substr(pos + 1);
+  } else {
+    cgi_path_ = request_path;
+    query_string_ = "";
+  }
   CreateCgiMetaVariablesFromHttpRequest(request, location);
 }
 
@@ -26,12 +34,21 @@ CgiRequest::CgiRequest(const CgiRequest &rhs) {
 CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
   if (this != &rhs) {
     cgi_path_ = rhs.cgi_path_;
+    query_string_ = rhs.query_string_;
     cgi_variables_ = rhs.cgi_variables_;
   }
   return *this;
 }
 
 CgiRequest::~CgiRequest() {}
+
+const std::string &CgiRequest::GetCgiPath() const {
+  return cgi_path_;
+}
+
+const std::string &CgiRequest::GetQueryString() const {
+  return query_string_;
+}
 
 int CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
@@ -86,7 +103,7 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
   cgi_variables_["PATH_INFO"] = "";
   cgi_variables_["PATH_TRANSLATED"] = "";  // unsetenv("PATH_TRANSLATED");
   cgi_variables_["SCRIPT_NAME"] = "";
-  cgi_variables_["QUERY_STRING"] = "";
+  cgi_variables_["QUERY_STRING"] = query_string_;
   cgi_variables_["REMOTE_HOST"] = "";
   cgi_variables_["REMOTE_ADDR"] = "";
   cgi_variables_["REMOTE_USER"] = "";
