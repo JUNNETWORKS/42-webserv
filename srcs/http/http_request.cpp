@@ -218,22 +218,19 @@ HttpStatus HttpRequest::InterpretVersion(const std::string &token) {
   return parse_status_ = BAD_REQUEST;
 }
 
-HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
+HttpStatus HttpRequest::InterpretHeaderField(const std::string &str) {
   size_t collon_pos = str.find_first_of(":");
 
-  if (collon_pos == std::string::npos || collon_pos == 0 ||
-      IsTcharString(str.substr(0, collon_pos)) == false)
+  if (collon_pos == std::string::npos || collon_pos == 0)
     return parse_status_ = BAD_REQUEST;
 
   std::string header = str.substr(0, collon_pos);
-  std::transform(header.begin(), header.end(), header.begin(), toupper);
-  str.erase(0, collon_pos + 1);
-  std::string field = utils::TrimString(str, kOWS);
-
-  Result<std::vector<std::string> > result = ParseHeaderFieldValue(str);
-  if (result.IsErr()) {
+  std::string value_str = str.substr(collon_pos + 1);
+  Result<std::vector<std::string> > result = ParseHeaderFieldValue(value_str);
+  if (result.IsErr() || IsTcharString(header) == false) {
     return parse_status_ = BAD_REQUEST;
   }
+  std::transform(header.begin(), header.end(), header.begin(), toupper);
   headers_[header] = result.Ok();
   return parse_status_ = OK;
 }
