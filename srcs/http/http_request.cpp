@@ -106,13 +106,10 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
 
   while (1) {
     if (buffer.CompareHead(kHeaderBoundary)) {
-      buffer.EraseHead(kHeaderBoundary.size());
       //先頭が\r\n\r\nなので終了処理
+      buffer.EraseHead(kHeaderBoundary.size());
       return kBodySize;
-    }
-
-    if (buffer.CompareHead(kCrlf)) {
-      // HeaderBoundary判定用に残しておいたcrlfを削除
+    } else {
       buffer.EraseHead(kCrlf.size());
     }
 
