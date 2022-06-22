@@ -9,10 +9,10 @@ namespace http {
 namespace {
 
 using namespace result;
+bool IsMethod(const std::string &token);
 bool IsObsFold(const utils::ByteVector &buf);
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
-Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
 Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
 std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     utils::ByteVector &buffer);
@@ -79,13 +79,19 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
   if (pos.IsErr())
     return kRequestLine;
 
-  std::string line = buffer.CutSubstrBeforePos(pos.Ok());
-  if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
-      InterpretVersion(line) == OK) {
-    return kHeaderField;
-  } else {
+  const std::string str = buffer.SubstrBeforePos(pos.Ok());
+  if (std::count(str.begin(), str.end(), ' ') != 2) {
+    parse_status_ = BAD_REQUEST;
     return kError;
   }
+
+  std::vector<std::string> tokens = utils::SplitString(str, " ");
+  if (InterpretMethod(tokens[0]) == OK && InterpretPath(tokens[1]) == OK &&
+      InterpretVersion(tokens[2]) == OK) {
+    buffer.erase(buffer.begin(), buffer.begin() + pos.Ok());
+    return kHeaderField;
+  }
+  return kError;
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
@@ -194,54 +200,41 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
 //========================================================================
 // Interpret系関数　文字列を解釈する関数　主にparse_statusで動作管理(OKじゃなくなったら次は実行されない)
 
-HttpStatus HttpRequest::InterpretMethod(std::string &str) {
-  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
-  if (result.IsErr() || result.Ok().empty() ||
-      IsTcharString(result.Ok()) == false) {
-    return parse_status_ = BAD_REQUEST;
-  }
-  method_ = result.Ok();
-
-  if (method_ == method_strs::kGet || method_ == method_strs::kDelete ||
-      method_ == method_strs::kPost) {
+HttpStatus HttpRequest::InterpretMethod(const std::string &token) {
+  if (IsMethod(token)) {
+    method_ = token;
     return parse_status_ = OK;
+  } else if (token.empty() || IsTcharString(token) == false) {
+    return parse_status_ = BAD_REQUEST;
   } else {
     return parse_status_ = NOT_IMPLEMENTED;
   }
 }
 
-HttpStatus HttpRequest::InterpretPath(std::string &str) {
-  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
-  if (result.IsErr()) {
-    return parse_status_ = BAD_REQUEST;
-  }
-  path_ = result.Ok();
-
-  if (path_.size() > kMaxUriLength) {
+HttpStatus HttpRequest::InterpretPath(const std::string &token) {
+  if (token.size() > kMaxUriLength) {
     return parse_status_ = URI_TOO_LONG;
   } else {
+    path_ = token;
     return parse_status_ = OK;
   }
 }
 
-HttpStatus HttpRequest::InterpretVersion(std::string &str) {
-  if (!utils::ForwardMatch(str, kHttpVersionPrefix))
-    return parse_status_ = BAD_REQUEST;
-
-  str.erase(0, kHttpVersionPrefix.size());
-
-  if (IsCorrectHTTPVersion(str)) {
-    // HTTP1.~ が保証される
-    str.erase(0, kExpectMajorVersion.size());
-    minor_version_ = std::atoi(str.c_str());
-    return parse_status_ = OK;
-  } else if (std::isdigit(str[0]) == true && str[0] != '0' && str[0] != '1') {
-    // HTTP2.0とかHTTP/2hogeとか
-    return parse_status_ = HTTP_VERSION_NOT_SUPPORTED;
-  } else {
-    // 0.9とかHTTP/hogeとか
-    return parse_status_ = BAD_REQUEST;
+HttpStatus HttpRequest::InterpretVersion(const std::string &token) {
+  if (utils::ForwardMatch(token, kHttpVersionPrefix)) {
+    const std::string str = token.substr(kHttpVersionPrefix.size());
+    if (IsCorrectHTTPVersion(str)) {
+      // HTTP1.~ が保証される
+      minor_version_ =
+          std::atoi(str.substr(kExpectMajorVersion.size()).c_str());
+      return parse_status_ = OK;
+    } else if (str.empty() == false && '2' <= str[0] && str[0] <= '9') {
+      // HTTP2.0とかHTTP/2hogeとか
+      return parse_status_ = HTTP_VERSION_NOT_SUPPORTED;
+    }
   }
+  // 0.9とかHTTP/hogeとかHTTP/ 1.1とかHTTP/1. 1とか
+  return parse_status_ = BAD_REQUEST;
 }
 
 HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
@@ -345,6 +338,11 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 namespace {
+
+bool IsMethod(const std::string &token) {
+  return token == method_strs::kGet || token == method_strs::kDelete ||
+         token == method_strs::kPost;
+}
 
 bool IsObsFold(const utils::ByteVector &buf) {
   return buf.CompareHead(kCrlf + " ") || buf.CompareHead(kCrlf + "\t");
@@ -470,32 +468,10 @@ Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str) {
 }
 
 bool IsCorrectHTTPVersion(const std::string &str) {
-  if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
-    return false;
-  std::string minor_ver = str.substr(kExpectMajorVersion.size(),
-                                     str.size() - kExpectMajorVersion.size());
-
-  if (minor_ver.size() == 0 ||
-      minor_ver.size() >
-          kMinorVersionDigitLimit)  // nginxだと 999はOK 1000はだめ
-    return false;                   // "HTTP/1."を弾く
-
-  for (std::string::iterator it = minor_ver.begin(); it != minor_ver.end();
-       it++) {  // HTTP/1.hogeとかを弾く
-    if (std::isdigit(*it) == false)
-      return false;
-  }
-  return true;
-}
-
-Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer) {
-  size_t white_space_pos = buffer.find_first_of(" ");
-  if (white_space_pos == std::string::npos) {
-    return Error();
-  }
-  std::string res = buffer.substr(0, white_space_pos);
-  buffer.erase(0, white_space_pos + 1);
-  return res;
+  return str.size() > kExpectMajorVersion.size() &&
+         str.size() <= kExpectMajorVersion.size() + kMinorVersionDigitLimit &&
+         utils::ForwardMatch(str, kExpectMajorVersion) &&
+         utils::IsDigits(str.substr(kExpectMajorVersion.size()));
 }
 
 }  // namespace
