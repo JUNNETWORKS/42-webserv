@@ -20,6 +20,7 @@ TEST(PercentEncodeTest, Japanese) {
   s = "あいうえお";
   expect = "%E3%81%82%E3%81%84%E3%81%86%E3%81%88%E3%81%8A";
   EXPECT_RESULT_IS_OK(PercentEncode(s));
+  EXPECT_RESULT_OK_EQ(PercentEncode(s), Result<std::string>(expect));
 }
 
 TEST(PercentEncodeTest, Isprint) {
