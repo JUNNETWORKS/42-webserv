@@ -143,7 +143,7 @@ void CgiRequest::ExecuteCgi() {
   SetMetaVariables();
   // TODO : stdin
   // TODO : chdir
-  // args_ に argv[0] の分が含まれてないので、+ 1
+  // cgi_args_ に argv[0] の分が含まれてないので、+ 1
   char **argv = new char *[cgi_args_.size() + 1 + 1];
   argv[0] = strdup(cgi_path_.c_str());  // TODO : req の pathにする必要あり
   size_t i = 0;
