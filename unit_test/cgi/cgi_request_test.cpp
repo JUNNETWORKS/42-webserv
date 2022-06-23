@@ -8,8 +8,9 @@
 namespace cgi {
 
 TEST(CgiRequestTest, DefaultTest) {
-  http::HttpRequest req;
+  config::Config conf;
   config::LocationConf location;
+  http::HttpRequest req(conf);
 
   std::string request_path = "/cgi-bin/test-cgi";
   cgi::CgiRequest cgi(request_path, req, location);
@@ -20,8 +21,9 @@ TEST(CgiRequestTest, DefaultTest) {
 // QueryStringTest
 //  ------------------------------------------------------------------------------------------
 TEST(CgiRequestTest, QueryStringTest) {
-  http::HttpRequest req;
+  config::Config conf;
   config::LocationConf location;
+  http::HttpRequest req(conf);
 
   {
     std::string expect_cgi_path_ = "/cgi-bin/test-cgi";
@@ -55,8 +57,9 @@ TEST(CgiRequestTest, QueryStringTest) {
 // ArgsTest
 //  ------------------------------------------------------------------------------------------
 TEST(CgiRequestTest, ArgsTest) {
-  http::HttpRequest req;
+  config::Config conf;
   config::LocationConf location;
+  http::HttpRequest req(conf);
 
   {
     std::string expect_cgi_path_ = "/cgi-bin/test-cgi";
