@@ -28,8 +28,7 @@ HttpRequest::HttpRequest(const config::Config &config)
       parse_status_(OK),
       body_(),
       body_size_(0),
-      is_chunked_(false),
-      has_obs_fold_(false) {}
+      is_chunked_(false) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs)
     : config_(rhs.config_),
@@ -41,8 +40,7 @@ HttpRequest::HttpRequest(const HttpRequest &rhs)
       parse_status_(rhs.parse_status_),
       body_(rhs.body_),
       body_size_(rhs.body_size_),
-      is_chunked_(rhs.is_chunked_),
-      has_obs_fold_(rhs.has_obs_fold_) {}
+      is_chunked_(rhs.is_chunked_) {}
 
 HttpRequest::~HttpRequest() {}
 
@@ -100,40 +98,23 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   if (boundary_pos.IsErr())
     return kHeaderField;
 
-  if (IsObsFold(buffer)) {  //先頭がobs-foldの時
-    parse_status_ = BAD_REQUEST;
-    return kError;
-  }
-
   while (1) {
-    if (buffer.CompareHead(kHeaderBoundary)) {
-      buffer.EraseHead(kHeaderBoundary.size());
+    if (IsObsFold(buffer)) {  //先頭がobs-foldの時
+      parse_status_ = BAD_REQUEST;
+      return kError;
+    } else if (buffer.CompareHead(kHeaderBoundary)) {
       //先頭が\r\n\r\nなので終了処理
+      buffer.EraseHead(kHeaderBoundary.size());
       return kBodySize;
-    }
-
-    if (buffer.CompareHead(kCrlf)) {
-      // HeaderBoundary判定用に残しておいたcrlfを削除
+    } else {
       buffer.EraseHead(kCrlf.size());
     }
 
-    utils::ByteVector field_buffer;
-    while (1) {
-      Result<size_t> crlf_pos = buffer.FindString(kCrlf);
-      field_buffer.insert(field_buffer.end(), buffer.begin(),
-                          buffer.begin() + crlf_pos.Ok());
-      buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
-      if (IsObsFold(buffer) == false)
-        break;
-      has_obs_fold_ = true;
-      // TODO has_obs_fold_がtrueの時は、message/http以外エラー
-      buffer.erase(buffer.begin(), buffer.begin() + kCrlf.size() + 1);
-      field_buffer.push_back(' ');
-    }
-    std::string field_buffer_str =
-        field_buffer.SubstrBeforePos(field_buffer.size());
-    if (InterpretHeaderField(field_buffer_str) != OK)
+    Result<size_t> crlf_pos = buffer.FindString(kCrlf);
+    if (InterpretHeaderField(buffer.SubstrBeforePos(crlf_pos.Ok())) != OK)
       return kError;
+    else
+      buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
   }
 }
 
@@ -237,22 +218,19 @@ HttpStatus HttpRequest::InterpretVersion(const std::string &token) {
   return parse_status_ = BAD_REQUEST;
 }
 
-HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
+HttpStatus HttpRequest::InterpretHeaderField(const std::string &str) {
   size_t collon_pos = str.find_first_of(":");
 
-  if (collon_pos == std::string::npos || collon_pos == 0 ||
-      IsTcharString(str.substr(0, collon_pos)) == false)
+  if (collon_pos == std::string::npos || collon_pos == 0)
     return parse_status_ = BAD_REQUEST;
 
   std::string header = str.substr(0, collon_pos);
-  std::transform(header.begin(), header.end(), header.begin(), toupper);
-  str.erase(0, collon_pos + 1);
-  std::string field = utils::TrimString(str, kOWS);
-
-  Result<std::vector<std::string> > result = ParseHeaderFieldValue(str);
-  if (result.IsErr()) {
+  std::string value_str = str.substr(collon_pos + 1);
+  Result<std::vector<std::string> > result = ParseHeaderFieldValue(value_str);
+  if (result.IsErr() || IsTcharString(header) == false) {
     return parse_status_ = BAD_REQUEST;
   }
+  std::transform(header.begin(), header.end(), header.begin(), toupper);
   headers_[header] = result.Ok();
   return parse_status_ = OK;
 }
@@ -488,7 +466,6 @@ void HttpRequest::PrintRequestInfo() {
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
     printf("is_chuked_: %d\n", is_chunked_);
-    printf("has_obs_fold_: %d\n", has_obs_fold_);
     printf("body_size: %ld\n", body_size_);
     for (std::map<std::string, std::vector<std::string> >::iterator it =
              headers_.begin();

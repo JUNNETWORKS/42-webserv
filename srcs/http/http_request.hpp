@@ -56,7 +56,6 @@ class HttpRequest {
   utils::ByteVector body_;  // HTTP リクエストのボディ
   unsigned long body_size_;
   bool is_chunked_;
-  bool has_obs_fold_;
 
   // buffer内の文字列で処理を完了できない時、current_bufferに文字列を保持して処理を中断
   // 次のbufferが来るのを待つ
@@ -91,7 +90,7 @@ class HttpRequest {
   HttpStatus InterpretMethod(const std::string &method);
   HttpStatus InterpretPath(const std::string &path);
   HttpStatus InterpretVersion(const std::string &version);
-  HttpStatus InterpretHeaderField(std::string &str);
+  HttpStatus InterpretHeaderField(const std::string &str);
   HttpStatus InterpretContentLength(
       const HeaderMap::mapped_type &length_header);
   HttpStatus InterpretTransferEncoding(
