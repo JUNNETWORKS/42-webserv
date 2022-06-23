@@ -142,10 +142,10 @@ void CgiRequest::ExecuteCgi() {
   // TODO : 不要な環境変数のunset
   SetMetaVariables();
   // TODO : stdin
-  // TODO : chdir 必要？
+  // TODO : chdir
   // args_ に argv[0] の分が含まれてないので、+ 1
   char **argv = new char *[cgi_args_.size() + 1 + 1];
-  argv[0] = strdup(cgi_path_.c_str());  // TODO : req の pathにする必要あいr
+  argv[0] = strdup(cgi_path_.c_str());  // TODO : req の pathにする必要あり
   size_t i = 0;
   for (; i < cgi_args_.size(); i++) {
     argv[i + 1] = strdup(cgi_args_[i].c_str());
