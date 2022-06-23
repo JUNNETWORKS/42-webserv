@@ -2,5 +2,6 @@ GET / HTTP/1.1
 Host: localhost:49200
 Header: value1,
  value2
+Content-Type: message/http
 
 

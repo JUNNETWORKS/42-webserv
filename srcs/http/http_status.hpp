@@ -1,6 +1,9 @@
 #ifndef HTTP_HTTP_STATUS_HPP
 #define HTTP_HTTP_STATUS_HPP
 
+#include <map>
+#include <string>
+
 namespace http {
 
 enum HttpStatus {
@@ -22,10 +25,29 @@ enum HttpStatus {
   NOT_ACCEPTABLE = 406,
   REQUEST_TIMEOUT = 408,
   PAYLOAD_TOO_LARGE = 413,
+  URI_TOO_LONG = 414,
   SERVER_ERROR = 500,
   NOT_IMPLEMENTED = 501,
   SERVICE_UNAVAILABLE = 503,
   HTTP_VERSION_NOT_SUPPORTED = 505
+};
+
+class StatusCodes {
+ private:
+  static const std::map<unsigned long, std::string> status_messages_;
+
+ public:
+  static bool IsHttpStatus(unsigned long status);
+  static std::string GetMessage(unsigned long status);
+
+ private:
+  StatusCodes();
+  StatusCodes(const StatusCodes &rhs);
+  StatusCodes &operator=(const StatusCodes &rhs);
+  ~StatusCodes();
+
+  // https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+  static std::map<unsigned long, std::string> CreateStatusMessages();
 };
 
 }  // namespace http
