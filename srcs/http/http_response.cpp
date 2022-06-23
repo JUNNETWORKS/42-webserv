@@ -159,7 +159,7 @@ bool HttpResponse::MakeRedirectResponse(const config::LocationConf &location,
   return true;
 }
 
-std::string read_child(int fd) {
+std::string ReadChild(int fd) {
   char buf[1024 + 1];
 
   std::string s;
@@ -204,7 +204,7 @@ bool HttpResponse::MakeCgiReponse(const config::LocationConf &location,
 
   int parentsock = cgi.ForkAndExecuteCgi();
 
-  std::string cgi_res = read_child(parentsock);
+  std::string cgi_res = ReadChild(parentsock);
   close(parentsock);
 
   // とりあえず返せるように
