@@ -52,6 +52,10 @@ CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
 
 CgiRequest::~CgiRequest() {}
 
+pid_t CgiRequest::GetPid() const {
+  return cgi_pid_;
+}
+
 const std::string &CgiRequest::GetCgiPath() const {
   return cgi_path_;
 }
@@ -74,15 +78,15 @@ int CgiRequest::ForkAndExecuteCgi() {
   int parentsock = sockfds[0];
   int childsock = sockfds[1];
 
-  pid_t pid = fork();
-  if (pid == 0) {
+  cgi_pid_ = fork();
+  if (cgi_pid_ == 0) {
     // Child
     close(parentsock);
     dup2(childsock, STDOUT_FILENO);
     close(childsock);
     ExecuteCgi();
     exit(EXIT_FAILURE);  // TODO :
-  } else if (pid > 0) {
+  } else if (cgi_pid_ > 0) {
     // Parent
     close(childsock);
     return parentsock;

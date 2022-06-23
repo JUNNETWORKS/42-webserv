@@ -12,6 +12,7 @@ namespace cgi {
 
 class CgiRequest {
  private:
+  pid_t cgi_pid_;
   std::string cgi_path_;
   std::string query_string_;
   std::vector<std::string> cgi_args_;
@@ -24,6 +25,7 @@ class CgiRequest {
   CgiRequest &operator=(const CgiRequest &rhs);
   ~CgiRequest();
 
+  pid_t GetPid() const;
   const std::string &GetCgiPath() const;
   const std::string &GetQueryString() const;
   const std::vector <std::string> &GetCgiArgs() const;
