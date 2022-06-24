@@ -14,34 +14,18 @@ namespace cgi {
 
 CgiRequest::CgiRequest(const std::string &request_path,
                        const http::HttpRequest &request,
-                       const config::LocationConf &location) {
-  std::string::size_type pos = request_path.find("?");
+                       const config::LocationConf &location)
+    : request_path_(request_path), request_(request), location_(location) {}
 
-  if (pos != std::string::npos) {
-    cgi_path_ = request_path.substr(0, pos);  // decode
-    query_string_ = request_path.substr(pos + 1);
-    if (query_string_ != "" && query_string_.find('=') == std::string::npos) {
-      // TODO : argv の 最大数でリミットかける必要ある？
-      // TODO : cig_args は パーセントデコーディングされる
-      // この時 + は split されない
-      cgi_args_ = utils::SplitString(query_string_, "+");
-      if (query_string_[query_string_.length() - 1] == '+') {
-        cgi_args_.push_back("");
-      }
-    }
-  } else {
-    cgi_path_ = request_path;  // decode
-    query_string_ = "";
-  }
-  CreateCgiMetaVariablesFromHttpRequest(request, location);
-}
-
-CgiRequest::CgiRequest(const CgiRequest &rhs) {
+CgiRequest::CgiRequest(const CgiRequest &rhs)
+    : request_(rhs.request_), location_(rhs.location_) {
   *this = rhs;
 }
 
 CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
   if (this != &rhs) {
+    cgi_pid_ = rhs.cgi_pid_;
+    request_path_ = rhs.request_path_;
     cgi_path_ = rhs.cgi_path_;
     query_string_ = rhs.query_string_;
     cgi_args_ = rhs.cgi_args_;
@@ -66,6 +50,37 @@ const std::string &CgiRequest::GetQueryString() const {
 
 const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
   return cgi_args_;
+}
+
+int CgiRequest::RunCgi() {
+  int parentsock;
+
+  ParseCigRequest();
+  CreateCgiMetaVariablesFromHttpRequest(request_, location_);
+  parentsock = ForkAndExecuteCgi();
+  return parentsock;
+}
+
+// 作業中
+bool CgiRequest::ParseCigRequest() {
+  std::string::size_type pos = request_path_.find("?");
+  if (pos != std::string::npos) {
+    cgi_path_ = request_path_.substr(0, pos);  // decode
+    query_string_ = request_path_.substr(pos + 1);
+    if (query_string_ != "" && query_string_.find('=') == std::string::npos) {
+      // TODO : argv の 最大数でリミットかける必要ある？
+      // TODO : cig_args は パーセントデコーディングされる
+      // この時 + は split されない
+      cgi_args_ = utils::SplitString(query_string_, "+");
+      if (query_string_[query_string_.length() - 1] == '+') {
+        cgi_args_.push_back("");
+      }
+    }
+  } else {
+    cgi_path_ = request_path_;  // decode
+    query_string_ = "";
+  }
+  return true;
 }
 
 int CgiRequest::ForkAndExecuteCgi() {

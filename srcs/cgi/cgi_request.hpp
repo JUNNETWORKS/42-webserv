@@ -13,6 +13,11 @@ namespace cgi {
 class CgiRequest {
  private:
   pid_t cgi_pid_;
+  std::string request_path_;
+  // TODO : 必要な情報だけ取るようにして、メンバ変数からは削除予定
+  const http::HttpRequest &request_;
+  // TODO : 必要な情報だけ取るようにして、メンバ変数からは削除予定
+  const config::LocationConf &location_;
   std::string cgi_path_;
   std::string query_string_;
   std::vector<std::string> cgi_args_;
@@ -28,8 +33,10 @@ class CgiRequest {
   pid_t GetPid() const;
   const std::string &GetCgiPath() const;
   const std::string &GetQueryString() const;
-  const std::vector <std::string> &GetCgiArgs() const;
+  const std::vector<std::string> &GetCgiArgs() const;
 
+  int RunCgi();
+  bool ParseCigRequest();
   // 返り値は無名ドメインソケットのfd
   // TODO: 第二引数はhttprequestじゃなくてcgirequestとかのほうがよいかも
   // TODO: cgiのpidをどうやってwaitするかが問題｡

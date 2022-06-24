@@ -202,7 +202,7 @@ bool HttpResponse::MakeCgiReponse(const config::LocationConf &location,
 
   cgi::CgiRequest cgi(abs_path, request, location);
 
-  int parentsock = cgi.ForkAndExecuteCgi();
+  int parentsock = cgi.RunCgi();
 
   std::string cgi_res = ReadChild(parentsock);
   close(parentsock);
