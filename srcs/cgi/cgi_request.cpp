@@ -15,7 +15,10 @@ namespace cgi {
 CgiRequest::CgiRequest(const std::string &request_path,
                        const http::HttpRequest &request,
                        const config::LocationConf &location)
-    : request_path_(request_path), request_(request), location_(location) {}
+    : cgi_pid_(-1),
+      request_path_(request_path),
+      request_(request),
+      location_(location) {}
 
 CgiRequest::CgiRequest(const CgiRequest &rhs)
     : request_(rhs.request_), location_(rhs.location_) {
