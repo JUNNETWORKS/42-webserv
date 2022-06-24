@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "config/config.hpp"
 #include "http/types.hpp"
 #include "http_constants.hpp"
 #include "http_status.hpp"
@@ -45,6 +46,7 @@ class HttpRequest {
     kError
   };
 
+  const config::Config &config_;
   std::string method_;
   std::string path_;
   int minor_version_;
@@ -54,6 +56,7 @@ class HttpRequest {
   utils::ByteVector body_;  // HTTP リクエストのボディ
   unsigned long body_size_;
   bool is_chunked_;
+  bool has_obs_fold_;
 
   // buffer内の文字列で処理を完了できない時、current_bufferに文字列を保持して処理を中断
   // 次のbufferが来るのを待つ
@@ -61,7 +64,7 @@ class HttpRequest {
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
  public:
-  HttpRequest();
+  HttpRequest(const config::Config &config);
   HttpRequest(const HttpRequest &rhs);
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
@@ -81,13 +84,14 @@ class HttpRequest {
   const utils::ByteVector &GetBody();
 
  private:
+  HttpRequest();
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
   ParsingPhase ParseBodySize();
   ParsingPhase ParseBody(utils::ByteVector &buffer);
-  HttpStatus InterpretMethod(std::string &str);
-  HttpStatus InterpretPath(std::string &str);
-  HttpStatus InterpretVersion(std::string &str);
+  HttpStatus InterpretMethod(const std::string &method);
+  HttpStatus InterpretPath(const std::string &path);
+  HttpStatus InterpretVersion(const std::string &version);
   HttpStatus InterpretHeaderField(std::string &str);
   HttpStatus InterpretContentLength(
       const HeaderMap::mapped_type &length_header);

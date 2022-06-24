@@ -9,17 +9,18 @@ namespace http {
 namespace {
 
 using namespace result;
-
+bool IsMethod(const std::string &token);
+bool IsObsFold(const utils::ByteVector &buf);
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
-Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer);
 Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
 std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     utils::ByteVector &buffer);
 }  // namespace
 
-HttpRequest::HttpRequest()
-    : method_(""),
+HttpRequest::HttpRequest(const config::Config &config)
+    : config_(config),
+      method_(""),
       path_(""),
       minor_version_(-1),
       headers_(),
@@ -27,26 +28,21 @@ HttpRequest::HttpRequest()
       parse_status_(OK),
       body_(),
       body_size_(0),
-      is_chunked_(false) {}
+      is_chunked_(false),
+      has_obs_fold_(false) {}
 
-HttpRequest::HttpRequest(const HttpRequest &rhs) {
-  *this = rhs;
-}
-
-HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
-  if (this != &rhs) {
-    method_ = rhs.method_;
-    path_ = rhs.path_;
-    minor_version_ = rhs.minor_version_;
-    headers_ = rhs.headers_;
-    phase_ = rhs.phase_;
-    parse_status_ = rhs.parse_status_;
-    body_ = rhs.body_;
-    body_size_ = rhs.body_size_;
-    is_chunked_ = rhs.is_chunked_;
-  }
-  return *this;
-}
+HttpRequest::HttpRequest(const HttpRequest &rhs)
+    : config_(rhs.config_),
+      method_(rhs.method_),
+      path_(rhs.path_),
+      minor_version_(rhs.minor_version_),
+      headers_(rhs.headers_),
+      phase_(rhs.phase_),
+      parse_status_(rhs.parse_status_),
+      body_(rhs.body_),
+      body_size_(rhs.body_size_),
+      is_chunked_(rhs.is_chunked_),
+      has_obs_fold_(rhs.has_obs_fold_) {}
 
 HttpRequest::~HttpRequest() {}
 
@@ -87,13 +83,19 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
   if (pos.IsErr())
     return kRequestLine;
 
-  std::string line = buffer.CutSubstrBeforePos(pos.Ok());
-  if (InterpretMethod(line) == OK && InterpretPath(line) == OK &&
-      InterpretVersion(line) == OK) {
-    return kHeaderField;
-  } else {
+  const std::string str = buffer.SubstrBeforePos(pos.Ok());
+  if (std::count(str.begin(), str.end(), ' ') != 2) {
+    parse_status_ = BAD_REQUEST;
     return kError;
   }
+
+  std::vector<std::string> tokens = utils::SplitString(str, " ");
+  if (InterpretMethod(tokens[0]) == OK && InterpretPath(tokens[1]) == OK &&
+      InterpretVersion(tokens[2]) == OK) {
+    buffer.erase(buffer.begin(), buffer.begin() + pos.Ok());
+    return kHeaderField;
+  }
+  return kError;
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
@@ -101,6 +103,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   Result<size_t> boundary_pos = buffer.FindString(kHeaderBoundary);
   if (boundary_pos.IsErr())
     return kHeaderField;
+
+  if (IsObsFold(buffer)) {  //先頭がobs-foldの時
+    parse_status_ = BAD_REQUEST;
+    return kError;
+  }
 
   while (1) {
     if (buffer.CompareHead(kHeaderBoundary)) {
@@ -114,15 +121,23 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
       buffer.EraseHead(kCrlf.size());
     }
 
-    Result<size_t> crlf_pos = buffer.FindString(kCrlf);
-    if (crlf_pos.IsErr()) {
-      return kHeaderField;
-    } else {
-      std::string line =
-          buffer.CutSubstrBeforePos(crlf_pos.Ok());  // headerfieldの解釈
-      if (InterpretHeaderField(line) != OK)
-        return kError;
+    utils::ByteVector field_buffer;
+    while (1) {
+      Result<size_t> crlf_pos = buffer.FindString(kCrlf);
+      field_buffer.insert(field_buffer.end(), buffer.begin(),
+                          buffer.begin() + crlf_pos.Ok());
+      buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
+      if (IsObsFold(buffer) == false)
+        break;
+      has_obs_fold_ = true;
+      // TODO has_obs_fold_がtrueの時は、message/http以外エラー
+      buffer.erase(buffer.begin(), buffer.begin() + kCrlf.size() + 1);
+      field_buffer.push_back(' ');
     }
+    std::string field_buffer_str =
+        field_buffer.SubstrBeforePos(field_buffer.size());
+    if (InterpretHeaderField(field_buffer_str) != OK)
+      return kError;
   }
 }
 
@@ -167,7 +182,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
       case Chunk::kErrorBadRequest:
         parse_status_ = BAD_REQUEST;
         return kError;
-      case Chunk::kErrorLength:  // TODO TOOLARGEじゃないかも
+      case Chunk::kErrorLength:
         parse_status_ = PAYLOAD_TOO_LARGE;
         return kError;
       default:
@@ -189,52 +204,41 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
 //========================================================================
 // Interpret系関数　文字列を解釈する関数　主にparse_statusで動作管理(OKじゃなくなったら次は実行されない)
 
-HttpStatus HttpRequest::InterpretMethod(std::string &str) {
-  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
-  if (result.IsErr()) {
-    return parse_status_ = BAD_REQUEST;
-  }
-  method_ = result.Ok();
-
-  if (method_ == method_strs::kGet || method_ == method_strs::kDelete ||
-      method_ == method_strs::kPost) {
-    // TODO 501 (Not Implemented)を判定する
+HttpStatus HttpRequest::InterpretMethod(const std::string &token) {
+  if (IsMethod(token)) {
+    method_ = token;
     return parse_status_ = OK;
-  }
-  return parse_status_ = BAD_REQUEST;
-}
-
-HttpStatus HttpRequest::InterpretPath(std::string &str) {
-  Result<std::string> result = CutSubstrBeforeWhiteSpace(str);
-  if (result.IsErr()) {
+  } else if (token.empty() || IsTcharString(token) == false) {
     return parse_status_ = BAD_REQUEST;
-  }
-  path_ = result.Ok();
-
-  if (true) {  // TODO 長いURLの時414(URI Too Long)を判定する
-    return parse_status_ = OK;
-  }
-  return parse_status_ = BAD_REQUEST;
-}
-
-HttpStatus HttpRequest::InterpretVersion(std::string &str) {
-  if (!utils::ForwardMatch(str, kHttpVersionPrefix))
-    return parse_status_ = BAD_REQUEST;
-
-  str.erase(0, kHttpVersionPrefix.size());
-
-  if (IsCorrectHTTPVersion(str)) {
-    // HTTP1.~ が保証される
-    str.erase(0, kExpectMajorVersion.size());
-    minor_version_ = std::atoi(str.c_str());
-    return parse_status_ = OK;
-  } else if (std::isdigit(str[0]) == true && str[0] != '0' && str[0] != '1') {
-    // HTTP2.0とかHTTP/2hogeとか
-    return parse_status_ = HTTP_VERSION_NOT_SUPPORTED;
   } else {
-    // 0.9とかHTTP/hogeとか
-    return parse_status_ = BAD_REQUEST;
+    return parse_status_ = NOT_IMPLEMENTED;
   }
+}
+
+HttpStatus HttpRequest::InterpretPath(const std::string &token) {
+  if (token.size() > kMaxUriLength) {
+    return parse_status_ = URI_TOO_LONG;
+  } else {
+    path_ = token;
+    return parse_status_ = OK;
+  }
+}
+
+HttpStatus HttpRequest::InterpretVersion(const std::string &token) {
+  if (utils::ForwardMatch(token, kHttpVersionPrefix)) {
+    const std::string str = token.substr(kHttpVersionPrefix.size());
+    if (IsCorrectHTTPVersion(str)) {
+      // HTTP1.~ が保証される
+      minor_version_ =
+          std::atoi(str.substr(kExpectMajorVersion.size()).c_str());
+      return parse_status_ = OK;
+    } else if (str.empty() == false && '2' <= str[0] && str[0] <= '9') {
+      // HTTP2.0とかHTTP/2hogeとか
+      return parse_status_ = HTTP_VERSION_NOT_SUPPORTED;
+    }
+  }
+  // 0.9とかHTTP/hogeとかHTTP/ 1.1とかHTTP/1. 1とか
+  return parse_status_ = BAD_REQUEST;
 }
 
 HttpStatus HttpRequest::InterpretHeaderField(std::string &str) {
@@ -338,6 +342,15 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 namespace {
+
+bool IsMethod(const std::string &token) {
+  return token == method_strs::kGet || token == method_strs::kDelete ||
+         token == method_strs::kPost;
+}
+
+bool IsObsFold(const utils::ByteVector &buf) {
+  return buf.CompareHead(kCrlf + " ") || buf.CompareHead(kCrlf + "\t");
+}
 
 // Chunk内にCRLFがあること、CRLFがチャンクの末尾についている事を検証する。
 bool ValidateChunkDataFormat(const Chunk &chunk, utils::ByteVector &buffer) {
@@ -459,32 +472,10 @@ Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str) {
 }
 
 bool IsCorrectHTTPVersion(const std::string &str) {
-  if (!utils::ForwardMatch(str, kExpectMajorVersion))  // HTTP/ 1.0とかを弾く
-    return false;
-  std::string minor_ver = str.substr(kExpectMajorVersion.size(),
-                                     str.size() - kExpectMajorVersion.size());
-
-  if (minor_ver.size() == 0 ||
-      minor_ver.size() >
-          kMinorVersionDigitLimit)  // nginxだと 999はOK 1000はだめ
-    return false;                   // "HTTP/1."を弾く
-
-  for (std::string::iterator it = minor_ver.begin(); it != minor_ver.end();
-       it++) {  // HTTP/1.hogeとかを弾く
-    if (std::isdigit(*it) == false)
-      return false;
-  }
-  return true;
-}
-
-Result<std::string> CutSubstrBeforeWhiteSpace(std::string &buffer) {
-  size_t white_space_pos = buffer.find_first_of(" ");
-  if (white_space_pos == std::string::npos) {
-    return Error();
-  }
-  std::string res = buffer.substr(0, white_space_pos);
-  buffer.erase(0, white_space_pos + 1);
-  return res;
+  return str.size() > kExpectMajorVersion.size() &&
+         str.size() <= kExpectMajorVersion.size() + kMinorVersionDigitLimit &&
+         utils::ForwardMatch(str, kExpectMajorVersion) &&
+         utils::IsDigits(str.substr(kExpectMajorVersion.size()));
 }
 
 }  // namespace
@@ -501,6 +492,7 @@ void HttpRequest::PrintRequestInfo() {
     printf("path_: %s\n", path_.c_str());
     printf("version_: %d\n", minor_version_);
     printf("is_chuked_: %d\n", is_chunked_);
+    printf("has_obs_fold_: %d\n", has_obs_fold_);
     printf("body_size: %ld\n", body_size_);
     for (std::map<std::string, std::vector<std::string> >::iterator it =
              headers_.begin();
