@@ -16,6 +16,7 @@ CgiRequest::CgiRequest(const std::string &request_path,
                        const http::HttpRequest &request,
                        const config::LocationConf &location)
     : cgi_pid_(-1),
+      cgi_unisock_(-1),
       request_path_(request_path),
       request_(request),
       location_(location) {}
@@ -28,6 +29,7 @@ CgiRequest::CgiRequest(const CgiRequest &rhs)
 CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
   if (this != &rhs) {
     cgi_pid_ = rhs.cgi_pid_;
+    cgi_unisock_ = rhs.cgi_unisock_;
     request_path_ = rhs.request_path_;
     cgi_path_ = rhs.cgi_path_;
     query_string_ = rhs.query_string_;
@@ -43,6 +45,10 @@ pid_t CgiRequest::GetPid() const {
   return cgi_pid_;
 }
 
+int CgiRequest::GetCgiUnisock() const {
+  return cgi_unisock_;
+}
+
 const std::string &CgiRequest::GetCgiPath() const {
   return cgi_path_;
 }
@@ -55,13 +61,11 @@ const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
   return cgi_args_;
 }
 
-int CgiRequest::RunCgi() {
-  int parentsock;
-
+bool CgiRequest::RunCgi() {
   ParseCigRequest();
   CreateCgiMetaVariablesFromHttpRequest(request_, location_);
-  parentsock = ForkAndExecuteCgi();
-  return parentsock;
+  ForkAndExecuteCgi();
+  return true;
 }
 
 // 作業中
@@ -86,7 +90,7 @@ bool CgiRequest::ParseCigRequest() {
   return true;
 }
 
-int CgiRequest::ForkAndExecuteCgi() {
+bool CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
   if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockfds) == -1) {
     // Error
@@ -106,8 +110,9 @@ int CgiRequest::ForkAndExecuteCgi() {
     exit(EXIT_FAILURE);  // TODO :
   } else if (cgi_pid_ > 0) {
     // Parent
+    cgi_unisock_ = parentsock;
     close(childsock);
-    return parentsock;
+    return true;
   } else {
     // Error
     exit(EXIT_FAILURE);  // TODO :
