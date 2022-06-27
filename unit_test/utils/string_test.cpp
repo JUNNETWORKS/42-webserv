@@ -88,4 +88,42 @@ INSTANTIATE_TEST_SUITE_P(StoulHexTestNg, StoulHexTestNg,
                                            "-1aB",  // Hex_ContainsMinusSign
                                            "+1aB"   // Hex_ContainsPlusSign
                                            ));
+
+// Split Test
+// ------------------------------------------------------------------------------------------
+class SplitTest
+    : public ::testing::TestWithParam<std::pair<
+          std::pair<std::string, std::string>, std::vector<std::string>>> {};
+
+TEST_P(SplitTest, Ok) {
+  std::pair<std::pair<std::string, std::string>, std::vector<std::string>>
+      param = GetParam();
+  std::pair<std::string, std::string> input = param.first;
+  std::vector<std::string> expected = param.second;
+
+  EXPECT_EQ(SplitString(input.first, input.second), expected);
+}
+
+const std::vector<
+    std::pair<std::pair<std::string, std::string>, std::vector<std::string>>>
+    SplitTestCase = {
+        {{"", ""}, {""}},
+        {{"a", ""}, {"a"}},
+        {{"", " "}, {""}},
+        {{" ", " "}, {"", ""}},
+        {{"   ", " "}, {"", "", "", ""}},
+        {{"a b c", " "}, {"a", "b", "c"}},
+        {{" a b c", " "}, {"", "a", "b", "c"}},
+        {{" a b c ", " "}, {"", "a", "b", "c", ""}},
+        {{"--a---b---c--", "---"}, {"--a", "b", "c--"}},
+        {{"-a-", "-"}, {"", "a", ""}},
+        {{"-a-", "---"}, {"-a-"}},
+        {{"-a-", "-----"}, {"-a-"}},
+        {{"---a---", "-"}, {"", "", "", "a", "", "", ""}},
+        {{"---a---", "---"}, {"", "a", ""}},
+};
+
+INSTANTIATE_TEST_SUITE_P(SplitTest, SplitTest,
+                         ::testing::ValuesIn(SplitTestCase));
+
 }  // namespace utils
