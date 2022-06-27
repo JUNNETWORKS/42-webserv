@@ -86,7 +86,7 @@ std::vector<std::string> SplitString(const std::string &str,
   size_t start_idx;
   size_t end_idx;
 
-  if (str == "" || delim == "") {
+  if (str.empty() || delim.empty()) {
     strs.push_back(str);
     return strs;
   }
