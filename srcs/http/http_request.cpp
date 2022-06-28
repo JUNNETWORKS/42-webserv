@@ -169,10 +169,12 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
     }
 
     Chunk chunk = chunk_pair.second;
+    if (chunk.data_size == 0) {
+      buffer.erase(buffer.begin(), buffer.begin() + chunk.size_str.size());
+      return kChunkedTrailer;
+    }
     buffer.erase(buffer.begin(),
                  buffer.begin() + chunk.size_str.size() + kCrlf.size());
-    if (chunk_pair.second.data_size == 0)
-      return kParsed;
     body_.insert(body_.end(), buffer.begin(), buffer.begin() + chunk.data_size);
     buffer.erase(buffer.begin(),
                  buffer.begin() + chunk.data_size + kCrlf.size());
