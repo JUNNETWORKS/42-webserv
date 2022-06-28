@@ -1,6 +1,9 @@
 #include "File.hpp"
 
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <cassert>
 #include <sstream>
@@ -8,7 +11,7 @@
 namespace utils {
 
 File::File(const std::string& absolute_path)
-    : absolute_path_(absolute_path), file_type_(kNotExist) {
+    : absolute_path_(absolute_path), file_type_(kNotExist), file_fd_(-1) {
   if (stat(absolute_path_.c_str(), &stat_) < 0) {
     file_type_ = kNotExist;
   } else {
@@ -29,6 +32,29 @@ File& File::operator=(File const& rhs) {
     file_type_ = rhs.file_type_;
   }
   return *this;
+}
+
+Result<void> File::Open() {
+  int fd = open(absolute_path_.c_str(), O_RDONLY);
+  if (fd < 0) {
+    return Error();
+  }
+  // TODO: NONBLOCKING に設定する?
+  file_fd_ = fd;
+  return Result<void>();
+}
+
+Result<int> File::Read(char* buf, size_t count) {
+  assert(file_fd_ >= 0);
+  int read_res = read(file_fd_, buf, count);
+  if (read_res < 0) {
+    return Error();
+  }
+  return read_res;
+}
+
+int File::GetFd() const {
+  return file_fd_;
 }
 
 // autoindexでsortを使用したいので作成
