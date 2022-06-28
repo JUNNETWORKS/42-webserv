@@ -6,7 +6,7 @@
 #include "utils/string.hpp"
 
 namespace utils {
-std::vector<std::string> PathSplit(const std::string path) {
+static std::vector<std::string> PathSplit(const std::string path) {
   std::vector<std::string> v;
   if (path == "") {
     return v;

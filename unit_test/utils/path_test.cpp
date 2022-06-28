@@ -27,6 +27,8 @@ const std::vector<std::pair<std::pair<std::string, std::string>, std::string>>
         {{"a/", "/b"}, "a/b"},
         {{"/a", "/b"}, "/a/b"},
         {{"/a/", "/b/"}, "/a/b"},
+        {{"a/b/c", "x/y/z"}, "a/b/c/x/y/z"},
+        {{"a///b///c", "x/./y/./z"}, "a/b/c/x/y/z"},
         {{"///a///", "///b///"}, "/a/b"},
         {{"a/b/c", "d/e/f"}, "a/b/c/d/e/f"},
         {{"/a/b/c/", "/d/e/f"}, "/a/b/c/d/e/f"},
