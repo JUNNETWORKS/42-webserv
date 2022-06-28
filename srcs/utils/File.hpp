@@ -15,6 +15,7 @@ class File {
   // enum の順番が sort の順番になる
   enum FileType { kNotExist, kDir, kFile };
 
+  File();
   File(const std::string &absolute_path);
   File(const File &rhs);
   ~File();

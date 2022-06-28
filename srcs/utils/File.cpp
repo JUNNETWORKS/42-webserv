@@ -10,6 +10,8 @@
 
 namespace utils {
 
+File::File() : file_type_(kNotExist), file_fd_(-1) {}
+
 File::File(const std::string& absolute_path)
     : absolute_path_(absolute_path), file_type_(kNotExist), file_fd_(-1) {
   if (stat(absolute_path_.c_str(), &stat_) < 0) {
@@ -30,6 +32,7 @@ File& File::operator=(File const& rhs) {
     absolute_path_ = rhs.absolute_path_;
     stat_ = rhs.stat_;
     file_type_ = rhs.file_type_;
+    // file_fd_ をコピーすると2重closeの問題が発生するのでコピーしない
   }
   return *this;
 }
