@@ -27,6 +27,18 @@ bool IsDir(const std::string& file_path) {
   return S_ISDIR(sb.st_mode);
 }
 
+// TODO: Resultで返したほうがいいかも?
+unsigned long GetFileSize(const std::string& file_path) {
+  struct stat sb;
+
+  stat(file_path.c_str(), &sb);
+  return sb.st_size;
+}
+
+bool IsReadableFile(const std::string& file_path) {
+  return access(file_path.c_str(), R_OK) == 0;
+}
+
 Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
   std::vector<utils::File> vec;
   struct dirent* dent;
