@@ -15,13 +15,14 @@ namespace {
 
 // リクエストに応じたレスポンスを返す
 http::HttpResponse *AllocateResponseObj(
-    const config::VirtualServerConf *vserver, const http::HttpRequest &request);
+    const config::VirtualServerConf *vserver, const http::HttpRequest &request,
+    Epoll *epoll);
 
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessRequest(ConnSocket *socket);
 
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
-bool ProcessResponse(ConnSocket *socket);
+bool ProcessResponse(ConnSocket *socket, Epoll *epoll);
 
 // HTTPリクエストのヘッダーに "Connection: close" が含まれているか
 //
@@ -40,7 +41,7 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
     should_close_conn |= ProcessRequest(conn_sock);
   }
   if (events & kFdeWrite) {
-    should_close_conn |= ProcessResponse(conn_sock);
+    should_close_conn |= ProcessResponse(conn_sock, epoll);
   }
 
   if (conn_sock->HasParsedRequest()) {
@@ -129,7 +130,7 @@ bool RequestHeaderHasConnectionClose(http::HttpRequest &request) {
   return false;
 }
 
-bool ProcessResponse(ConnSocket *socket) {
+bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
   int conn_fd = socket->GetFd();
   const config::Config &config = socket->GetConfig();
   std::deque<http::HttpRequest> &requests = socket->GetRequests();
@@ -148,19 +149,22 @@ bool ProcessResponse(ConnSocket *socket) {
 
     if (socket->GetResponse() == NULL) {
       // レスポンスオブジェクトがまだない
-      http::HttpResponse *response = AllocateResponseObj(vserver, request);
+      http::HttpResponse *response =
+          AllocateResponseObj(vserver, request, epoll);
       socket->SetResponse(response);
     } else {
       http::HttpResponse *response = socket->GetResponse();
       if (response->IsReadyToWrite()) {
+        // 書き込むデータが存在する
         response->Write(conn_fd);
       } else if (response->IsAllDataWritingCompleted()) {
+        // 全て書き込み完了
         delete response;
         should_close_conn = true;
         requests.pop_front();
       } else {
         // 書き込むデータはないがレスポンスは完成していない
-        response->MakeResponse(vserver, socket);
+        response->MakeResponse(socket);
       }
     }
 
@@ -172,8 +176,8 @@ bool ProcessResponse(ConnSocket *socket) {
 }
 
 http::HttpResponse *AllocateResponseObj(
-    const config::VirtualServerConf *vserver,
-    const http::HttpRequest &request) {
+    const config::VirtualServerConf *vserver, const http::HttpRequest &request,
+    Epoll *epoll) {
   if (!vserver) {
     http::HttpResponse *res = new http::HttpResponse();
     res->MakeErrorResponse(NULL, request, http::NOT_FOUND);
@@ -188,11 +192,11 @@ http::HttpResponse *AllocateResponseObj(
   }
 
   if (location->GetIsCgi()) {
-    return new http::HttpCgiResponse();
+    return new http::HttpCgiResponse(location, epoll);
   } else if (location->GetRedirectUrl()) {
-    return new http::HttpRedirectResponse();
+    return new http::HttpRedirectResponse(location, epoll);
   } else {
-    return new http::HttpFileResponse();
+    return new http::HttpFileResponse(location, epoll);
   }
 };
 
