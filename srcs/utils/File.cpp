@@ -25,7 +25,9 @@ File::File(const File& rhs) {
   *this = rhs;
 }
 
-File::~File() {}
+File::~File() {
+  Close();
+}
 
 File& File::operator=(File const& rhs) {
   if (this != &rhs) {
@@ -54,6 +56,12 @@ Result<int> File::Read(char* buf, size_t count) {
     return Error();
   }
   return read_res;
+}
+
+void File::Close() {
+  if (file_fd_ >= 0) {
+    close(file_fd_);
+  }
 }
 
 int File::GetFd() const {

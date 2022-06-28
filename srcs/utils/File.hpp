@@ -24,6 +24,7 @@ class File {
 
   Result<void> Open();
   Result<int> Read(char *buf, size_t count);
+  void Close();
 
   int GetFd() const;
   std::string GetAbsolutePath() const;
