@@ -61,7 +61,8 @@ HttpResponse::~HttpResponse() {
 Result<void> HttpResponse::RegisterFile(std::string file_path) {
   FileWithEvents *file_with_events = new FileWithEvents();
   file_with_events->file = utils::File(file_path);
-  if (file_with_events->file.Open().IsErr()) {
+  if (!utils::IsReadableFile(file_path) ||
+      file_with_events->file.Open().IsErr()) {
     delete file_with_events;
     return Error();
   }
