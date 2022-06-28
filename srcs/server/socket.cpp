@@ -58,8 +58,12 @@ bool ConnSocket::HasParsedRequest() {
   return !requests_.empty() && requests_.front().IsCorrectRequest();
 }
 
-http::HttpResponse &ConnSocket::GetResponse() {
+http::HttpResponse *ConnSocket::GetResponse() {
   return response_;
+}
+
+void ConnSocket::SetResponse(http::HttpResponse *response) {
+  response_ = response;
 }
 
 utils::ByteVector &ConnSocket::GetBuffer() {
