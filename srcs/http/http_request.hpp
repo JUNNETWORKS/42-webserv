@@ -85,7 +85,8 @@ class HttpRequest {
  private:
   HttpRequest();
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
-  ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
+  ParsingPhase ParseHeaderField(utils::ByteVector &buffer,
+                                const ParsingPhase &phase);
   ParsingPhase ParseBodySize();
   ParsingPhase ParseBody(utils::ByteVector &buffer);
   ParsingPhase ParseChunkedTrailer(utils::ByteVector &buffer);

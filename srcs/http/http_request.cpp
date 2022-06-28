@@ -95,10 +95,10 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
 }
 
 HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
-    utils::ByteVector &buffer) {
+    utils::ByteVector &buffer, const ParsingPhase &next) {
   Result<size_t> boundary_pos = buffer.FindString(kHeaderBoundary);
   if (boundary_pos.IsErr())
-    return kHeaderField;
+    return phase_;
 
   while (1) {
     if (IsObsFold(buffer)) {  //先頭がobs-foldの時
@@ -107,7 +107,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     } else if (buffer.CompareHead(kHeaderBoundary)) {
       //先頭が\r\n\r\nなので終了処理
       buffer.EraseHead(kHeaderBoundary.size());
-      return kBodySize;
+      return next;
     } else {
       buffer.EraseHead(kCrlf.size());
     }
