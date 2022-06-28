@@ -156,7 +156,7 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       http::HttpResponse *response = socket->GetResponse();
       if (response->IsReadyToWrite()) {
         // 書き込むデータが存在する
-        response->Write(conn_fd);
+        should_close_conn |= response->Write(conn_fd).IsErr();
       } else if (response->IsAllDataWritingCompleted()) {
         // 全て書き込み完了
         delete response;
@@ -191,13 +191,15 @@ http::HttpResponse *AllocateResponseObj(
     return res;
   }
 
-  if (location->GetIsCgi()) {
-    return new http::HttpCgiResponse(location, epoll);
-  } else if (location->GetRedirectUrl()) {
-    return new http::HttpRedirectResponse(location, epoll);
-  } else {
-    return new http::HttpFileResponse(location, epoll);
-  }
+  return new http::HttpFileResponse(location, epoll);
+  // TODO: 以下のコードが実行できるようにする
+  //  if (location->GetIsCgi()) {
+  //    return new http::HttpCgiResponse(location, epoll);
+  //  } else if (location->GetRedirectUrl()) {
+  //    return new http::HttpRedirectResponse(location, epoll);
+  //  } else {
+  //    return new http::HttpFileResponse(location, epoll);
+  //  }
 };
 
 }  // namespace
