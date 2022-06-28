@@ -13,6 +13,10 @@ namespace server {
 
 namespace {
 
+// リクエストに応じたレスポンスを返す
+http::HttpResponse *AllocateResponseObj(
+    const config::VirtualServerConf *vserver, const http::HttpRequest &request);
+
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessRequest(ConnSocket *socket);
 
@@ -133,7 +137,7 @@ bool ProcessResponse(ConnSocket *socket) {
 
   if (socket->HasParsedRequest()) {
     http::HttpRequest &request = requests.front();
-    http::HttpResponse &response = socket->GetResponse();
+
     const std::string &host =
         request.GetHeader("Host").empty() ? "" : request.GetHeader("Host")[0];
     const std::string &port = socket->GetPort();
@@ -141,26 +145,56 @@ bool ProcessResponse(ConnSocket *socket) {
     // ポートとHostヘッダーから VirtualServerConf を取得
     const config::VirtualServerConf *vserver =
         config.GetVirtualServerConf(port, host);
-    if (!vserver) {
-      // 404 Not Found を返す
-      response.MakeErrorResponse(NULL, request, http::NOT_FOUND);
-      response.Write(conn_fd);
-      response.Clear();
-      return should_close_conn;
+
+    if (socket->GetResponse() == NULL) {
+      // レスポンスオブジェクトがまだない
+      http::HttpResponse *response = AllocateResponseObj(vserver, request);
+      socket->SetResponse(response);
+    } else {
+      http::HttpResponse *response = socket->GetResponse();
+      if (response->IsReadyToWrite()) {
+        response->Write(conn_fd);
+      } else if (response->IsAllDataWritingCompleted()) {
+        delete response;
+        should_close_conn = true;
+        requests.pop_front();
+      } else {
+        // 書き込むデータはないがレスポンスは完成していない
+        response->MakeResponse(vserver, socket);
+      }
     }
 
-    response.MakeResponse(*vserver, request);
-    response.Write(conn_fd);
-    response.Clear();
-
     // "Connection: close" がリクエストで指定されていた場合はソケット接続を切断
-    should_close_conn = RequestHeaderHasConnectionClose(request);
-
-    requests.pop_front();
+    should_close_conn |= RequestHeaderHasConnectionClose(request);
   }
 
   return should_close_conn;
 }
+
+http::HttpResponse *AllocateResponseObj(
+    const config::VirtualServerConf *vserver,
+    const http::HttpRequest &request) {
+  if (!vserver) {
+    http::HttpResponse *res = new http::HttpResponse();
+    res->MakeErrorResponse(NULL, request, http::NOT_FOUND);
+    return res;
+  }
+  const config::LocationConf *location =
+      vserver->GetLocation(request.GetPath());
+  if (!location) {
+    http::HttpResponse *res = new http::HttpResponse();
+    res->MakeErrorResponse(NULL, request, http::NOT_FOUND);
+    return res;
+  }
+
+  if (location->GetIsCgi()) {
+    return new http::HttpCgiResponse();
+  } else if (location->GetRedirectUrl()) {
+    return new http::HttpRedirectResponse();
+  } else {
+    return new http::HttpFileResponse();
+  }
+};
 
 }  // namespace
 
