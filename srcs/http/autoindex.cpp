@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 
-#include "http/http_response.hpp"
+#include "http/http_file_response.hpp"
 #include "result/result.hpp"
 #include "utils/File.hpp"
 #include "utils/io.hpp"
@@ -50,7 +50,7 @@ std::string AutoIndexFileName(const std::string &file_name) {
   return ss.str();
 }
 
-std::string HttpResponse::MakeAutoIndex(
+std::string HttpFileResponse::MakeAutoIndex(
     const std::string &root_path, const std::string &relative_path) const {
   Result<std::vector<utils::File> > result =
       utils::GetFileList(root_path + "/" + relative_path);
