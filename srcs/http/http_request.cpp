@@ -64,6 +64,8 @@ void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
     phase_ = ParseBodySize();
   if (phase_ == kBody)
     phase_ = ParseBody(buffer);
+  if (phase_ == kChunkedTrailer)
+    phase_ = ParseChunkedTrailer(buffer);
   PrintRequestInfo();
 }
 
@@ -177,6 +179,9 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
   }
   return phase_;
 }
+
+HttpRequest::ParsingPhase HttpRequest::ParseChunkedTrailer(
+    utils::ByteVector &buffer) {}
 
 //========================================================================
 // Interpret系関数　文字列を解釈する関数　主にparse_statusで動作管理(OKじゃなくなったら次は実行されない)

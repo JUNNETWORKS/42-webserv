@@ -42,6 +42,7 @@ class HttpRequest {
     kHeaderField,
     kBodySize,
     kBody,
+    kChunkedTrailer,
     kParsed,
     kError
   };
@@ -87,6 +88,7 @@ class HttpRequest {
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
   ParsingPhase ParseBodySize();
   ParsingPhase ParseBody(utils::ByteVector &buffer);
+  ParsingPhase ParseChunkedTrailer(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(const std::string &method);
   HttpStatus InterpretPath(const std::string &path);
   HttpStatus InterpretVersion(const std::string &version);
