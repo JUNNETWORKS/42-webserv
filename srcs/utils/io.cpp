@@ -27,6 +27,13 @@ bool IsDir(const std::string& file_path) {
   return S_ISDIR(sb.st_mode);
 }
 
+bool IsRegularFile(const std::string& file_path) {
+  struct stat sb;
+
+  stat(file_path.c_str(), &sb);
+  return S_ISREG(sb.st_mode);
+}
+
 // TODO: Resultで返したほうがいいかも?
 unsigned long GetFileSize(const std::string& file_path) {
   struct stat sb;
