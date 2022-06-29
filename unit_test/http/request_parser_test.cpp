@@ -394,6 +394,15 @@ TEST(RequestParserTest, KOFieldInvalidTransferEncoding) {
   EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
 }
 
+TEST(RequestParserTest, KOBodyChunkTrailerObsFold) {
+  http::HttpRequest req(default_conf);
+  utils::ByteVector buf = OpenFile("KOBodyChunkTrailerObsFold.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
 TEST(RequestParserTest, OKBodyChunkSizeZero) {
   http::HttpRequest req(default_conf);
   utils::ByteVector buf = OpenFile("OKBodyChunkSizeZero.txt");
@@ -435,6 +444,23 @@ TEST(RequestParserTest, OKBodyCorrectChunk) {
   const utils::ByteVector expect_body("12345abcde");
   const utils::ByteVector body = req.GetBody();
   EXPECT_EQ(body, expect_body);
+}
+
+TEST(RequestParserTest, OKBodyCorrectChunkTrailer) {
+  http::HttpRequest req(default_conf);
+  utils::ByteVector buf = OpenFile("OKBodyCorrectChunkTrailer.txt");
+
+  req.ParseRequest(buf);
+  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_EQ(req.GetParseStatus(), OK);
+
+  const utils::ByteVector expect_body("12345abcde");
+  const utils::ByteVector body = req.GetBody();
+  EXPECT_EQ(body, expect_body);
+
+  const std::vector<std::string> expect_header = {"hello"};
+
+  EXPECT_EQ(expect_header, req.GetHeader("hoge"));
 }
 
 }  // namespace http
