@@ -65,8 +65,11 @@ HttpResponse::~HttpResponse() {
 
 Result<void> HttpResponse::RegisterFile(std::string file_path) {
   FileBuffer *file_buffer = new FileBuffer();
+  int flags;
   if (!utils::IsRegularFile(file_path) || !utils::IsReadableFile(file_path) ||
-      (file_buffer->file_fd = open(file_path.c_str(), O_RDONLY)) < 0) {
+      (file_buffer->file_fd = open(file_path.c_str(), O_RDONLY)) < 0 ||
+      (flags = fcntl(file_buffer->file_fd, F_GETFL, 0)) < 0 ||
+      fcntl(file_buffer->file_fd, F_SETFL, flags | O_NONBLOCK) < 0) {
     delete file_buffer;
     return Error();
   }
