@@ -85,7 +85,13 @@ Result<void> HttpResponse::RegisterFile(std::string file_path) {
 // Writer
 
 Result<void> HttpResponse::Write(int fd) {
-  WriteStatusAndHeader(fd);
+  Result<int> status_header_res = WriteStatusAndHeader(fd);
+  if (status_header_res.IsErr()) {
+    return status_header_res.Err();
+  }
+  if (status_header_res.IsOk() && status_header_res.Ok() > 0) {
+    return Result<void>();
+  }
   if (!body_bytes_.empty()) {
     int write_res =
         write(fd, body_bytes_.data(), body_bytes_.size() - written_body_count_);
@@ -96,14 +102,15 @@ Result<void> HttpResponse::Write(int fd) {
   }
 }
 
-Result<void> HttpResponse::WriteStatusAndHeader(int fd) {
+Result<int> HttpResponse::WriteStatusAndHeader(int fd) {
   if (IsStatusAndHeadersWritingCompleted()) {
-    return;
+    return 0;
   }
   if (status_and_headers_bytes_.empty()) {
     status_and_headers_bytes_ = SerializeStatusAndHeader();
     writtern_status_headers_count_ = 0;
   }
+
   int write_res = write(
       fd, status_and_headers_bytes_.data() + writtern_status_headers_count_,
       status_and_headers_bytes_.size() - writtern_status_headers_count_);
@@ -112,6 +119,7 @@ Result<void> HttpResponse::WriteStatusAndHeader(int fd) {
   }
   writtern_status_headers_count_ += write_res;
   // この関数内のwrite後に呼び出し元でもwriteがノンブロッキングで可能かは保証されていない
+  return write_res;
 }
 
 //========================================================================
@@ -158,6 +166,11 @@ bool HttpResponse::IsReadyToWrite() {
 
 bool HttpResponse::IsAllDataWritingCompleted() {
   // TODO: 実装する
+}
+
+bool HttpResponse::IsStatusAndHeadersWritingCompleted() {
+  return !status_and_headers_bytes_.empty() &&
+         writtern_status_headers_count_ == status_and_headers_bytes_.size();
 }
 
 //========================================================================

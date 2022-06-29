@@ -92,7 +92,13 @@ class HttpResponse {
   // ファイルをopenし､Epollで監視する
   Result<void> RegisterFile(std::string file_path);
 
-  Result<void> WriteStatusAndHeader(int fd);
+  // status-line と header-lines を書き込む｡
+  // status_and_headers_bytes_ にデータが無い(初回呼び出し)ときには､
+  // データをセットする｡
+  //
+  // 返り値は今回書き込んだバイト数である｡
+  // 0ならば全てのバイト書き込みが完了したことになる｡
+  Result<int> WriteStatusAndHeader(int fd);
 
   bool IsStatusAndHeadersWritingCompleted();
 
