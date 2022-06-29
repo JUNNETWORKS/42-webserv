@@ -6,7 +6,7 @@
 #include "utils/string.hpp"
 
 namespace utils {
-static std::vector<std::string> PathSplit(const std::string path) {
+static std::vector<std::string> SplitPath(const std::string path) {
   std::vector<std::string> v;
   if (path == "") {
     return v;
@@ -21,7 +21,7 @@ static std::vector<std::string> PathSplit(const std::string path) {
 
 // TODO : 最後のスラッシュ消さないようにするべきか？
 // そもそも、./ も消すべきでないか。
-std::string PathJoin(const std::vector<std::string> &v) {
+std::string JoinPath(const std::vector<std::string> &v) {
   std::string joined;
   std::string slash;
 
@@ -38,16 +38,16 @@ std::string PathJoin(const std::vector<std::string> &v) {
   return joined;
 }
 
-std::string PathJoin(const std::string &s1, const std::string &s2) {
-  return PathJoin(PathSplit(s1 + "/" + s2));
+std::string JoinPath(const std::string &s1, const std::string &s2) {
+  return JoinPath(SplitPath(s1 + "/" + s2));
 }
 
 bool IsValidPath(const std::string &path) {
-  return PathNormalization(path).IsOk();
+  return NormalizePath(path).IsOk();
 }
 
-Result<std::string> PathNormalization(const std::string &path) {
-  std::vector<std::string> vec = PathSplit(path);
+Result<std::string> NormalizePath(const std::string &path) {
+  std::vector<std::string> vec = SplitPath(path);
   std::vector<std::string> normalize;
   for (std::vector<std::string>::const_iterator it = vec.begin();
        it != vec.end(); it++) {
@@ -63,7 +63,7 @@ Result<std::string> PathNormalization(const std::string &path) {
       normalize.push_back(*it);
     }
   }
-  return (PathJoin(normalize));
+  return (JoinPath(normalize));
 }
 
 }  // namespace utils

@@ -17,7 +17,7 @@ TEST_P(PathTestOk, Ok) {
       GetParam();
   std::pair<std::string, std::string> input = param.first;
   std::string expected = param.second;
-  EXPECT_EQ(PathJoin(input.first, input.second), expected);
+  EXPECT_EQ(JoinPath(input.first, input.second), expected);
 }
 
 const std::vector<std::pair<std::pair<std::string, std::string>, std::string>>
@@ -35,7 +35,7 @@ const std::vector<std::pair<std::pair<std::string, std::string>, std::string>>
         {{"///a///b///c///", "///d///e///f///"}, "/a/b/c/d/e/f"},
 };
 
-INSTANTIATE_TEST_SUITE_P(PathJoin, PathTestOk,
+INSTANTIATE_TEST_SUITE_P(JoinPath, PathTestOk,
                          ::testing::ValuesIn(PathJoinVec));
 
 //  Path Normalization
@@ -48,8 +48,8 @@ TEST_P(PathNormalizationTestOk, Ok) {
   std::string input = param.first;
   Result<std::string> expected = param.second;
   EXPECT_TRUE(IsValidPath(input));
-  EXPECT_RESULT_IS_OK(PathNormalization(input));
-  EXPECT_RESULT_OK_EQ(PathNormalization(input), expected);
+  EXPECT_RESULT_IS_OK(NormalizePath(input));
+  EXPECT_RESULT_OK_EQ(NormalizePath(input), expected);
 }
 
 const std::vector<std::pair<std::string, std::string>> PathNormalizationOkVec =
@@ -66,7 +66,7 @@ const std::vector<std::pair<std::string, std::string>> PathNormalizationOkVec =
         {"/hoge/fuga/./.././", "/hoge"},
 };
 
-INSTANTIATE_TEST_SUITE_P(PathNormalization, PathNormalizationTestOk,
+INSTANTIATE_TEST_SUITE_P(NormalizePath, PathNormalizationTestOk,
                          ::testing::ValuesIn(PathNormalizationOkVec));
 
 //
@@ -77,7 +77,7 @@ TEST_P(PathNormalizationTestErr, Ok) {
   std::string param = GetParam();
   std::string input = param;
   EXPECT_FALSE(IsValidPath(input));
-  EXPECT_RESULT_IS_ERR(PathNormalization(input));
+  EXPECT_RESULT_IS_ERR(NormalizePath(input));
 }
 
 const std::vector<std::string> PathNormalizationErrVec = {
