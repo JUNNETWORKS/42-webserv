@@ -1,5 +1,8 @@
 #include "http/http_response.hpp"
 
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -20,7 +23,7 @@ HttpResponse::HttpResponse()
     : http_version_(kDefaultHttpVersion),
       location_(NULL),
       epoll_(NULL),
-      file_with_events_(NULL),
+      file_buffer_(NULL),
       file_fde_(NULL),
       writtern_status_headers_count_(0) {}
 
@@ -29,7 +32,7 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
     : http_version_(kDefaultHttpVersion),
       location_(location),
       epoll_(epoll),
-      file_with_events_(NULL),
+      file_buffer_(NULL),
       file_fde_(NULL),
       writtern_status_headers_count_(0) {}
 
@@ -59,21 +62,22 @@ HttpResponse::~HttpResponse() {
 }
 
 Result<void> HttpResponse::RegisterFile(std::string file_path) {
-  FileWithEvents *file_with_events = new FileWithEvents();
-  file_with_events->file = utils::File(file_path);
-  if (!utils::IsReadableFile(file_path) ||
-      file_with_events->file.Open().IsErr()) {
-    delete file_with_events;
+  FileBuffer *file_buffer = new FileBuffer();
+  if (!utils::IsRegularFile(file_path) || !utils::IsReadableFile(file_path) ||
+      (file_buffer->file_fd = open(file_path.c_str(), O_RDONLY)) < 0) {
+    delete file_buffer;
     return Error();
   }
-  file_with_events->events = 0;
+  file_buffer->events = 0;
+  file_buffer->is_eof = false;
+  file_buffer->is_unregistered = false;
 
-  server::FdEvent *fde = server::CreateFdEvent(
-      file_with_events_->file.GetFd(), HandleFileEvent, file_with_events);
+  server::FdEvent *fde = server::CreateFdEvent(file_buffer_->file_fd,
+                                               HandleFileEvent, file_buffer);
   epoll_->Register(fde);
   epoll_->Add(fde, server::kFdeRead);
 
-  file_with_events_ = file_with_events;
+  file_buffer_ = file_buffer;
   file_fde_ = fde;
 }
 

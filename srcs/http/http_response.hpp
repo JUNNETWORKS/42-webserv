@@ -15,10 +15,23 @@
 
 namespace http {
 
-struct FileWithEvents {
-  utils::File file;
-  // どのイベント(kFdeEvents)が可能か
+struct FileBuffer {
+  // 1回のreadで何バイト読み取るか
+  static const unsigned long kBytesPerRead = 1024;  // 1KB
+  // bufferが保持する最大サイズ｡
+  // 1リクエストがメモリを大量に使わないようにするために存在する
+  static const unsigned long kMaxBufferSize = 1024 * 50;  // 50KB
+
+  int file_fd;
+
+  // Epoll events
   unsigned int events;
+  bool is_eof;
+
+  // このフラグがfalseのときにはdeleteせずにこのフラグをtrueにするだけ｡
+  // HttpResponse と EpollEventHandler で double-free しないようにするため
+  bool is_unregistered;
+
   // ファイルから読み取れるときに読み込んでおく
   utils::ByteVector buffer;
 };
@@ -52,7 +65,7 @@ class HttpResponse {
   // File
   // 全てのレスポンスクラスはファイルを返せる必要がある｡
   // なぜならエラー時にファイルを扱う可能性があるからである｡
-  FileWithEvents *file_with_events_;
+  FileBuffer *file_buffer_;
   // レスポンス完了後､Epollの監視を解除するために必要
   server::FdEvent *file_fde_;
 
