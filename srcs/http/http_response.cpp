@@ -52,12 +52,14 @@ HttpResponse &HttpResponse::operator=(const HttpResponse &rhs) {
 }
 
 HttpResponse::~HttpResponse() {
-  if (file_with_events_) {
-    // TODO: イベントのあったものをループで処理するときにフリー済みの領域に
-    // イベントハンドラーがアクセスする可能性がある?
-    epoll_->Unregister(file_fde_);
-    delete file_fde_;
-    delete file_with_events_;
+  if (file_buffer_) {
+    if (file_buffer_->is_unregistered) {
+      delete file_fde_;
+      delete file_buffer_;
+    } else {
+      epoll_->Unregister(file_fde_);
+      file_buffer_->is_unregistered = true;
+    }
   }
 }
 
