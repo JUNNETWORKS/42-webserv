@@ -204,11 +204,11 @@ utils::ByteVector HttpResponse::SerializeStatusAndHeader() {
 }
 
 utils::ByteVector HttpResponse::SerializeStatusLine() const {
-  std::string status_line;
-  status_line += http_version_ + " ";
-  status_line += status_ + " ";
-  status_line += status_message_ + http::kCrlf;
-  return status_line;
+  std::stringstream ss;
+  ss << http_version_ << " ";
+  ss << status_ << " ";
+  ss << status_message_ << http::kCrlf;
+  return ss.str();
 }
 
 utils::ByteVector HttpResponse::SerializeHeaders() const {
