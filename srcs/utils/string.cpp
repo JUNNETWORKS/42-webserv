@@ -2,7 +2,10 @@
 
 #include <cerrno>
 #include <cstdlib>
+#include <iomanip>
+#include <iostream>
 #include <limits>
+#include <list>
 #include <stdexcept>
 #include <vector>
 
@@ -80,20 +83,66 @@ Result<unsigned long> Stoul(const std::string &str, BaseDigit base) {
   return num;
 }
 
+std::string PercentEncode(const utils::ByteVector &to_encode) {
+  std::stringstream ss;
+
+  for (utils::ByteVector::const_iterator it = to_encode.begin();
+       it != to_encode.end(); it++) {
+    if (!std::isalnum(*it) && *it != '-' && *it != '_' && *it != '.' &&
+        *it != '~') {
+      int n = *it;
+      ss << "%" << std::uppercase << std::setw(2) << std::setfill('0')
+         << std::hex << n;
+    } else {
+      ss << *it;
+    }
+  }
+  return ss.str();
+}
+
+Result<std::string> PercentDecode(const utils::ByteVector &to_decode) {
+  std::string decoded;
+  char c;
+
+  for (utils::ByteVector::const_iterator it = to_decode.begin();
+       it != to_decode.end(); it++) {
+    if (*it == '%') {
+      if (std::distance(it, to_decode.end()) < 3) {
+        return Error();
+      }
+      std::string hex = std::string(it + 1, it + 3);
+      Result<unsigned long> res = Stoul(hex, kHexadecimal);
+      if (res.IsErr()) {
+        return Error();
+      }
+      c = static_cast<char>(res.Ok());
+      it += 2;
+    } else {
+      c = static_cast<char>(*it);
+    }
+    decoded.push_back(c);
+  }
+  return decoded;
+}
+
 std::vector<std::string> SplitString(const std::string &str,
                                      const std::string &delim) {
   std::vector<std::string> strs;
   size_t start_idx;
   size_t end_idx;
 
+  if (str.empty() || delim.empty()) {
+    strs.push_back(str);
+    return strs;
+  }
+
   start_idx = 0;
   while ((end_idx = str.find(delim, start_idx)) != std::string::npos) {
-    end_idx = str.find(delim, start_idx);
     strs.push_back(str.substr(start_idx, end_idx - start_idx));
     start_idx = end_idx + delim.size();
   }
   // 最後に文字が余っている場合
-  if (start_idx < str.length() - 1) {
+  if (start_idx <= str.length()) {
     strs.push_back(str.substr(start_idx, str.length() - start_idx));
   }
   return strs;

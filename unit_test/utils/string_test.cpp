@@ -6,101 +6,124 @@
 
 namespace utils {
 
-TEST(StoulTest, Zero) {
-  EXPECT_RESULT_IS_OK(Stoul("0"));
-  EXPECT_RESULT_OK_EQ(Stoul("0"), Result<unsigned long>(0));
+//========================
+// 成功のパターン
+
+class StoulTestOk : public ::testing::TestWithParam<
+                        std::pair<std::string, Result<unsigned long>>> {};
+
+TEST_P(StoulTestOk, Ok) {
+  std::pair<std::string, Result<unsigned long>> param = GetParam();
+  std::string input = param.first;
+  Result<unsigned long> expected = param.second;
+  EXPECT_RESULT_IS_OK(Stoul(input));
+  EXPECT_RESULT_OK_EQ(Stoul(input), expected);
 }
 
-TEST(StoulTest, Maximumvalue) {
-  EXPECT_RESULT_IS_OK(Stoul("18446744073709551615"));
-  EXPECT_RESULT_OK_EQ(Stoul("18446744073709551615"),
-                      Result<unsigned long>(18446744073709551615ul));
+const std::vector<std::pair<std::string, Result<unsigned long>>> StoulOkVec = {
+    {"0", 0},                                          // 最小値
+    {"18446744073709551615", 18446744073709551615ul},  // 最大値
+};
+
+INSTANTIATE_TEST_SUITE_P(StoulOk, StoulTestOk, ::testing::ValuesIn(StoulOkVec));
+
+//========================
+// エラーのパターン
+
+class StoulTestNg : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(StoulTestNg, Ng) {
+  std::string input = GetParam();
+  // Result<unsigned long> expected = param.second;
+  EXPECT_RESULT_IS_ERR(Stoul(input));
 }
 
-TEST(StoulTest, MaximumvalueWithPlusSign) {
-  EXPECT_RESULT_IS_ERR(Stoul("+18446744073709551615"));
+INSTANTIATE_TEST_SUITE_P(
+    StoulNg, StoulTestNg,
+    ::testing::Values("+18446744073709551615",  // +がある場合
+                      "18446744073709551616",   // オーバーフロー
+                      "+++++++++++18446744073709551615",  // +いっぱい
+                      "-1",                               // マイナス
+                      "--------1",  // マイナス符号いっぱい
+                      "+0", "-0", "a100", "100a", "10a0"));
+
+//========================
+// 16進数成功のパターン
+
+class StoulHexTestOk : public ::testing::TestWithParam<
+                           std::pair<std::string, Result<unsigned long>>> {};
+
+TEST_P(StoulHexTestOk, Ok) {
+  std::pair<std::string, Result<unsigned long>> param = GetParam();
+  std::string input = param.first;
+  Result<unsigned long> expected = param.second;
+  EXPECT_RESULT_IS_OK(Stoul(input, kHexadecimal));
+  EXPECT_RESULT_OK_EQ(Stoul(input, kHexadecimal), expected);
 }
 
-TEST(StoulTest, MaximumvaluePlusOne) {
-  EXPECT_RESULT_IS_ERR(Stoul("18446744073709551616"));
+const std::vector<std::pair<std::string, Result<unsigned long>>> StoulHexOkVec =
+    {{"0", 0},
+     {"FFFFFFFFFFFFFFFF", 18446744073709551615ul},
+     {"abcdef", 11259375},
+     {"ABCDEF", 11259375},
+     {"abcdefABCDEF", 188900977659375ul},
+     {"123BcD4F657e90A", 82116841074845962ul}};
+
+INSTANTIATE_TEST_SUITE_P(StoulHexTestOk, StoulHexTestOk,
+                         ::testing::ValuesIn(StoulHexOkVec));
+
+//========================
+// 16進数エラーのパターン
+
+class StoulHexTestNg : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(StoulHexTestNg, Ng) {
+  std::string input = GetParam();
+  // Result<unsigned long> expected = param.second;
+  EXPECT_RESULT_IS_ERR(Stoul(input));
 }
 
-TEST(StoulTest, MaximumvalueWithPlusSigns) {
-  EXPECT_RESULT_IS_ERR(Stoul("+++++++++++18446744073709551615"));
+INSTANTIATE_TEST_SUITE_P(StoulHexTestNg, StoulHexTestNg,
+                         ::testing::Values("100G",  // Hex_NonHexadecimalValue
+                                           "-1aB",  // Hex_ContainsMinusSign
+                                           "+1aB"   // Hex_ContainsPlusSign
+                                           ));
+
+// Split Test
+// ------------------------------------------------------------------------------------------
+class SplitTest
+    : public ::testing::TestWithParam<std::pair<
+          std::pair<std::string, std::string>, std::vector<std::string>>> {};
+
+TEST_P(SplitTest, Ok) {
+  std::pair<std::pair<std::string, std::string>, std::vector<std::string>>
+      param = GetParam();
+  std::pair<std::string, std::string> input = param.first;
+  std::vector<std::string> expected = param.second;
+
+  EXPECT_EQ(SplitString(input.first, input.second), expected);
 }
 
-TEST(StoulTest, MinusOne) {
-  EXPECT_RESULT_IS_ERR(Stoul("-1"));
-}
+const std::vector<
+    std::pair<std::pair<std::string, std::string>, std::vector<std::string>>>
+    SplitTestCase = {
+        {{"", ""}, {""}},
+        {{"a", ""}, {"a"}},
+        {{"", " "}, {""}},
+        {{" ", " "}, {"", ""}},
+        {{"   ", " "}, {"", "", "", ""}},
+        {{"a b c", " "}, {"a", "b", "c"}},
+        {{" a b c", " "}, {"", "a", "b", "c"}},
+        {{" a b c ", " "}, {"", "a", "b", "c", ""}},
+        {{"--a---b---c--", "---"}, {"--a", "b", "c--"}},
+        {{"-a-", "-"}, {"", "a", ""}},
+        {{"-a-", "---"}, {"-a-"}},
+        {{"-a-", "-----"}, {"-a-"}},
+        {{"---a---", "-"}, {"", "", "", "a", "", "", ""}},
+        {{"---a---", "---"}, {"", "a", ""}},
+};
 
-TEST(StoulTest, MinusSigns) {
-  EXPECT_RESULT_IS_ERR(Stoul("--------1"));
-}
+INSTANTIATE_TEST_SUITE_P(SplitTest, SplitTest,
+                         ::testing::ValuesIn(SplitTestCase));
 
-TEST(StoulTest, PlusZero) {
-  EXPECT_RESULT_IS_ERR(Stoul("+0"));
-}
-
-TEST(StoulTest, MinusZero) {
-  EXPECT_RESULT_IS_ERR(Stoul("-0"));
-}
-
-TEST(StoulTest, IncludeAlphabetFront) {
-  EXPECT_RESULT_IS_ERR(Stoul("a100"));
-}
-
-TEST(StoulTest, IncludeAlphabetBack) {
-  EXPECT_RESULT_IS_ERR(Stoul("100a"));
-}
-
-TEST(StoulTest, IncludeAlphabetMiddle) {
-  EXPECT_RESULT_IS_ERR(Stoul("10a0"));
-}
-
-TEST(StoulTest, Hex_Zero) {
-  EXPECT_RESULT_IS_OK(Stoul("0", kHexadecimal));
-  EXPECT_RESULT_OK_EQ(Stoul("0", kHexadecimal), Result<unsigned long>(0));
-}
-
-TEST(StoulTest, Hex_Maximumvalue) {
-  EXPECT_RESULT_IS_OK(Stoul("FFFFFFFFFFFFFFFF", kHexadecimal));
-  EXPECT_RESULT_OK_EQ(Stoul("FFFFFFFFFFFFFFFF", kHexadecimal),
-                      Result<unsigned long>(18446744073709551615ul));
-}
-
-TEST(StoulTest, Hex_OnlyCharValueLower) {
-  EXPECT_RESULT_IS_OK(Stoul("abcdef", kHexadecimal));
-  EXPECT_RESULT_OK_EQ(Stoul("abcdef", kHexadecimal),
-                      Result<unsigned long>(11259375));
-}
-
-TEST(StoulTest, Hex_OnlyCharValueUpper) {
-  EXPECT_RESULT_IS_OK(Stoul("ABCDEF", kHexadecimal));
-  EXPECT_RESULT_OK_EQ(Stoul("ABCDEF", kHexadecimal),
-                      Result<unsigned long>(11259375));
-}
-
-TEST(StoulTest, Hex_OnlyCharValueMix) {
-  EXPECT_RESULT_IS_OK(Stoul("abcdefABCDEF", kHexadecimal));
-  EXPECT_RESULT_OK_EQ(Stoul("abcdefABCDEF", kHexadecimal),
-                      Result<unsigned long>(188900977659375ul));
-}
-
-TEST(StoulTest, Hex_MixValue) {
-  EXPECT_RESULT_IS_OK(Stoul("123BcD4F657e90A", kHexadecimal));
-  EXPECT_RESULT_OK_EQ(Stoul("123BcD4F657e90A", kHexadecimal),
-                      Result<unsigned long>(82116841074845962ul));
-}
-
-TEST(StoulTest, Hex_NonHexadecimalValue) {
-  EXPECT_RESULT_IS_ERR(Stoul("100G", kHexadecimal));
-}
-
-TEST(StoulTest, Hex_ContainsMinusSign) {
-  EXPECT_RESULT_IS_ERR(Stoul("-1aB", kHexadecimal));
-}
-
-TEST(StoulTest, Hex_ContainsPlusSign) {
-  EXPECT_RESULT_IS_ERR(Stoul("+1aB", kHexadecimal));
-}
 }  // namespace utils
