@@ -347,25 +347,25 @@ bool ValidateChunkExtensionFormat(const std::string &) {
 
 Chunk::ChunkStatus ParseChunkSizeDirective(utils::ByteVector &buffer,
                                            Chunk &chunk) {
-  std::string res;
   Result<size_t> crlf_pos = buffer.FindString(kCrlf);
   if (crlf_pos.IsErr())
     return Chunk::kWaiting;
 
-  res = buffer.SubstrBeforePos(crlf_pos.Ok());
-  size_t semicolon_pos = res.find(';');
+  std::string directive = buffer.SubstrBeforePos(crlf_pos.Ok());
+  size_t semicolon_pos = directive.find(';');
 
-  std::string size_str;
-  chunk.size_str = res;
+  std::string size_digits;
+  chunk.size_str = directive;
   if (semicolon_pos == std::string::npos) {
-    size_str = res;
-  } else if (ValidateChunkExtensionFormat(res.substr(semicolon_pos))) {
-    size_str = res.substr(0, semicolon_pos);
+    size_digits = directive;
+  } else if (ValidateChunkExtensionFormat(directive.substr(semicolon_pos))) {
+    size_digits = directive.substr(0, semicolon_pos);
   } else {
     return Chunk::kErrorBadRequest;
   }
+
   Result<unsigned long> convert_res =
-      utils::Stoul(size_str, utils::kHexadecimal);
+      utils::Stoul(size_digits, utils::kHexadecimal);
   if (convert_res.IsErr())
     return Chunk::kErrorBadRequest;
   chunk.data_size = convert_res.Ok();
