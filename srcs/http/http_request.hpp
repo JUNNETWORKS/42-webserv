@@ -85,14 +85,13 @@ class HttpRequest {
  private:
   HttpRequest();
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
-  ParsingPhase ParseHeaderField(utils::ByteVector &buffer,
-                                const ParsingPhase &phase);
+  ParsingPhase ParseField(utils::ByteVector &buffer, const ParsingPhase &phase);
   ParsingPhase ParseBodySize();
   ParsingPhase ParseBody(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(const std::string &method);
   HttpStatus InterpretPath(const std::string &path);
   HttpStatus InterpretVersion(const std::string &version);
-  HttpStatus InterpretHeaderField(const std::string &str);
+  HttpStatus InterpretField(const std::string &str);
   HttpStatus InterpretContentLength(
       const HeaderMap::mapped_type &length_header);
   HttpStatus InterpretTransferEncoding(

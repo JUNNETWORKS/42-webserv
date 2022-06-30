@@ -13,7 +13,7 @@ bool IsMethod(const std::string &token);
 bool IsObsFold(const utils::ByteVector &buf);
 bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
-Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
+Result<std::vector<std::string> > ParseFieldValue(std::string &str);
 std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     utils::ByteVector &buffer);
 }  // namespace
@@ -59,13 +59,13 @@ void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
   if (phase_ == kRequestLine)
     phase_ = ParseRequestLine(buffer);
   if (phase_ == kHeaderField)
-    phase_ = ParseHeaderField(buffer, kBodySize);
+    phase_ = ParseField(buffer, kBodySize);
   if (phase_ == kBodySize)
     phase_ = ParseBodySize();
   if (phase_ == kBody)
     phase_ = ParseBody(buffer);
   if (phase_ == kChunkedTrailer)
-    phase_ = ParseHeaderField(buffer, kParsed);
+    phase_ = ParseField(buffer, kParsed);
   PrintRequestInfo();
 }
 
@@ -94,8 +94,8 @@ HttpRequest::ParsingPhase HttpRequest::ParseRequestLine(
   return kError;
 }
 
-HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
-    utils::ByteVector &buffer, const ParsingPhase &next) {
+HttpRequest::ParsingPhase HttpRequest::ParseField(utils::ByteVector &buffer,
+                                                  const ParsingPhase &next) {
   Result<size_t> boundary_pos = buffer.FindString(kHeaderBoundary);
   if (boundary_pos.IsErr())
     return phase_;
@@ -113,7 +113,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     }
 
     Result<size_t> crlf_pos = buffer.FindString(kCrlf);
-    if (InterpretHeaderField(buffer.SubstrBeforePos(crlf_pos.Ok())) != OK)
+    if (InterpretField(buffer.SubstrBeforePos(crlf_pos.Ok())) != OK)
       return kError;
     else
       buffer.erase(buffer.begin(), buffer.begin() + crlf_pos.Ok());
@@ -222,7 +222,7 @@ HttpStatus HttpRequest::InterpretVersion(const std::string &token) {
   return parse_status_ = BAD_REQUEST;
 }
 
-HttpStatus HttpRequest::InterpretHeaderField(const std::string &str) {
+HttpStatus HttpRequest::InterpretField(const std::string &str) {
   size_t collon_pos = str.find_first_of(":");
 
   if (collon_pos == std::string::npos || collon_pos == 0)
@@ -230,7 +230,7 @@ HttpStatus HttpRequest::InterpretHeaderField(const std::string &str) {
 
   std::string header = str.substr(0, collon_pos);
   std::string value_str = str.substr(collon_pos + 1);
-  Result<std::vector<std::string> > result = ParseHeaderFieldValue(value_str);
+  Result<std::vector<std::string> > result = ParseFieldValue(value_str);
   if (result.IsErr() || IsTcharString(header) == false) {
     return parse_status_ = BAD_REQUEST;
   }
@@ -432,7 +432,7 @@ Result<std::string> CutSubstrHeaderValue(std::string &str) {
 // strにヘッダの:以降を受け取り、splitしてvecにつめる
 //  e.g. str = If-Match: "strong", W/"weak", "oops, a \"comma\""
 //  returnは 'strong', 'W/weak'  'oops, a "comma"'
-Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str) {
+Result<std::vector<std::string> > ParseFieldValue(std::string &str) {
   std::vector<std::string> vec;
 
   while (!str.empty()) {
