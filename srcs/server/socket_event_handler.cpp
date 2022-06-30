@@ -4,6 +4,7 @@
 
 #include <deque>
 
+#include "http/http_file_response.hpp"
 #include "result/result.hpp"
 #include "server/epoll.hpp"
 #include "server/socket.hpp"
@@ -179,15 +180,15 @@ http::HttpResponse *AllocateResponseObj(
     const config::VirtualServerConf *vserver, const http::HttpRequest &request,
     Epoll *epoll) {
   if (!vserver) {
-    http::HttpResponse *res = new http::HttpResponse();
-    res->MakeErrorResponse(NULL, request, http::NOT_FOUND);
+    http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
+    res->MakeErrorResponse(request, http::NOT_FOUND);
     return res;
   }
   const config::LocationConf *location =
       vserver->GetLocation(request.GetPath());
   if (!location) {
-    http::HttpResponse *res = new http::HttpResponse();
-    res->MakeErrorResponse(NULL, request, http::NOT_FOUND);
+    http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
+    res->MakeErrorResponse(request, http::NOT_FOUND);
     return res;
   }
 

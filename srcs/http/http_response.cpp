@@ -19,14 +19,6 @@ namespace http {
 
 const std::string HttpResponse::kDefaultHttpVersion = "HTTP/1.1";
 
-HttpResponse::HttpResponse()
-    : http_version_(kDefaultHttpVersion),
-      location_(NULL),
-      epoll_(NULL),
-      file_buffer_(NULL),
-      file_fde_(NULL),
-      writtern_status_headers_count_(0) {}
-
 HttpResponse::HttpResponse(const config::LocationConf *location,
                            server::Epoll *epoll)
     : http_version_(kDefaultHttpVersion),
@@ -34,21 +26,8 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       epoll_(epoll),
       file_buffer_(NULL),
       file_fde_(NULL),
-      writtern_status_headers_count_(0) {}
-
-HttpResponse::HttpResponse(const HttpResponse &rhs) {
-  *this = rhs;
-}
-
-HttpResponse &HttpResponse::operator=(const HttpResponse &rhs) {
-  if (this != &rhs) {
-    http_version_ = rhs.http_version_;
-    status_ = rhs.status_;
-    status_message_ = rhs.status_message_;
-    headers_ = rhs.headers_;
-    body_bytes_ = rhs.body_bytes_;
-  }
-  return *this;
+      writtern_status_headers_count_(0) {
+  assert(epoll_ != NULL);
 }
 
 HttpResponse::~HttpResponse() {
@@ -137,19 +116,21 @@ Result<int> HttpResponse::WriteStatusAndHeader(int fd) {
 
 void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {}
 
-bool HttpResponse::MakeErrorResponse(const config::LocationConf *location,
-                                     const HttpRequest &request,
+void HttpResponse::MakeErrorResponse(const HttpRequest &request,
                                      HttpStatus status) {
   // エラーレスポンスを作る前にメンバー変数を初期化したほうがいいかも?
   SetStatus(status, StatusCodes::GetMessage(status));
 
-  const std::map<http::HttpStatus, std::string> &error_pages =
-      location->GetErrorPages();
-  if (error_pages.find(status) == error_pages.end() ||
-      RegisterFile(error_pages.at(status)).IsErr()) {
+  if (location_) {
+    const std::map<http::HttpStatus, std::string> &error_pages =
+        location_->GetErrorPages();
+    if (error_pages.find(status) == error_pages.end() ||
+        RegisterFile(error_pages.at(status)).IsErr()) {
+      body_bytes_ = MakeErrorResponseBody(status);
+    }
+  } else {
     body_bytes_ = MakeErrorResponseBody(status);
   }
-  return true;
 }
 
 std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {

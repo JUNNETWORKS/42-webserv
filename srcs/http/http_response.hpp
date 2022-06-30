@@ -70,15 +70,12 @@ class HttpResponse {
   server::FdEvent *file_fde_;
 
  public:
-  HttpResponse();
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
-  HttpResponse(const HttpResponse &rhs);
   ~HttpResponse();
 
   virtual void MakeResponse(server::ConnSocket *conn_sock);
 
-  bool MakeErrorResponse(const config::LocationConf *location,
-                         const HttpRequest &request, HttpStatus status);
+  void MakeErrorResponse(const HttpRequest &request, HttpStatus status);
 
   virtual Result<void> Write(int fd);
 
@@ -111,7 +108,10 @@ class HttpResponse {
   void AppendHeader(const std::string &header, const std::string &value);
 
  private:
+  HttpResponse();
+  HttpResponse(const HttpResponse &rhs);
   HttpResponse &operator=(const HttpResponse &rhs);
+
   void WriteStatusLine(int fd) const;
   void WriteHeaders(int fd) const;
   void WriteBody(int fd) const;
