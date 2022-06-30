@@ -62,21 +62,21 @@ const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
 }
 
 bool CgiRequest::RunCgi() {
-  ParseCigRequest();
+  ParseCgiRequest();
   CreateCgiMetaVariablesFromHttpRequest(request_, location_);
   ForkAndExecuteCgi();
   return true;
 }
 
 // 作業中
-bool CgiRequest::ParseCigRequest() {
+bool CgiRequest::ParseCgiRequest() {
   std::string::size_type pos = request_path_.find("?");
   if (pos != std::string::npos) {
     cgi_path_ = request_path_.substr(0, pos);  // decode
     query_string_ = request_path_.substr(pos + 1);
     if (query_string_ != "" && query_string_.find('=') == std::string::npos) {
       // TODO : argv の 最大数でリミットかける必要ある？
-      // TODO : cig_args は パーセントデコーディングされる
+      // TODO : cgi_args は パーセントデコーディングされる
       // この時 + は split されない
       cgi_args_ = utils::SplitString(query_string_, "+");
       if (query_string_[query_string_.length() - 1] == '+') {

@@ -38,7 +38,7 @@ class CgiRequest {
   const std::vector<std::string> &GetCgiArgs() const;
 
   bool RunCgi();
-  bool ParseCigRequest();
+  bool ParseCgiRequest();
   // 返り値は無名ドメインソケットのfd
   // TODO: 第二引数はhttprequestじゃなくてcgirequestとかのほうがよいかも
   // TODO: cgiのpidをどうやってwaitするかが問題｡

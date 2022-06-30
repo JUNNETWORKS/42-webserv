@@ -14,7 +14,7 @@ TEST(CgiRequestTest, DefaultTest) {
 
   std::string request_path = "/cgi-bin/test-cgi";
   cgi::CgiRequest cgi(request_path, req, location);
-  cgi.ParseCigRequest();
+  cgi.ParseCgiRequest();
 
   EXPECT_EQ(request_path, cgi.GetCgiPath());
 }
@@ -31,7 +31,7 @@ TEST(CgiRequestTest, QueryStringTest) {
     std::string expect_query_string = "hoge";
     std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
     cgi::CgiRequest cgi(request_path, req, location);
-    cgi.ParseCigRequest();
+    cgi.ParseCgiRequest();
 
     EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
     EXPECT_EQ(expect_query_string, cgi.GetQueryString());
@@ -41,7 +41,7 @@ TEST(CgiRequestTest, QueryStringTest) {
     std::string expect_query_string = "";
     std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
     cgi::CgiRequest cgi(request_path, req, location);
-    cgi.ParseCigRequest();
+    cgi.ParseCgiRequest();
 
     EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
     EXPECT_EQ(expect_query_string, cgi.GetQueryString());
@@ -51,7 +51,7 @@ TEST(CgiRequestTest, QueryStringTest) {
     std::string expect_query_string = "?";
     std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
     cgi::CgiRequest cgi(request_path, req, location);
-    cgi.ParseCigRequest();
+    cgi.ParseCgiRequest();
 
     EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
     EXPECT_EQ(expect_query_string, cgi.GetQueryString());
@@ -71,7 +71,7 @@ TEST(CgiRequestTest, ArgsTest) {
     std::vector<std::string> expect_cgi_args = {};
     std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
     cgi::CgiRequest cgi(request_path, req, location);
-    cgi.ParseCigRequest();
+    cgi.ParseCgiRequest();
 
     EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
     EXPECT_EQ(expect_query_string, cgi.GetQueryString());
@@ -83,7 +83,7 @@ TEST(CgiRequestTest, ArgsTest) {
     std::vector<std::string> expect_cgi_args = {"hoge", "fuga"};
     std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
     cgi::CgiRequest cgi(request_path, req, location);
-    cgi.ParseCigRequest();
+    cgi.ParseCgiRequest();
 
     EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
     EXPECT_EQ(expect_query_string, cgi.GetQueryString());
@@ -96,7 +96,7 @@ TEST(CgiRequestTest, ArgsTest) {
     std::vector<std::string> expect_cgi_args = {};
     std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
     cgi::CgiRequest cgi(request_path, req, location);
-    cgi.ParseCigRequest();
+    cgi.ParseCgiRequest();
 
     EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
     EXPECT_EQ(expect_query_string, cgi.GetQueryString());
@@ -108,7 +108,7 @@ TEST(CgiRequestTest, ArgsTest) {
     std::vector<std::string> expect_cgi_args = {"", ""};
     std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
     cgi::CgiRequest cgi(request_path, req, location);
-    cgi.ParseCigRequest();
+    cgi.ParseCgiRequest();
 
     EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
     EXPECT_EQ(expect_query_string, cgi.GetQueryString());
@@ -120,7 +120,7 @@ TEST(CgiRequestTest, ArgsTest) {
     std::vector<std::string> expect_cgi_args = {"", "", ""};
     std::string request_path = expect_cgi_path_ + "?" + expect_query_string;
     cgi::CgiRequest cgi(request_path, req, location);
-    cgi.ParseCigRequest();
+    cgi.ParseCgiRequest();
 
     EXPECT_EQ(expect_cgi_path_, cgi.GetCgiPath());
     EXPECT_EQ(expect_query_string, cgi.GetQueryString());
