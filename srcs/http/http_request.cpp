@@ -341,25 +341,50 @@ bool ValidateChunkDataFormat(const Chunk &chunk, utils::ByteVector &buffer) {
   return false;
 }
 
+bool ValidateChunkExtensionFormat(const std::string &) {
+  return true;
+}
+
+Chunk::ChunkStatus ParseChunkSizeDirective(utils::ByteVector &buffer,
+                                           Chunk &chunk) {
+  std::string res;
+  Result<size_t> crlf_pos = buffer.FindString(kCrlf);
+  if (crlf_pos.IsErr())
+    return Chunk::kWaiting;
+
+  res = buffer.SubstrBeforePos(crlf_pos.Ok());
+  size_t semicolon_pos = res.find(';');
+
+  std::string size_str;
+  chunk.size_str = res;
+  if (semicolon_pos == std::string::npos) {
+    size_str = res;
+  } else if (ValidateChunkExtensionFormat(res.substr(semicolon_pos))) {
+    size_str = res.substr(0, semicolon_pos);
+  } else {
+    return Chunk::kErrorBadRequest;
+  }
+  Result<unsigned long> convert_res =
+      utils::Stoul(size_str, utils::kHexadecimal);
+  if (convert_res.IsErr())
+    return Chunk::kErrorBadRequest;
+  chunk.data_size = convert_res.Ok();
+
+  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
+  if (chunk.data_size >= kMaxSize) {
+    return Chunk::kErrorLength;
+  }
+
+  return Chunk::kReceived;
+}
+
 std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     utils::ByteVector &buffer) {
   Chunk res;
 
-  Result<size_t> pos = buffer.FindString(kCrlf);
-  if (pos.IsErr())
-    return std::make_pair(Chunk::kWaiting, res);
-  res.size_str = buffer.SubstrBeforePos(pos.Ok());
-
-  Result<unsigned long> convert_res =
-      utils::Stoul(res.size_str, utils::kHexadecimal);
-  if (convert_res.IsErr())
-    return std::make_pair(Chunk::kErrorBadRequest, res);
-  res.data_size = convert_res.Ok();
-
-  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
-  if (res.data_size >= kMaxSize) {
-    return std::make_pair(Chunk::kErrorLength, res);
-  }
+  Chunk::ChunkStatus size_res = ParseChunkSizeDirective(buffer, res);
+  if (size_res != Chunk::kReceived)
+    return std::make_pair(size_res, res);
 
   if (res.data_size == 0) {
     return std::make_pair(Chunk::kReceived, res);
