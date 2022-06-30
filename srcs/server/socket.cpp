@@ -48,7 +48,7 @@ Socket::ESockType Socket::GetSockType() const {
 
 ConnSocket::ConnSocket(int fd, const std::string &port,
                        const config::Config &config)
-    : Socket(fd, ListenSock, port, config) {}
+    : Socket(fd, ListenSock, port, config), response_(NULL) {}
 
 std::deque<http::HttpRequest> &ConnSocket::GetRequests() {
   return requests_;
