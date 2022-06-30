@@ -94,7 +94,7 @@ Result<void> HttpResponse::Write(int fd) {
   if (status_header_res.IsErr()) {
     return status_header_res.Err();
   }
-  if (status_header_res.IsOk() && status_header_res.Ok() > 0) {
+  if (status_header_res.Ok() > 0) {
     return Result<void>();
   }
   if (!body_bytes_.empty()) {
@@ -104,6 +104,11 @@ Result<void> HttpResponse::Write(int fd) {
       return Error();
     }
     written_body_count_ += write_res;
+  }
+  if (written_body_count_ == body_bytes_.size() && file_buffer_) {
+    body_bytes_.clear();
+    written_body_count_ = 0;
+    body_bytes_.swap(file_buffer_->buffer);
   }
 }
 
@@ -135,6 +140,7 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {}
 bool HttpResponse::MakeErrorResponse(const config::LocationConf *location,
                                      const HttpRequest &request,
                                      HttpStatus status) {
+  // エラーレスポンスを作る前にメンバー変数を初期化したほうがいいかも?
   SetStatus(status, StatusCodes::GetMessage(status));
 
   const std::map<http::HttpStatus, std::string> &error_pages =
