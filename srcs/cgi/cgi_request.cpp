@@ -79,9 +79,6 @@ bool CgiRequest::ParseCgiRequest() {
       // TODO : cgi_args は パーセントデコーディングされる
       // この時 + は split されない
       cgi_args_ = utils::SplitString(query_string_, "+");
-      if (query_string_[query_string_.length() - 1] == '+') {
-        cgi_args_.push_back("");
-      }
     }
   } else {
     cgi_path_ = request_path_;  // decode
