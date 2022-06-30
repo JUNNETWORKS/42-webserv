@@ -201,7 +201,7 @@ http::HttpResponse *AllocateResponseObj(
   //  } else {
   //    return new http::HttpFileResponse(location, epoll);
   //  }
-};
+}
 
 }  // namespace
 

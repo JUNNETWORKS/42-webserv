@@ -69,6 +69,7 @@ Result<void> HttpResponse::RegisterFile(std::string file_path) {
 
   file_buffer_ = file_buffer;
   file_fde_ = fde;
+  return Result<void>();
 }
 
 //========================================================================
@@ -95,6 +96,7 @@ Result<void> HttpResponse::Write(int fd) {
     written_body_count_ = 0;
     body_bytes_.swap(file_buffer_->buffer);
   }
+  return Result<void>();
 }
 
 Result<int> HttpResponse::WriteStatusAndHeader(int fd) {
@@ -120,10 +122,13 @@ Result<int> HttpResponse::WriteStatusAndHeader(int fd) {
 //========================================================================
 // Reponse Maker
 
-void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {}
+void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
+  (void)conn_sock;
+}
 
 void HttpResponse::MakeErrorResponse(const HttpRequest &request,
                                      HttpStatus status) {
+  (void)request;
   // エラーレスポンスを作る前にメンバー変数を初期化したほうがいいかも?
   SetStatus(status, StatusCodes::GetMessage(status));
 
@@ -170,7 +175,6 @@ bool HttpResponse::IsReadyToWrite() {
 }
 
 bool HttpResponse::IsAllDataWritingCompleted() {
-  bool is_status_ans_headers_written = IsStatusAndHeadersWritingCompleted();
   if (file_buffer_) {
     return IsStatusAndHeadersWritingCompleted() &&
            written_body_count_ == body_bytes_.size() &&

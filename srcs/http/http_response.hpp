@@ -13,6 +13,10 @@
 #include "server/socket.hpp"
 #include "utils/File.hpp"
 
+namespace server {
+class ConnSocket;
+}
+
 namespace http {
 
 struct FileBuffer {
@@ -71,7 +75,7 @@ class HttpResponse {
 
  public:
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
-  ~HttpResponse();
+  virtual ~HttpResponse();
 
   virtual void MakeResponse(server::ConnSocket *conn_sock);
 

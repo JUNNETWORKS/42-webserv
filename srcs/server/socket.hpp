@@ -11,6 +11,10 @@
 #include "result/result.hpp"
 #include "utils/ByteVector.hpp"
 
+namespace http {
+class HttpResponse;
+}
+
 namespace server {
 using namespace result;
 
