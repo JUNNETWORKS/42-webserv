@@ -161,16 +161,15 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       } else if (response->IsAllDataWritingCompleted()) {
         // 全て書き込み完了
         delete response;
-        should_close_conn = true;
+        // "Connection: close"
+        // がリクエストで指定されていた場合はソケット接続を切断
+        should_close_conn |= RequestHeaderHasConnectionClose(request);
         requests.pop_front();
       } else {
         // 書き込むデータはないがレスポンスは完成していない
         response->MakeResponse(socket);
       }
     }
-
-    // "Connection: close" がリクエストで指定されていた場合はソケット接続を切断
-    should_close_conn |= RequestHeaderHasConnectionClose(request);
   }
 
   return should_close_conn;
