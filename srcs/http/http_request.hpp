@@ -31,7 +31,7 @@ struct Chunk {
     kErrorLength = PAYLOAD_TOO_LARGE,
     kErrorBadRequest = BAD_REQUEST
   };
-  std::string size_str;
+  unsigned long size_directive_len;
   unsigned long data_size;
 };
 

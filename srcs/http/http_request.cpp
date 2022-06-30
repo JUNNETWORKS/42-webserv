@@ -170,11 +170,11 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
 
     Chunk chunk = chunk_pair.second;
     if (chunk.data_size == 0) {
-      buffer.erase(buffer.begin(), buffer.begin() + chunk.size_str.size());
+      buffer.erase(buffer.begin(), buffer.begin() + chunk.size_directive_len);
       return kChunkedTrailer;
     }
     buffer.erase(buffer.begin(),
-                 buffer.begin() + chunk.size_str.size() + kCrlf.size());
+                 buffer.begin() + chunk.size_directive_len + kCrlf.size());
     body_.insert(body_.end(), buffer.begin(), buffer.begin() + chunk.data_size);
     buffer.erase(buffer.begin(),
                  buffer.begin() + chunk.data_size + kCrlf.size());
@@ -333,7 +333,7 @@ bool IsObsFold(const utils::ByteVector &buf) {
 // Chunk内にCRLFがあること、CRLFがチャンクの末尾についている事を検証する。
 bool ValidateChunkDataFormat(const Chunk &chunk, utils::ByteVector &buffer) {
   utils::ByteVector chunk_data_bytes = utils::ByteVector(
-      buffer.begin() + chunk.size_str.size() + kCrlf.size(), buffer.end());
+      buffer.begin() + chunk.size_directive_len + kCrlf.size(), buffer.end());
   Result<size_t> res = chunk_data_bytes.FindString(kCrlf);
   if (res.IsOk()) {
     return res.Ok() == chunk.data_size;
@@ -355,7 +355,7 @@ Chunk::ChunkStatus ParseChunkSizeDirective(utils::ByteVector &buffer,
   size_t semicolon_pos = directive.find(';');
 
   std::string size_digits;
-  chunk.size_str = directive;
+  chunk.size_directive_len = directive.size();
   if (semicolon_pos == std::string::npos) {
     size_digits = directive;
   } else if (ValidateChunkExtensionFormat(directive.substr(semicolon_pos))) {
@@ -391,7 +391,7 @@ std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
   }
 
   unsigned long expect_buffer_size =
-      res.size_str.size() + kCrlf.size() + res.data_size + kCrlf.size();
+      res.size_directive_len + kCrlf.size() + res.data_size + kCrlf.size();
   if (buffer.size() < expect_buffer_size)
     return std::make_pair(Chunk::kWaiting, res);
 
