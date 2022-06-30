@@ -21,12 +21,18 @@ const std::string HttpResponse::kDefaultHttpVersion = "HTTP/1.1";
 
 HttpResponse::HttpResponse(const config::LocationConf *location,
                            server::Epoll *epoll)
-    : http_version_(kDefaultHttpVersion),
-      location_(location),
+    : location_(location),
       epoll_(epoll),
+      http_version_(kDefaultHttpVersion),
+      status_(OK),
+      status_message_(StatusCodes::GetMessage(OK)),
+      headers_(),
+      status_and_headers_bytes_(),
+      writtern_status_headers_count_(0),
+      body_bytes_(),
+      written_body_count_(0),
       file_buffer_(NULL),
-      file_fde_(NULL),
-      writtern_status_headers_count_(0) {
+      file_fde_(NULL) {
   assert(epoll_ != NULL);
 }
 
