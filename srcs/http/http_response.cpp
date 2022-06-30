@@ -172,11 +172,27 @@ std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
 // Status checker
 
 bool HttpResponse::IsReadyToWrite() {
-  // TODO: 実装する
+  if (file_buffer_) {
+    return !IsStatusAndHeadersWritingCompleted() ||
+           (written_body_count_ < body_bytes_.size() ||
+            !file_buffer_->buffer.empty());
+  } else {
+    return !IsStatusAndHeadersWritingCompleted() ||
+           written_body_count_ < body_bytes_.size();
+  }
 }
 
 bool HttpResponse::IsAllDataWritingCompleted() {
-  // TODO: 実装する
+  bool is_status_ans_headers_written = IsStatusAndHeadersWritingCompleted();
+  if (file_buffer_) {
+    return IsStatusAndHeadersWritingCompleted() &&
+           written_body_count_ == body_bytes_.size() &&
+           !file_buffer_->buffer.empty() &&
+           (file_buffer_->is_eof || file_buffer_->events & kFdeError);
+  } else {
+    return IsStatusAndHeadersWritingCompleted() &&
+           written_body_count_ == body_bytes_.size();
+  }
 }
 
 bool HttpResponse::IsStatusAndHeadersWritingCompleted() {
