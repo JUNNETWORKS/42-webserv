@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "http/http_response.hpp"
+
 namespace http {
 
 void HandleFileEvent(FdEvent *fde, unsigned int events, void *data,
@@ -27,10 +28,14 @@ void HandleFileEvent(FdEvent *fde, unsigned int events, void *data,
       return;
     }
     utils::Byte buf[FileBuffer::kBytesPerRead];
+    // kBytesPerRead + 0 のようにしているのは､
+    // static const メンバ定数は参照として使えないので､
+    // 演算を行うことで右辺値に変換している｡
     int read_res =
         read(fde->fd, buf,
-             std::min(FileBuffer::kBytesPerRead,
+             std::min(FileBuffer::kBytesPerRead + 0,
                       FileBuffer::kMaxBufferSize - file_buffer->buffer.size()));
+
     if (read_res < 0) {
       // Error
       file_buffer->events = kFdeError;
