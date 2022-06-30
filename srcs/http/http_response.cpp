@@ -200,6 +200,7 @@ utils::ByteVector HttpResponse::SerializeStatusAndHeader() {
   bytes.insert(bytes.end(), status_line.begin(), status_line.end());
   utils::ByteVector header_lines = SerializeHeaders();
   bytes.insert(bytes.end(), header_lines.begin(), header_lines.end());
+  bytes.insert(bytes.end(), kCrlf.begin(), kCrlf.end());
   return bytes;
 }
 
