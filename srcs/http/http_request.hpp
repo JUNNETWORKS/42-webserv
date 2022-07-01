@@ -68,6 +68,7 @@ class HttpRequest {
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
 
+  const std::string &GetMethod() const;
   const std::string &GetPath() const;
   HttpStatus GetParseStatus() const;
 
