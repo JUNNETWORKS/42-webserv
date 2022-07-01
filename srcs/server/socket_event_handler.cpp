@@ -153,6 +153,7 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       http::HttpResponse *response =
           AllocateResponseObj(vserver, request, epoll);
       socket->SetResponse(response);
+      response->MakeResponse(socket);
     } else {
       http::HttpResponse *response = socket->GetResponse();
       if (response->IsReadyToWrite()) {
@@ -163,11 +164,12 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
         delete response;
         // "Connection: close"
         // がリクエストで指定されていた場合はソケット接続を切断
+        // TODO: レスポンスが200番台の時以外はclose
         should_close_conn |= RequestHeaderHasConnectionClose(request);
+        should_close_conn = true;
         requests.pop_front();
       } else {
         // 書き込むデータはないがレスポンスは完成していない
-        response->MakeResponse(socket);
       }
     }
   }
