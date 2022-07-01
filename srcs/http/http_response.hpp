@@ -30,7 +30,6 @@ class HttpResponse {
   static const std::string kDefaultHttpVersion;
 
   const config::LocationConf *location_;
-  // File Response の場合は file_fd を監視したい
   server::Epoll *epoll_;
 
   // Status Line
@@ -98,23 +97,12 @@ class HttpResponse {
   HttpResponse(const HttpResponse &rhs);
   HttpResponse &operator=(const HttpResponse &rhs);
 
-  void WriteStatusLine(int fd) const;
-  void WriteHeaders(int fd) const;
-  void WriteBody(int fd) const;
-
   // StatusLine と Headers をバイト列にする
-  utils::ByteVector SerializeStatusAndHeader();
+  utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;
   utils::ByteVector SerializeHeaders() const;
 
   std::string MakeErrorResponseBody(HttpStatus status);
-
-  // Making response
-  bool MakeFileResponse(const config::LocationConf &location,
-                        const HttpRequest &request);
-
-  std::string MakeAutoIndex(const std::string &root_path,
-                            const std::string &relative_path) const;
 };
 
 }  // namespace http

@@ -175,7 +175,7 @@ bool HttpResponse::IsStatusAndHeadersWritingCompleted() {
 //========================================================================
 // Serialization
 
-utils::ByteVector HttpResponse::SerializeStatusAndHeader() {
+utils::ByteVector HttpResponse::SerializeStatusAndHeader() const {
   utils::ByteVector bytes;
   utils::ByteVector status_line = SerializeStatusLine();
   bytes.insert(bytes.end(), status_line.begin(), status_line.end());
@@ -233,62 +233,6 @@ void HttpResponse::SetStatusMessage(const std::string &status_message) {
 void HttpResponse::AppendHeader(const std::string &header,
                                 const std::string &value) {
   headers_[header].push_back(value);
-}
-
-std::string ReadChild(int fd) {
-  char buf[1024 + 1];
-
-  std::string s;
-  while (1) {
-    ssize_t read_ret;
-    // std::cout << "into read " << read_ret << std::endl;
-    read_ret = read(fd, buf, 1024);
-    // std::cout << "read_ret " << read_ret << std::endl;
-    if (read_ret < 0) {
-      std::cerr << "MakeCgiReponse read err" << std::endl;
-      exit(1);
-    }
-    if (read_ret == 0) {
-      break;
-    }
-    buf[read_ret] = '\0';
-    s += std::string(buf);
-  }
-  // std::cout << "CGI" << std::endl;
-  // std::cout << "--- --- ---" << std::endl;
-  // std::cout << "body" << std::endl;
-  // std::cout << body_ << std::endl;
-  return s;
-}
-
-bool HttpResponse::MakeCgiReponse(const config::LocationConf &location,
-                                  const HttpRequest &request) {
-  // TODO: 実装する
-  // (void)location;
-  // (void)request;
-  std::string req_path = request.GetPath();
-  std::string abs_path =
-      location.GetRootDir() + "/" +
-      req_path.replace(0, location.GetPathPattern().length(), "");
-
-  std::cout << "--- cgi ---" << std::endl;
-  std::cout << "request.GetPath() : " << request.GetPath() << std::endl;
-  std::cout << "abs_path          : " << request.GetPath() << std::endl;
-  std::cout << "--- --- ---" << std::endl;
-
-  cgi::CgiRequest cgi(abs_path, request, location);
-
-  cgi.RunCgi();
-  int parentsock = cgi.GetCgiUnisock();
-
-  std::string cgi_res = ReadChild(parentsock);
-  close(parentsock);
-
-  // とりあえず返せるように
-  SEtStatus(OK);
-  SetBody(cgi_res);
-  AppendHeader("Content-Type", "text/plain");
-  return true;
 }
 
 }  // namespace http
