@@ -38,14 +38,17 @@ class CgiRequest {
   const std::vector<std::string> &GetCgiArgs() const;
 
   bool RunCgi();
+
+  // 現在はテストしたので、public
   bool ParseCgiRequest();
+
+ private:
+  CgiRequest();
+
   // 返り値は無名ドメインソケットのfd
   // TODO: 第二引数はhttprequestじゃなくてcgirequestとかのほうがよいかも
   // TODO: cgiのpidをどうやってwaitするかが問題｡
   bool ForkAndExecuteCgi();
-
- private:
-  CgiRequest();
 
   // リクエストからCGIスクリプトに渡す変数を作成する
   void CreateCgiMetaVariablesFromHttpRequest(
