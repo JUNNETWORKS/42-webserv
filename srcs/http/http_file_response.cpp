@@ -27,7 +27,7 @@ void HttpFileResponse::MakeResponse(server::ConnSocket *conn_sock) {
     return;
   }
 
-  if (utils::IsReadableFile(abs_file_path)) {
+  if (!utils::IsReadableFile(abs_file_path)) {
     MakeErrorResponse(request, FORBIDDEN);
     return;
   }
