@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "http/file_event_handler.hpp"
 #include "http/http_constants.hpp"
 #include "http/http_request.hpp"
 #include "server/epoll.hpp"
@@ -31,44 +30,23 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       writtern_status_headers_count_(0),
       body_bytes_(),
       written_body_count_(0),
-      file_buffer_(NULL),
-      file_fde_(NULL) {
+      file_fd_(-1),
+      is_file_eof_(false) {
   assert(epoll_ != NULL);
 }
 
 HttpResponse::~HttpResponse() {
-  if (file_buffer_) {
-    if (file_buffer_->is_unregistered) {
-      delete file_fde_;
-      delete file_buffer_;
-    } else {
-      epoll_->Unregister(file_fde_);
-      file_buffer_->is_unregistered = true;
-    }
+  if (file_fd_ >= 0) {
+    close(file_fd_);
   }
 }
 
 Result<void> HttpResponse::RegisterFile(std::string file_path) {
-  FileBuffer *file_buffer = new FileBuffer();
-  int flags;
   if (!utils::IsRegularFile(file_path) || !utils::IsReadableFile(file_path) ||
-      (file_buffer->file_fd = open(file_path.c_str(), O_RDONLY)) < 0 ||
-      (flags = fcntl(file_buffer->file_fd, F_GETFL, 0)) < 0 ||
-      fcntl(file_buffer->file_fd, F_SETFL, flags | O_NONBLOCK) < 0) {
-    delete file_buffer;
+      (file_fd_ = open(file_path.c_str(), O_RDONLY)) < 0) {
     return Error();
   }
-  file_buffer->events = 0;
-  file_buffer->is_eof = false;
-  file_buffer->is_unregistered = false;
-
-  server::FdEvent *fde = server::CreateFdEvent(file_buffer_->file_fd,
-                                               HandleFileEvent, file_buffer);
-  epoll_->Register(fde);
-  epoll_->Add(fde, server::kFdeRead);
-
-  file_buffer_ = file_buffer;
-  file_fde_ = fde;
+  printf("RegisterFile(%s)\n", file_path.c_str());
   return Result<void>();
 }
 
@@ -83,18 +61,24 @@ Result<void> HttpResponse::Write(int fd) {
   if (status_header_res.Ok() > 0) {
     return Result<void>();
   }
+
+  if (file_fd_ >= 0 && !is_file_eof_) {
+    utils::Byte buf[kBytesPerRead];
+    int read_res = read(file_fd_, buf, kBytesPerRead);
+    if (read_res < 0) {
+      return Error();
+    } else if (read_res == 0) {
+      is_file_eof_ = true;
+    }
+    body_bytes_.AppendDataToBuffer(buf, read_res);
+  }
   if (!body_bytes_.empty()) {
-    int write_res =
-        write(fd, body_bytes_.data(), body_bytes_.size() - written_body_count_);
+    int write_res = write(fd, body_bytes_.data() + written_body_count_,
+                          body_bytes_.size() - written_body_count_);
     if (write_res < 0) {
       return Error();
     }
     written_body_count_ += write_res;
-  }
-  if (written_body_count_ == body_bytes_.size() && file_buffer_) {
-    body_bytes_.clear();
-    written_body_count_ = 0;
-    body_bytes_.swap(file_buffer_->buffer);
   }
   return Result<void>();
 }
@@ -164,10 +148,8 @@ std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
 // Status checker
 
 bool HttpResponse::IsReadyToWrite() {
-  if (file_buffer_) {
-    return !IsStatusAndHeadersWritingCompleted() ||
-           (written_body_count_ < body_bytes_.size() ||
-            !file_buffer_->buffer.empty());
+  if (file_fd_ >= 0) {
+    return !IsStatusAndHeadersWritingCompleted() || !is_file_eof_;
   } else {
     return !IsStatusAndHeadersWritingCompleted() ||
            written_body_count_ < body_bytes_.size();
@@ -175,11 +157,9 @@ bool HttpResponse::IsReadyToWrite() {
 }
 
 bool HttpResponse::IsAllDataWritingCompleted() {
-  if (file_buffer_) {
-    return IsStatusAndHeadersWritingCompleted() &&
-           written_body_count_ == body_bytes_.size() &&
-           !file_buffer_->buffer.empty() &&
-           (file_buffer_->is_eof || file_buffer_->events & kFdeError);
+  if (file_fd_ >= 0) {
+    return IsStatusAndHeadersWritingCompleted() && is_file_eof_ &&
+           written_body_count_ == body_bytes_.size();
   } else {
     return IsStatusAndHeadersWritingCompleted() &&
            written_body_count_ == body_bytes_.size();
