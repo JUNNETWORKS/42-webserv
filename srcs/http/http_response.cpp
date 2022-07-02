@@ -47,7 +47,6 @@ Result<void> HttpResponse::RegisterFile(std::string file_path) {
       (file_fd_ = open(file_path.c_str(), O_RDONLY)) < 0) {
     return Error();
   }
-  printf("RegisterFile(%s)\n", file_path.c_str());
   return Result<void>();
 }
 
