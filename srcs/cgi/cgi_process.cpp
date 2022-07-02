@@ -17,7 +17,10 @@ CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll)
       is_err(false),
       is_finished(false) {}
 
-CgiProcess::~CgiProcess() {}
+CgiProcess::~CgiProcess() {
+  delete cgi_request_;
+  delete cgi_response_;
+}
 
 Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
   is_executed = true;
