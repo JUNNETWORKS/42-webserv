@@ -111,6 +111,11 @@ Result<int> HttpResponse::WriteStatusAndHeader(int fd) {
 void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
+  // TODO: 想定通りの挙動になるように直す
+  // location: /upload
+  // request : /upload/hoge.txt
+  // expected: /upload/hoge.txt
+  // actual  : /upload/upload/hoge.txt
   const std::string &abs_file_path =
       location_->GetRootDir() + request.GetPath();
   if (!utils::IsFileExist(abs_file_path)) {
