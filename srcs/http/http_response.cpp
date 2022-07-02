@@ -30,7 +30,6 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       status_and_headers_bytes_(),
       writtern_status_headers_count_(0),
       body_bytes_(),
-      written_body_count_(0),
       file_fd_(-1),
       is_file_eof_(false) {
   assert(epoll_ != NULL);
@@ -77,12 +76,11 @@ Result<void> HttpResponse::Write(int fd) {
     body_bytes_.AppendDataToBuffer(buf, read_res);
   }
   if (!body_bytes_.empty()) {
-    ssize_t write_res = write(fd, body_bytes_.data() + written_body_count_,
-                              body_bytes_.size() - written_body_count_);
+    ssize_t write_res = write(fd, body_bytes_.data(), body_bytes_.size());
     if (write_res < 0) {
       return Error();
     }
-    written_body_count_ += write_res;
+    body_bytes_.EraseHead(write_res);
   }
   return Result<void>();
 }
@@ -176,20 +174,19 @@ std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
 
 bool HttpResponse::IsReadyToWrite() {
   if (file_fd_ >= 0) {
-    return !IsStatusAndHeadersWritingCompleted() || !is_file_eof_;
+    return !IsStatusAndHeadersWritingCompleted() || !is_file_eof_ ||
+           !body_bytes_.empty();
   } else {
-    return !IsStatusAndHeadersWritingCompleted() ||
-           written_body_count_ < body_bytes_.size();
+    return !IsStatusAndHeadersWritingCompleted() || !body_bytes_.empty();
   }
 }
 
 bool HttpResponse::IsAllDataWritingCompleted() {
   if (file_fd_ >= 0) {
     return IsStatusAndHeadersWritingCompleted() && is_file_eof_ &&
-           written_body_count_ == body_bytes_.size();
+           body_bytes_.empty();
   } else {
-    return IsStatusAndHeadersWritingCompleted() &&
-           written_body_count_ == body_bytes_.size();
+    return IsStatusAndHeadersWritingCompleted() && body_bytes_.empty();
   }
 }
 
