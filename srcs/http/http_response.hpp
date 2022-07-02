@@ -70,6 +70,8 @@ class HttpResponse {
   // すべてのデータの write が完了したか
   virtual bool IsAllDataWritingCompleted();
 
+  const std::vector<std::string> &GetHeader(const std::string &header);
+
  protected:
   // ファイルをopenし､Epollで監視する
   Result<void> RegisterFile(const std::string &file_path);
@@ -90,6 +92,7 @@ class HttpResponse {
   void SetStatus(HttpStatus status);
   void SetStatus(HttpStatus status, const std::string &status_message);
   void SetStatusMessage(const std::string &status_message);
+  void SetHeader(const std::string &header, const std::string &value);
   void AppendHeader(const std::string &header, const std::string &value);
 
  private:

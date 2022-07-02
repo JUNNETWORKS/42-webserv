@@ -126,6 +126,11 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
     body_bytes_ = MakeAutoIndex(location_->GetRootDir(), request.GetPath());
     SetStatus(OK, StatusCodes::GetMessage(OK));
     AppendHeader("Content-Type", "text/html");
+    if (std::find(request.GetHeader("Connection").begin(),
+                  request.GetHeader("Connection").end(),
+                  "close") != request.GetHeader("Connection").end()) {
+      SetHeader("Connection", "close");
+    }
     return;
   }
 
@@ -137,6 +142,11 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   SetStatus(OK, StatusCodes::GetMessage(OK));
   AppendHeader("Content-Type", "text/plain");
   RegisterFile(abs_file_path);
+  if (std::find(request.GetHeader("Connection").begin(),
+                request.GetHeader("Connection").end(),
+                "close") != request.GetHeader("Connection").end()) {
+    SetHeader("Connection", "close");
+  }
 }
 
 void HttpResponse::MakeErrorResponse(const HttpRequest &request,
@@ -144,6 +154,7 @@ void HttpResponse::MakeErrorResponse(const HttpRequest &request,
   (void)request;
   // エラーレスポンスを作る前にメンバー変数を初期化したほうがいいかも?
   SetStatus(status, StatusCodes::GetMessage(status));
+  SetHeader("Connection", "close");
 
   if (location_) {
     const std::map<http::HttpStatus, std::string> &error_pages =
@@ -257,9 +268,20 @@ void HttpResponse::SetStatusMessage(const std::string &status_message) {
   status_message_ = status_message;
 }
 
+void HttpResponse::SetHeader(const std::string &header,
+                             const std::string &value) {
+  headers_[header].clear();
+  headers_[header].push_back(value);
+}
+
 void HttpResponse::AppendHeader(const std::string &header,
                                 const std::string &value) {
   headers_[header].push_back(value);
+}
+
+const std::vector<std::string> &HttpResponse::GetHeader(
+    const std::string &header) {
+  return headers_[header];
 }
 
 }  // namespace http

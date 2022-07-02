@@ -25,11 +25,11 @@ bool ProcessRequest(ConnSocket *socket);
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessResponse(ConnSocket *socket, Epoll *epoll);
 
-// HTTPリクエストのヘッダーに "Connection: close" が含まれているか
+// HTTPレスポンスのヘッダーに "Connection: close" が含まれているか
 //
 // request を const_reference で受け取っていないのは
-// HttpRequest.GetHeader() が const メソッドじゃないから
-bool RequestHeaderHasConnectionClose(http::HttpRequest &request);
+// HttpResponse.GetHeader() が const メソッドじゃないから
+bool ResponseHeaderHasConnectionClose(http::HttpResponse &response);
 
 }  // namespace
 
@@ -119,9 +119,9 @@ bool ProcessRequest(ConnSocket *socket) {
   return false;
 }
 
-bool RequestHeaderHasConnectionClose(http::HttpRequest &request) {
+bool ResponseHeaderHasConnectionClose(http::HttpResponse &response) {
   const std::vector<std::string> &connection_header =
-      request.GetHeader("Connection");
+      response.GetHeader("Connection");
   for (std::vector<std::string>::const_iterator it = connection_header.begin();
        it != connection_header.end(); ++it) {
     if (*it == "close") {
@@ -161,13 +161,11 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       // 書き込むデータが存在する
       should_close_conn |= response->Write(conn_fd).IsErr();
     } else if (response->IsAllDataWritingCompleted()) {
+      // "Connection: close"
+      // がレスポンスヘッダーに存在していればソケット接続を切断
+      should_close_conn |= ResponseHeaderHasConnectionClose(*response);
       // 全て書き込み完了
       delete response;
-      // "Connection: close"
-      // がリクエストで指定されていた場合はソケット接続を切断
-      // TODO: レスポンスが200番台の時以外はclose
-      should_close_conn |= RequestHeaderHasConnectionClose(request);
-      should_close_conn = true;
       requests.pop_front();
     } else {
       // 書き込むデータはないがレスポンスは完成していない
