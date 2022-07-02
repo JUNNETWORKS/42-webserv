@@ -25,6 +25,7 @@ TEST_P(LocationGetAbsTest, location_abs_test) {
   EXPECT_EQ(conf.GetAbsolutePath(req_path), expected);
 }
 
+// req_path の 前には必ず、locationが必要
 // {"location", "root_dir", "req_path", "expected"}
 const std::vector<
     std::tuple<std::string, std::string, std::string, std::string>>
@@ -36,6 +37,10 @@ const std::vector<
         {"/", "/public", "/hoge", "/public/hoge"},
         {"/", "/public/", "/", "/public/"},
         {"/", "/public/", "/hoge", "/public/hoge"},
+        {"/location", "/", "/location", "/"},
+        {"/location", "/", "/location/", "/"},
+        {"/location", "/", "/location/hoge", "/hoge"},
+        {"/location", "/", "/location/hoge/", "/hoge/"},
         {"/cgi-bin", "/public/cgi-bin", "/cgi-bin/test-cgi",
          "/public/cgi-bin/test-cgi"},
         {"/cgi-bin/", "/public/cgi-bin", "/cgi-bin/test-cgi",
