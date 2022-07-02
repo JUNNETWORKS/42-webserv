@@ -154,23 +154,23 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
           AllocateResponseObj(vserver, request, epoll);
       socket->SetResponse(response);
       response->MakeResponse(socket);
+    }
+
+    http::HttpResponse *response = socket->GetResponse();
+    if (response->IsReadyToWrite()) {
+      // 書き込むデータが存在する
+      should_close_conn |= response->Write(conn_fd).IsErr();
+    } else if (response->IsAllDataWritingCompleted()) {
+      // 全て書き込み完了
+      delete response;
+      // "Connection: close"
+      // がリクエストで指定されていた場合はソケット接続を切断
+      // TODO: レスポンスが200番台の時以外はclose
+      should_close_conn |= RequestHeaderHasConnectionClose(request);
+      should_close_conn = true;
+      requests.pop_front();
     } else {
-      http::HttpResponse *response = socket->GetResponse();
-      if (response->IsReadyToWrite()) {
-        // 書き込むデータが存在する
-        should_close_conn |= response->Write(conn_fd).IsErr();
-      } else if (response->IsAllDataWritingCompleted()) {
-        // 全て書き込み完了
-        delete response;
-        // "Connection: close"
-        // がリクエストで指定されていた場合はソケット接続を切断
-        // TODO: レスポンスが200番台の時以外はclose
-        should_close_conn |= RequestHeaderHasConnectionClose(request);
-        should_close_conn = true;
-        requests.pop_front();
-      } else {
-        // 書き込むデータはないがレスポンスは完成していない
-      }
+      // 書き込むデータはないがレスポンスは完成していない
     }
   }
 
