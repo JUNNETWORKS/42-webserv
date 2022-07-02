@@ -48,6 +48,8 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
   if ((file_fd_ = open(file_path.c_str(), O_RDONLY)) < 0) {
     return Error();
   }
+  unsigned long file_size = utils::GetFileSize(file_path);
+  SetHeader("Content-Length", utils::ConvertToStr(file_size));
   return Result<void>();
 }
 
@@ -128,6 +130,7 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
 
   if (utils::IsDir(abs_file_path)) {
     body_bytes_ = MakeAutoIndex(location_->GetRootDir(), request.GetPath());
+    SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
     SetStatus(OK, StatusCodes::GetMessage(OK));
     AppendHeader("Content-Type", "text/html");
     return;
@@ -150,15 +153,18 @@ void HttpResponse::MakeErrorResponse(const HttpRequest &request,
   SetStatus(status, StatusCodes::GetMessage(status));
   SetHeader("Connection", "close");
 
-  if (location_) {
-    const std::map<http::HttpStatus, std::string> &error_pages =
-        location_->GetErrorPages();
-    if (error_pages.find(status) == error_pages.end() ||
-        RegisterFile(error_pages.at(status)).IsErr()) {
-      body_bytes_ = MakeErrorResponseBody(status);
-    }
-  } else {
+  if (!location_) {
     body_bytes_ = MakeErrorResponseBody(status);
+    SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
+    return;
+  }
+
+  const std::map<http::HttpStatus, std::string> &error_pages =
+      location_->GetErrorPages();
+  if (error_pages.find(status) == error_pages.end() ||
+      RegisterFile(error_pages.at(status)).IsErr()) {
+    body_bytes_ = MakeErrorResponseBody(status);
+    SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
   }
 }
 
