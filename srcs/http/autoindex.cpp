@@ -50,8 +50,8 @@ std::string AutoIndexFileName(const std::string &file_name) {
   return ss.str();
 }
 
-std::string HttpResponse::MakeAutoIndex(
-    const std::string &root_path, const std::string &relative_path) const {
+std::string HttpResponse::MakeAutoIndex(const std::string &root_path,
+                                        const std::string &relative_path) {
   Result<std::vector<utils::File> > result =
       utils::GetFileList(root_path + "/" + relative_path);
   if (result.IsErr()) {

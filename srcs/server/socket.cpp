@@ -48,7 +48,7 @@ Socket::ESockType Socket::GetSockType() const {
 
 ConnSocket::ConnSocket(int fd, const std::string &port,
                        const config::Config &config)
-    : Socket(fd, ListenSock, port, config) {}
+    : Socket(fd, ListenSock, port, config), response_(NULL) {}
 
 std::deque<http::HttpRequest> &ConnSocket::GetRequests() {
   return requests_;
@@ -58,8 +58,12 @@ bool ConnSocket::HasParsedRequest() {
   return !requests_.empty() && requests_.front().IsCorrectRequest();
 }
 
-http::HttpResponse &ConnSocket::GetResponse() {
+http::HttpResponse *ConnSocket::GetResponse() {
   return response_;
+}
+
+void ConnSocket::SetResponse(http::HttpResponse *response) {
+  response_ = response;
 }
 
 utils::ByteVector &ConnSocket::GetBuffer() {
