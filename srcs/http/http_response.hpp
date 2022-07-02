@@ -109,6 +109,8 @@ class HttpResponse {
 
   static std::string MakeAutoIndex(const std::string &root_path,
                                    const std::string &relative_path);
+
+  static bool IsRequestHasConnectionClose(HttpRequest &request);
 };
 
 }  // namespace http

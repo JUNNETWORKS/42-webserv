@@ -110,9 +110,7 @@ Result<ssize_t> HttpResponse::WriteStatusAndHeader(int fd) {
 void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
-  if (std::find(request.GetHeader("Connection").begin(),
-                request.GetHeader("Connection").end(),
-                "close") != request.GetHeader("Connection").end()) {
+  if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
 
@@ -278,6 +276,12 @@ void HttpResponse::AppendHeader(const std::string &header,
 const std::vector<std::string> &HttpResponse::GetHeader(
     const std::string &header) {
   return headers_[header];
+}
+
+bool HttpResponse::IsRequestHasConnectionClose(HttpRequest &request) {
+  return std::find(request.GetHeader("Connection").begin(),
+                   request.GetHeader("Connection").end(),
+                   "close") != request.GetHeader("Connection").end();
 }
 
 }  // namespace http
