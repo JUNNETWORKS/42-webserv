@@ -68,7 +68,7 @@ Result<void> HttpResponse::Write(int fd) {
   // body に関するwrite
   if (file_fd_ >= 0 && !is_file_eof_) {
     utils::Byte buf[kBytesPerRead];
-    int read_res = read(file_fd_, buf, kBytesPerRead);
+    ssize_t read_res = read(file_fd_, buf, kBytesPerRead);
     if (read_res < 0) {
       return Error();
     } else if (read_res == 0) {
@@ -77,8 +77,8 @@ Result<void> HttpResponse::Write(int fd) {
     body_bytes_.AppendDataToBuffer(buf, read_res);
   }
   if (!body_bytes_.empty()) {
-    int write_res = write(fd, body_bytes_.data() + written_body_count_,
-                          body_bytes_.size() - written_body_count_);
+    ssize_t write_res = write(fd, body_bytes_.data() + written_body_count_,
+                              body_bytes_.size() - written_body_count_);
     if (write_res < 0) {
       return Error();
     }
@@ -96,7 +96,7 @@ Result<int> HttpResponse::WriteStatusAndHeader(int fd) {
     writtern_status_headers_count_ = 0;
   }
 
-  int write_res = write(
+  ssize_t write_res = write(
       fd, status_and_headers_bytes_.data() + writtern_status_headers_count_,
       status_and_headers_bytes_.size() - writtern_status_headers_count_);
   if (write_res < 0) {
