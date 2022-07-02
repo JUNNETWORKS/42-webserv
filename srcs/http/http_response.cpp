@@ -54,6 +54,7 @@ Result<void> HttpResponse::RegisterFile(std::string file_path) {
 // Writer
 
 Result<void> HttpResponse::Write(int fd) {
+  // status と headers に関するwrite
   Result<int> status_header_res = WriteStatusAndHeader(fd);
   if (status_header_res.IsErr()) {
     return status_header_res.Err();
@@ -62,6 +63,7 @@ Result<void> HttpResponse::Write(int fd) {
     return Result<void>();
   }
 
+  // body に関するwrite
   if (file_fd_ >= 0 && !is_file_eof_) {
     utils::Byte buf[kBytesPerRead];
     int read_res = read(file_fd_, buf, kBytesPerRead);
