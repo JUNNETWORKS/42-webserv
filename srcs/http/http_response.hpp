@@ -103,6 +103,9 @@ class HttpResponse {
   utils::ByteVector SerializeHeaders() const;
 
   std::string MakeErrorResponseBody(HttpStatus status);
+
+  static std::string MakeAutoIndex(const std::string &root_path,
+                                   const std::string &relative_path);
 };
 
 }  // namespace http
