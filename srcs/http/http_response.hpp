@@ -80,7 +80,7 @@ class HttpResponse {
   //
   // 返り値は今回書き込んだバイト数である｡
   // 0ならば全てのバイト書き込みが完了したことになる｡
-  Result<int> WriteStatusAndHeader(int fd);
+  Result<ssize_t> WriteStatusAndHeader(int fd);
 
   bool IsStatusAndHeadersWritingCompleted();
 

@@ -56,7 +56,7 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
 
 Result<void> HttpResponse::Write(int fd) {
   // status と headers に関するwrite
-  Result<int> status_header_res = WriteStatusAndHeader(fd);
+  Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
   if (status_header_res.IsErr()) {
     return status_header_res.Err();
   }
@@ -85,7 +85,7 @@ Result<void> HttpResponse::Write(int fd) {
   return Result<void>();
 }
 
-Result<int> HttpResponse::WriteStatusAndHeader(int fd) {
+Result<ssize_t> HttpResponse::WriteStatusAndHeader(int fd) {
   if (IsStatusAndHeadersWritingCompleted()) {
     return 0;
   }
