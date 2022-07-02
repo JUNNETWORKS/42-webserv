@@ -4,7 +4,7 @@
 
 #include <deque>
 
-#include "http/http_file_response.hpp"
+#include "http/http_response.hpp"
 #include "result/result.hpp"
 #include "server/epoll.hpp"
 #include "server/socket.hpp"
@@ -193,14 +193,14 @@ http::HttpResponse *AllocateResponseObj(
     return res;
   }
 
-  return new http::HttpFileResponse(location, epoll);
+  return new http::HttpResponse(location, epoll);
   // TODO: 以下のコードが実行できるようにする
   //  if (location->GetIsCgi()) {
   //    return new http::HttpCgiResponse(location, epoll);
   //  } else if (location->GetRedirectUrl()) {
   //    return new http::HttpRedirectResponse(location, epoll);
   //  } else {
-  //    return new http::HttpFileResponse(location, epoll);
+  //    return new http::HttpResponse(location, epoll);
   //  }
 }
 
