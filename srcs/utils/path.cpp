@@ -35,7 +35,7 @@ std::string JoinPath(const std::vector<std::string> &v) {
       slash = "/";
     }
   }
-  if (joined.back() != '/' && is_last_slash) {
+  if (joined != "" && joined[joined.length() - 1] != '/' && is_last_slash) {
     joined += "/";
   }
   return joined;
