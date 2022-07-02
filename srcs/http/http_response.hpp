@@ -72,7 +72,7 @@ class HttpResponse {
 
  protected:
   // ファイルをopenし､Epollで監視する
-  Result<void> RegisterFile(std::string file_path);
+  Result<void> RegisterFile(const std::string &file_path);
 
   // status-line と header-lines を書き込む｡
   // status_and_headers_bytes_ にデータが無い(初回呼び出し)ときには､
