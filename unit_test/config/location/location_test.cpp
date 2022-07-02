@@ -31,9 +31,10 @@ const std::vector<
     LocationGetAbsTestTuple = {
         {"/", "/", "/", "/"},
         {"/", "/", "/hoge", "/hoge"},
+        {"/", "/", "/hoge/", "/hoge/"},
         {"/", "/public", "/", "/public"},
         {"/", "/public", "/hoge", "/public/hoge"},
-        {"/", "/public/", "/", "/public"},
+        {"/", "/public/", "/", "/public/"},
         {"/", "/public/", "/hoge", "/public/hoge"},
         {"/cgi-bin", "/public/cgi-bin", "/cgi-bin/test-cgi",
          "/public/cgi-bin/test-cgi"},
@@ -41,9 +42,6 @@ const std::vector<
          "/public/cgi-bin/test-cgi"},
         {"/cgi-bin/", "/public/cgi-bin/", "/cgi-bin/test-cgi",
          "/public/cgi-bin/test-cgi"}};
-
-// TODO : join path が 最後のパス消さないようにするべきか
-// {"/", "/", "/hoge/", "/hoge/"}
 
 INSTANTIATE_TEST_SUITE_P(LocationGetAbsTest, LocationGetAbsTest,
                          ::testing::ValuesIn(LocationGetAbsTestTuple));
