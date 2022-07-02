@@ -55,7 +55,6 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
 // Writer
 
 Result<void> HttpResponse::Write(int fd) {
-  // status と headers に関するwrite
   Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
   if (status_header_res.IsErr()) {
     return status_header_res.Err();
@@ -64,7 +63,6 @@ Result<void> HttpResponse::Write(int fd) {
     return Result<void>();
   }
 
-  // body に関するwrite
   if (file_fd_ >= 0 && !is_file_eof_) {
     utils::Byte buf[kBytesPerRead];
     ssize_t read_res = read(file_fd_, buf, kBytesPerRead);
@@ -72,8 +70,9 @@ Result<void> HttpResponse::Write(int fd) {
       return Error();
     } else if (read_res == 0) {
       is_file_eof_ = true;
+    } else {
+      body_bytes_.AppendDataToBuffer(buf, read_res);
     }
-    body_bytes_.AppendDataToBuffer(buf, read_res);
   }
   if (!body_bytes_.empty()) {
     ssize_t write_res = write(fd, body_bytes_.data(), body_bytes_.size());
