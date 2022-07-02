@@ -110,6 +110,12 @@ Result<ssize_t> HttpResponse::WriteStatusAndHeader(int fd) {
 void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
+  if (std::find(request.GetHeader("Connection").begin(),
+                request.GetHeader("Connection").end(),
+                "close") != request.GetHeader("Connection").end()) {
+    SetHeader("Connection", "close");
+  }
+
   // TODO: 想定通りの挙動になるように直す
   // location: /upload
   // request : /upload/hoge.txt
@@ -126,11 +132,6 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
     body_bytes_ = MakeAutoIndex(location_->GetRootDir(), request.GetPath());
     SetStatus(OK, StatusCodes::GetMessage(OK));
     AppendHeader("Content-Type", "text/html");
-    if (std::find(request.GetHeader("Connection").begin(),
-                  request.GetHeader("Connection").end(),
-                  "close") != request.GetHeader("Connection").end()) {
-      SetHeader("Connection", "close");
-    }
     return;
   }
 
@@ -142,11 +143,6 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   SetStatus(OK, StatusCodes::GetMessage(OK));
   AppendHeader("Content-Type", "text/plain");
   RegisterFile(abs_file_path);
-  if (std::find(request.GetHeader("Connection").begin(),
-                request.GetHeader("Connection").end(),
-                "close") != request.GetHeader("Connection").end()) {
-    SetHeader("Connection", "close");
-  }
 }
 
 void HttpResponse::MakeErrorResponse(const HttpRequest &request,
