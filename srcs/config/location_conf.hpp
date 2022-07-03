@@ -99,6 +99,12 @@ class LocationConf {
   void SetRedirectUrl(std::string redirect_url);
 
   bool IsMatchPattern(std::string path) const;
+
+  // location : /cgi-bin
+  // root dir : /public/cgi-bin
+  // req      : /cgi-bin/test-cgi;
+  // -> /public/cgi-bin/test-cgi
+  std::string GetAbsolutePath(std::string path) const;
 };
 
 }  // namespace config

@@ -19,11 +19,11 @@ static std::vector<std::string> SplitPath(const std::string path) {
   return v;
 }
 
-// TODO : 最後のスラッシュ消さないようにするべきか？
 // そもそも、./ も消すべきでないか。
 std::string JoinPath(const std::vector<std::string> &v) {
   std::string joined;
   std::string slash;
+  bool is_last_slash = v.back() == "";
 
   for (std::vector<std::string>::const_iterator it = v.begin(); it != v.end();
        it++) {
@@ -35,10 +35,19 @@ std::string JoinPath(const std::vector<std::string> &v) {
       slash = "/";
     }
   }
+  if (joined != "" && joined[joined.length() - 1] != '/' && is_last_slash) {
+    joined += "/";
+  }
   return joined;
 }
 
 std::string JoinPath(const std::string &s1, const std::string &s2) {
+  if (s1 == "") {
+    return JoinPath(SplitPath(s2));
+  }
+  if (s2 == "") {
+    return JoinPath(SplitPath(s1));
+  }
   return JoinPath(SplitPath(s1 + "/" + s2));
 }
 
@@ -46,6 +55,9 @@ bool IsValidPath(const std::string &path) {
   return NormalizePath(path).IsOk();
 }
 
+// TODO : 最後のスラッシュ消さないようにするべきか？
+// TODO : 消さない場合 /hoge/../ -> /hoge/
+//                   /hoge/..  -> /hoge or /hoge/   ...?
 Result<std::string> NormalizePath(const std::string &path) {
   std::vector<std::string> vec = SplitPath(path);
   std::vector<std::string> normalize;
