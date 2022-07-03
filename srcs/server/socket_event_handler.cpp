@@ -166,6 +166,7 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       should_close_conn |= ResponseHeaderHasConnectionClose(*response);
       // 全て書き込み完了
       delete response;
+      socket->SetResponse(NULL);
       requests.pop_front();
     } else {
       // 書き込むデータはないがレスポンスは完成していない
