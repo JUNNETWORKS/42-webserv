@@ -63,7 +63,7 @@ void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
   if (phase_ == kHeaderField)
     phase_ = ParseHeaderField(buffer);
   if (phase_ == kLoadHeader)
-    phase_ = ParseBodySize();
+    phase_ = LoadHeader();
   if (phase_ == kBody)
     phase_ = ParseBody(buffer);
   PrintRequestInfo();
@@ -120,7 +120,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   }
 }
 
-HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
+HttpRequest::ParsingPhase HttpRequest::LoadHeader() {
   if (DecideBodySize() != OK)
     return kError;
   return kBody;
