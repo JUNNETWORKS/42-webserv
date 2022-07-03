@@ -40,7 +40,7 @@ class HttpRequest {
   enum ParsingPhase {
     kRequestLine,
     kHeaderField,
-    kBodySize,
+    kLoadHeader,
     kBody,
     kParsed,
     kError
