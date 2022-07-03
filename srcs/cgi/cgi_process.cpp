@@ -49,11 +49,7 @@ void CgiProcess::KillCgi() {
 }
 
 cgi::CgiRequest *CgiProcess::AllocateCgiRequest(http::HttpRequest &request) {
-  // TODO: 予想している挙動と異なるので変換する関数を作成する
-  // location: /cgi-bin
-  // request : /cgi-bin/index.php
-  // result  : /cgi-bin/cgi-bin/index.php
-  std::string cgi_path = location_->GetPathPattern() + request.GetPath();
+  std::string cgi_path = location_->GetAbsolutePath(request.GetPath());
   return new cgi::CgiRequest(cgi_path, request, *location_);
 }
 
