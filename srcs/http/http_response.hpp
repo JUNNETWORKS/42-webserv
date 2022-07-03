@@ -23,14 +23,20 @@ using namespace result;
 
 class HttpResponse {
  protected:
+  // 次何を書き込むか
+  enum WritingPhase { kStatusAndHeader, kBody };
+
   // 1回のreadで何バイト読み取るか
   static const unsigned long kBytesPerRead = 1024;  // 1KB
 
-  // デフォルトのHTTPバージョン(HTTP/1.1)
-  static const std::string kDefaultHttpVersion;
-
   const config::LocationConf *location_;
   server::Epoll *epoll_;
+
+  // 次何を書き込むか
+  WritingPhase phase_;
+
+  // デフォルトのHTTPバージョン(HTTP/1.1)
+  static const std::string kDefaultHttpVersion;
 
   // Status Line
   std::string http_version_;
@@ -42,11 +48,9 @@ class HttpResponse {
 
   // Status Line と Headers のバイト列と書き込んだバイト数
   utils::ByteVector status_and_headers_bytes_;
-  unsigned long writtern_status_headers_count_;
 
   // Body のバイト列と書き込んだバイト数
   utils::ByteVector body_bytes_;
-  unsigned long written_body_count_;
 
   // File
   // 全てのレスポンスクラスはファイルを返せる必要がある｡
@@ -84,7 +88,8 @@ class HttpResponse {
   // 0ならば全てのバイト書き込みが完了したことになる｡
   Result<ssize_t> WriteStatusAndHeader(int fd);
 
-  bool IsStatusAndHeadersWritingCompleted();
+  Result<ssize_t> ReadFile();
+  Result<ssize_t> WriteBody(int fd);
 
   // ========================================================================
   // Getter and Setter

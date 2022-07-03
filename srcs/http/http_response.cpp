@@ -23,12 +23,12 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
                            server::Epoll *epoll)
     : location_(location),
       epoll_(epoll),
+      phase_(kStatusAndHeader),
       http_version_(kDefaultHttpVersion),
       status_(OK),
       status_message_(StatusCodes::GetMessage(OK)),
       headers_(),
       status_and_headers_bytes_(),
-      writtern_status_headers_count_(0),
       body_bytes_(),
       file_fd_(-1),
       is_file_eof_(false) {
@@ -62,47 +62,69 @@ Result<void> HttpResponse::Write(int fd) {
     return status_header_res.Err();
   }
   if (status_header_res.Ok() > 0) {
+    // WriteStatusAndHeader()
+    // で書き込みが行われた後にノンブロッキングで書き込める保証はない
     return Result<void>();
   }
 
   if (file_fd_ >= 0 && !is_file_eof_) {
-    utils::Byte buf[kBytesPerRead];
-    ssize_t read_res = read(file_fd_, buf, kBytesPerRead);
-    if (read_res < 0) {
-      return Error();
-    } else if (read_res == 0) {
-      is_file_eof_ = true;
-    } else {
-      body_bytes_.AppendDataToBuffer(buf, read_res);
+    Result<ssize_t> result = ReadFile();
+    if (result.IsErr()) {
+      return result.Err();
     }
   }
   if (!body_bytes_.empty()) {
-    ssize_t write_res = write(fd, body_bytes_.data(), body_bytes_.size());
-    if (write_res < 0) {
-      return Error();
+    Result<ssize_t> result = WriteBody(fd);
+    if (result.IsErr()) {
+      return result.Err();
     }
-    body_bytes_.EraseHead(write_res);
   }
   return Result<void>();
 }
 
 Result<ssize_t> HttpResponse::WriteStatusAndHeader(int fd) {
-  if (IsStatusAndHeadersWritingCompleted()) {
+  if (phase_ != kStatusAndHeader) {
     return 0;
   }
   if (status_and_headers_bytes_.empty()) {
     status_and_headers_bytes_ = SerializeStatusAndHeader();
-    writtern_status_headers_count_ = 0;
   }
 
-  ssize_t write_res = write(
-      fd, status_and_headers_bytes_.data() + writtern_status_headers_count_,
-      status_and_headers_bytes_.size() - writtern_status_headers_count_);
+  ssize_t write_res = write(fd, status_and_headers_bytes_.data(),
+                            status_and_headers_bytes_.size());
   if (write_res < 0) {
     return Error();
   }
-  writtern_status_headers_count_ += write_res;
+  status_and_headers_bytes_.EraseHead(write_res);
+  if (status_and_headers_bytes_.empty()) {
+    phase_ = kBody;
+  }
   // この関数内のwrite後に呼び出し元でもwriteがノンブロッキングで可能かは保証されていない
+  return write_res;
+}
+
+Result<ssize_t> HttpResponse::ReadFile() {
+  if (is_file_eof_) {
+    return 0;
+  }
+  utils::Byte buf[kBytesPerRead];
+  ssize_t read_res = read(file_fd_, buf, kBytesPerRead);
+  if (read_res < 0) {
+    return Error();
+  } else if (read_res == 0) {
+    is_file_eof_ = true;
+  } else {
+    body_bytes_.AppendDataToBuffer(buf, read_res);
+  }
+  return read_res;
+}
+
+Result<ssize_t> HttpResponse::WriteBody(int fd) {
+  ssize_t write_res = write(fd, body_bytes_.data(), body_bytes_.size());
+  if (write_res < 0) {
+    return Error();
+  }
+  body_bytes_.EraseHead(write_res);
   return write_res;
 }
 
@@ -189,25 +211,20 @@ std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
 
 bool HttpResponse::IsReadyToWrite() {
   if (file_fd_ >= 0) {
-    return !IsStatusAndHeadersWritingCompleted() || !is_file_eof_ ||
-           !body_bytes_.empty();
+    return phase_ == kStatusAndHeader ||
+           (phase_ == kBody && (!is_file_eof_ || !body_bytes_.empty()));
   } else {
-    return !IsStatusAndHeadersWritingCompleted() || !body_bytes_.empty();
+    return phase_ == kStatusAndHeader ||
+           (phase_ == kBody && !body_bytes_.empty());
   }
 }
 
 bool HttpResponse::IsAllDataWritingCompleted() {
   if (file_fd_ >= 0) {
-    return IsStatusAndHeadersWritingCompleted() && is_file_eof_ &&
-           body_bytes_.empty();
+    return phase_ != kStatusAndHeader && is_file_eof_ && body_bytes_.empty();
   } else {
-    return IsStatusAndHeadersWritingCompleted() && body_bytes_.empty();
+    return phase_ != kStatusAndHeader && body_bytes_.empty();
   }
-}
-
-bool HttpResponse::IsStatusAndHeadersWritingCompleted() {
-  return !status_and_headers_bytes_.empty() &&
-         writtern_status_headers_count_ == status_and_headers_bytes_.size();
 }
 
 //========================================================================
