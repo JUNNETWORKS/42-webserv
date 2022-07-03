@@ -57,7 +57,7 @@ std::string HttpResponse::MakeAutoIndex(const std::string &root_path,
   if (result.IsErr()) {
     // resultクラスでエラーを返すか
     // return MakeErrorResponse();
-    return "";
+    return "AutoIndex Error " + root_path + "/" + relative_path;
   }
 
   std::vector<utils::File> file_vec = result.Ok();

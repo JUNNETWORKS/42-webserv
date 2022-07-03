@@ -138,13 +138,9 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
     SetHeader("Connection", "close");
   }
 
-  // TODO: 想定通りの挙動になるように直す
-  // location: /upload
-  // request : /upload/hoge.txt
-  // expected: /upload/hoge.txt
-  // actual  : /upload/upload/hoge.txt
   const std::string &abs_file_path =
-      location_->GetRootDir() + request.GetPath();
+      location_->GetAbsolutePath(request.GetPath());
+  printf("abs_path: %s\n", abs_file_path.c_str());
   if (!utils::IsFileExist(abs_file_path)) {
     MakeErrorResponse(request, NOT_FOUND);
     return;
