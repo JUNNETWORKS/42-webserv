@@ -147,7 +147,7 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   }
 
   if (utils::IsDir(abs_file_path)) {
-    body_bytes_ = MakeAutoIndex(location_->GetRootDir(), request.GetPath());
+    body_bytes_ = MakeAutoIndex(abs_file_path, request.GetPath());
     SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
     SetStatus(OK, StatusCodes::GetMessage(OK));
     AppendHeader("Content-Type", "text/html");
