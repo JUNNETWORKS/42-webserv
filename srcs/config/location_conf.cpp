@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "utils/path.hpp"
 #include "utils/string.hpp"
 
 namespace config {
@@ -172,6 +173,12 @@ bool LocationConf::IsMatchPattern(std::string path) const {
   } else {
     return utils::ForwardMatch(path, path_pattern_);
   }
+}
+
+std::string LocationConf::GetAbsolutePath(std::string path) const {
+  std::string abs_path = utils::JoinPath(
+      GetRootDir(), path.replace(0, GetPathPattern().length(), ""));
+  return abs_path;
 }
 
 }  // namespace config
