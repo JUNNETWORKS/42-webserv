@@ -133,6 +133,11 @@ HttpRequest::ParsingPhase HttpRequest::LoadHeader(
     return kError;
   }
 
+  if (LoadLocation() == false) {
+    parse_status_ = BAD_REQUEST;  // TODO BAD_REQUESTじゃないかも
+    return kError;
+  }
+
   if (DecideBodySize() != OK)
     return kError;
   return kBody;
@@ -349,8 +354,16 @@ bool HttpRequest::LoadVirtualServer(const config::Config &conf,
   return true;
 }
 
-namespace {
+bool HttpRequest::LoadLocation() {
+  if (vserver_ == NULL)
+    return false;
+  location_ = vserver_->GetLocation(path_);
+  if (location_ == NULL)
+    return false;
+  return true;
+}
 
+namespace {
 bool IsMethod(const std::string &token) {
   return token == method_strs::kGet || token == method_strs::kDelete ||
          token == method_strs::kPost;

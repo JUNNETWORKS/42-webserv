@@ -107,6 +107,7 @@ class HttpRequest {
   HttpStatus DecideBodySize();
   bool LoadVirtualServer(const config::Config &conf,
                          const config::PortType &port);
+  bool LoadLocation();
   void PrintRequestInfo();
 };
 
