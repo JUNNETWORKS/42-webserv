@@ -51,6 +51,10 @@ const std::string &HttpRequest::GetMethod() const {
   return method_;
 }
 
+void HttpRequest::SetPath(const std::string &path) {
+  path_ = path;
+}
+
 const std::string &HttpRequest::GetPath() const {
   return path_;
 }

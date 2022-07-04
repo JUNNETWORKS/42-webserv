@@ -25,12 +25,15 @@ class HttpCgiResponse : public HttpResponse {
   virtual bool IsAllDataWritingCompleted();
 
  private:
-  void MakeDocumentResponse(server::ConnSocket *conn_sock);
+  void MakeDocumentResponse();
   void MakeLocalRedirectResponse(server::ConnSocket *conn_sock);
-  void MakeClientRedirectResponse(server::ConnSocket *conn_sock);
+  void MakeClientRedirectResponse();
 
   void SetStatusFromCgiResponse();
   void SetHeadersFromCgiResponse();
+
+  // LocalRedirect の結果に基づき新しいリクエストを作成
+  HttpRequest CreateLocalRedirectRequest(const HttpRequest &request);
 };
 
 }  // namespace http

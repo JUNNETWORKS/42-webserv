@@ -1,5 +1,7 @@
 #include "http/http_cgi_response.hpp"
 
+#include <unistd.h>
+
 namespace http {
 
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
@@ -34,12 +36,12 @@ void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
       http::HttpRequest &request = conn_sock->GetRequests().front();
       MakeErrorResponse(request, SERVER_ERROR);
     } else if (type == cgi::CgiResponse::kDocumentResponse) {
-      MakeDocumentResponse(conn_sock);
+      MakeDocumentResponse();
     } else if (type == cgi::CgiResponse::kLocalRedirect) {
       MakeLocalRedirectResponse(conn_sock);
     } else if (type == cgi::CgiResponse::kClientRedirect ||
                type == cgi::CgiResponse::kClientRedirectWithDocument) {
-      MakeClientRedirectResponse(conn_sock);
+      MakeClientRedirectResponse();
     } else {
       // Not Identified
     }
@@ -49,6 +51,11 @@ void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
 // データ書き込みが可能か
 bool HttpCgiResponse::IsReadyToWrite() {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
+
+  // LocalRedirectの場合はレスポンスを書き込まないので常にFalse
+  if (cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
+    return false;
+  }
 
   // Trueの場合
   // - MakeErrorResponseが呼ばれている
@@ -63,19 +70,33 @@ bool HttpCgiResponse::IsReadyToWrite() {
 }
 
 // すべてのデータの write が完了したか
-bool HttpCgiResponse::IsAllDataWritingCompleted();
+bool HttpCgiResponse::IsAllDataWritingCompleted() {
+  cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
-void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
+  // LocalRedirectの場合はレスポンスを書き込まないので常にTrue
+  if (cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
+    return true;
+  }
+
+  // Trueの場合
+  // - CgiProcessが終了済み && バッファの全てのデータが書き込み完了
+  return cgi_process_->IsCgiFinished() &&
+         cgi_process_->GetCgiResponse()->GetBody().empty();
+}
+
+void HttpCgiResponse::MakeDocumentResponse() {
   SetStatusFromCgiResponse();
   SetHeadersFromCgiResponse();
 }
 
 void HttpCgiResponse::MakeLocalRedirectResponse(server::ConnSocket *conn_sock) {
-
+  // LocalRedirect を反映させた Request を2番目にinsertする
+  std::deque<http::HttpRequest> &requests = conn_sock->GetRequests();
+  HttpRequest new_request = CreateLocalRedirectRequest(requests.front());
+  requests.insert(requests.begin() + 1, new_request);
 }
 
-void HttpCgiResponse::MakeClientRedirectResponse(
-    server::ConnSocket *conn_sock) {
+void HttpCgiResponse::MakeClientRedirectResponse() {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
   if (cgi_response->GetHeader("Status").IsOk()) {
     SetStatusFromCgiResponse();
@@ -87,6 +108,26 @@ void HttpCgiResponse::MakeClientRedirectResponse(
 
 Result<void> HttpCgiResponse::Write(int fd) {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
+
+  Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
+  if (status_header_res.IsErr()) {
+    return status_header_res.Err();
+  }
+  if (status_header_res.Ok() > 0) {
+    // WriteStatusAndHeader()
+    // で書き込みが行われた後にノンブロッキングで書き込める保証はない
+    return Result<void>();
+  }
+
+  utils::ByteVector &response_body = cgi_response->GetBody();
+  if (!response_body.empty()) {
+    ssize_t write_res = write(fd, response_body.data(), response_body.size());
+    if (write_res < 0) {
+      return Error();
+    }
+    response_body.EraseHead(write_res);
+  }
+  return Result<void>();
 }
 
 void HttpCgiResponse::SetStatusFromCgiResponse() {
@@ -123,6 +164,17 @@ void HttpCgiResponse::SetHeadersFromCgiResponse() {
       SetHeader(it->first, it->second);
     }
   }
+}
+
+HttpRequest HttpCgiResponse::CreateLocalRedirectRequest(
+    const HttpRequest &request) {
+  cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
+
+  Result<std::string> location = cgi_response->GetHeader("LOCATION");
+
+  HttpRequest new_request(request);
+  new_request.SetPath(location.Ok());
+  return new_request;
 }
 
 }  // namespace http
