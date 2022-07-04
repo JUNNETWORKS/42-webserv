@@ -24,9 +24,13 @@ class CgiProcess {
   const config::LocationConf *location_;
   Epoll *epoll_;
 
-  bool is_executed;
-  bool is_err;
-  bool is_finished;
+  bool is_executed_;
+  bool is_err_;
+  bool is_finished_;
+
+  // HttpCgiResponse と Epoll から参照されるので､
+  // use-after-free を防ぐために参照カウントのようなものを持たせる｡
+  bool is_unregistered_;
 
  public:
   CgiProcess(const config::LocationConf *location, Epoll *epoll);
@@ -40,8 +44,10 @@ class CgiProcess {
 
   //========================================================================
   // Getter and Setter
-  bool IsCgiExecuted();
-  bool IsCgiFinished();
+  bool IsCgiExecuted() const;
+  bool IsCgiFinished() const;
+  bool IsUnregistered() const;
+  void SetIsUnregistered(bool is_unregistered);
   CgiResponse *GetCgiResponse();
 
  private:

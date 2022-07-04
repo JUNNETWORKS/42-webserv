@@ -13,9 +13,9 @@ CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll)
       cgi_output_buffer_(),
       location_(location),
       epoll_(epoll),
-      is_executed(false),
-      is_err(false),
-      is_finished(false) {}
+      is_executed_(false),
+      is_err_(false),
+      is_finished_(false) {}
 
 CgiProcess::~CgiProcess() {
   delete cgi_request_;
@@ -23,7 +23,7 @@ CgiProcess::~CgiProcess() {
 }
 
 Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
-  is_executed = true;
+  is_executed_ = true;
 
   cgi_request_ = AllocateCgiRequest(request);
   cgi_response_ = new CgiResponse();
@@ -53,12 +53,24 @@ cgi::CgiRequest *CgiProcess::AllocateCgiRequest(http::HttpRequest &request) {
   return new cgi::CgiRequest(cgi_path, request, *location_);
 }
 
-bool CgiProcess::IsCgiExecuted() {
-  return is_executed;
+bool CgiProcess::IsCgiExecuted() const {
+  return is_executed_;
 }
 
-bool CgiProcess::IsCgiFinished() {
-  return is_finished;
+bool CgiProcess::IsCgiFinished() const {
+  return is_finished_;
+}
+
+bool CgiProcess::IsUnregistered() const {
+  return is_unregistered_;
+}
+
+void CgiProcess::SetIsUnregistered(bool is_unregistered) {
+  is_unregistered_ = is_unregistered;
+}
+
+CgiResponse *CgiProcess::GetCgiResponse() {
+  return cgi_response_;
 }
 
 void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
@@ -69,7 +81,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
 
   if (events & kFdeError) {
     // Error
-    cgi_process->is_err = true;
+    cgi_process->is_err_ = true;
     return;
   }
 
@@ -79,7 +91,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                               cgi_process->cgi_input_buffer_.data(),
                               cgi_process->cgi_input_buffer_.size());
     if (write_res < 0) {
-      cgi_process->is_err = true;
+      cgi_process->is_err_ = true;
       return;
     }
     cgi_process->cgi_input_buffer_.EraseHead(write_res);
@@ -89,7 +101,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
     utils::Byte buf[kDataPerRead];
     ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
     if (read_res < 0) {
-      cgi_process->is_err = true;
+      cgi_process->is_err_ = true;
       return;
     }
     cgi_process->cgi_output_buffer_.AppendDataToBuffer(buf, read_res);
