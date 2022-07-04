@@ -42,6 +42,7 @@ Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
   epoll_->Register(fde);
   epoll_->Add(fde, kFdeWrite);
   epoll_->Add(fde, kFdeRead);
+  return Result<void>();
 }
 
 void CgiProcess::KillCgi() {
@@ -75,6 +76,8 @@ CgiResponse *CgiProcess::GetCgiResponse() {
 
 void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                                 Epoll *epoll) {
+  (void)fde;
+  (void)epoll;
   CgiProcess *cgi_process = reinterpret_cast<CgiProcess *>(data);
   CgiRequest *cgi_request = cgi_process->cgi_request_;
   CgiResponse *cgi_response = cgi_process->cgi_response_;

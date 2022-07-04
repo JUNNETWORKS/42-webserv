@@ -54,7 +54,7 @@ class CgiResponse {
   ResponseType GetResponseType() const;
   const HeaderVecType &GetHeaders();
   Result<std::string> GetHeader(const std::string key) const;
-  const utils::ByteVector &GetBody();
+  utils::ByteVector &GetBody();
 
  private:
   // RFC3875(CGI/1.1) 2.2 Bacic Rules で定義されている BNF 規則
