@@ -114,8 +114,12 @@ bool ProcessRequest(ConnSocket *socket) {
 }
 
 bool RequestHeaderHasConnectionClose(http::HttpRequest &request) {
-  const std::vector<std::string> &connection_header =
+  Result<const std::vector<std::string> &> connection_header_res =
       request.GetHeader("Connection");
+  if (connection_header_res.IsErr())
+    return false;
+  const std::vector<std::string> connection_header = connection_header_res.Ok();
+
   for (std::vector<std::string>::const_iterator it = connection_header.begin();
        it != connection_header.end(); ++it) {
     if (*it == "close") {
@@ -134,8 +138,9 @@ bool ProcessResponse(ConnSocket *socket) {
   if (socket->HasParsedRequest()) {
     http::HttpRequest &request = requests.front();
     http::HttpResponse &response = socket->GetResponse();
-    const std::string &host =
-        request.GetHeader("Host").empty() ? "" : request.GetHeader("Host")[0];
+    const std::string &host = request.GetHeader("Host").Ok()[0];
+    // TODO vserverをrequestから取得する
+
     const std::string &port = socket->GetPort();
 
     // ポートとHostヘッダーから VirtualServerConf を取得
