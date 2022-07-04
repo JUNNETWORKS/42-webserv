@@ -78,7 +78,7 @@ class HttpRequest {
 
   // ========================================================================
   // Getter and Setter
-  const std::vector<std::string> &GetHeader(std::string header);
+  Result<const std::vector<std::string> &> GetHeader(std::string header) const;
   const utils::ByteVector &GetBody();
 
  private:
