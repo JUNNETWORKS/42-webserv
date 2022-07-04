@@ -105,8 +105,8 @@ class HttpRequest {
   ParsingPhase ParseChunkedBody(utils::ByteVector &buffer);
 
   HttpStatus DecideBodySize();
-  Result<const config::VirtualServerConf *> LoadVirtualServer(
-      const config::Config &conf, const config::PortType &port);
+  bool LoadVirtualServer(const config::Config &conf,
+                         const config::PortType &port);
   void PrintRequestInfo();
 };
 
