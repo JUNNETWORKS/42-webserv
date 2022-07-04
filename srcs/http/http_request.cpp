@@ -27,7 +27,9 @@ HttpRequest::HttpRequest()
       parse_status_(OK),
       body_(),
       body_size_(0),
-      is_chunked_(false) {}
+      is_chunked_(false),
+      vserver_(NULL),
+      location_(NULL) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs)
     : method_(rhs.method_),
@@ -38,7 +40,9 @@ HttpRequest::HttpRequest(const HttpRequest &rhs)
       parse_status_(rhs.parse_status_),
       body_(rhs.body_),
       body_size_(rhs.body_size_),
-      is_chunked_(rhs.is_chunked_) {}
+      is_chunked_(rhs.is_chunked_),
+      vserver_(rhs.vserver_),
+      location_(rhs.location_) {}
 
 HttpRequest::~HttpRequest() {}
 
