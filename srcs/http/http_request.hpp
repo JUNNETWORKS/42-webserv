@@ -74,7 +74,8 @@ class HttpRequest {
   const std::string &GetPath() const;
   HttpStatus GetParseStatus() const;
 
-  void ParseRequest(utils::ByteVector &buffer);
+  void ParseRequest(utils::ByteVector &buffer, const config::Config &conf,
+                    const config::PortType &port);
   bool IsCorrectRequest();
   bool IsCorrectStatus();
   bool IsParsed();
@@ -87,7 +88,8 @@ class HttpRequest {
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
-  ParsingPhase LoadHeader();
+  ParsingPhase LoadHeader(const config::Config &conf,
+                          const config::PortType &conn_sock);
   ParsingPhase ParseBody(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(const std::string &method);
   HttpStatus InterpretPath(const std::string &path);
@@ -101,6 +103,8 @@ class HttpRequest {
   ParsingPhase ParseChunkedBody(utils::ByteVector &buffer);
 
   HttpStatus DecideBodySize();
+  Result<const config::VirtualServerConf *> LoadVirtualServer(
+      const config::Config &conf, const config::PortType &port);
   void PrintRequestInfo();
 };
 

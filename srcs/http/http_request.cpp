@@ -56,14 +56,16 @@ const std::string &HttpRequest::GetPath() const {
 //========================================================================
 // Parse系関数　内部でInterpret系関数を呼び出す　主にphaseで動作管理
 
-void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
+void HttpRequest::ParseRequest(utils::ByteVector &buffer,
+                               const config::Config &conf,
+                               const config::PortType &port) {
   // TODO 長すぎるbufferは捨ててエラーにする
   if (phase_ == kRequestLine)
     phase_ = ParseRequestLine(buffer);
   if (phase_ == kHeaderField)
     phase_ = ParseHeaderField(buffer);
   if (phase_ == kLoadHeader)
-    phase_ = LoadHeader();
+    phase_ = LoadHeader(conf, port);
   if (phase_ == kBody)
     phase_ = ParseBody(buffer);
   PrintRequestInfo();
@@ -120,7 +122,15 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   }
 }
 
-HttpRequest::ParsingPhase HttpRequest::LoadHeader() {
+HttpRequest::ParsingPhase HttpRequest::LoadHeader(
+    const config::Config &conf, const config::PortType &port) {
+  Result<const config::VirtualServerConf *> vserver_res =
+      LoadVirtualServer(conf, port);
+  if (vserver_res.IsErr()) {
+    parse_status_ = BAD_REQUEST;
+    return kError;
+  }
+
   if (DecideBodySize() != OK)
     return kError;
   return kBody;
@@ -322,6 +332,18 @@ HttpStatus HttpRequest::DecideBodySize() {
     return InterpretContentLength((*length_header_it).second);
 
   return OK;
+}
+
+Result<const config::VirtualServerConf *> HttpRequest::LoadVirtualServer(
+    const config::Config &conf, const config::PortType &port) {
+  Result<const std::vector<std::string> &> host_res = GetHeader("Host");
+  if (host_res.IsErr() || host_res.Ok().size() != 1)
+    return Error();
+  const config::VirtualServerConf *vserver =
+      conf.GetVirtualServerConf(port, host_res.Ok()[0]);
+  if (vserver == NULL)
+    return Error();
+  return vserver;
 }
 
 namespace {
