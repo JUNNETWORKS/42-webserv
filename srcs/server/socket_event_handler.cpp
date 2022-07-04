@@ -101,7 +101,8 @@ bool ProcessRequest(ConnSocket *socket) {
       if (requests.empty() || requests.back().IsParsed()) {
         requests.push_back(http::HttpRequest());
       }
-      requests.back().ParseRequest(buffer);
+      requests.back().ParseRequest(buffer, socket->GetConfig(),
+                                   socket->GetPort());
       if (requests.back().IsCorrectStatus() == false) {
         buffer.clear();
       }
