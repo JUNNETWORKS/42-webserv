@@ -13,10 +13,13 @@
 #include "http/types.hpp"
 #include "http_constants.hpp"
 #include "http_status.hpp"
+#include "result/result.hpp"
 #include "utils/ByteVector.hpp"
 #include "utils/string.hpp"
 
 namespace http {
+
+using namespace result;
 
 namespace method_strs {
 const std::string kGet = "GET";
@@ -78,7 +81,7 @@ class HttpRequest {
 
   // ========================================================================
   // Getter and Setter
-  const std::vector<std::string> &GetHeader(std::string header);
+  Result<const std::vector<std::string> &> GetHeader(std::string header) const;
   const utils::ByteVector &GetBody();
 
  private:
