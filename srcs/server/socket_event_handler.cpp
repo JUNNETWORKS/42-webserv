@@ -4,6 +4,7 @@
 
 #include <deque>
 
+#include "http/http_cgi_response.hpp"
 #include "http/http_response.hpp"
 #include "result/result.hpp"
 #include "server/epoll.hpp"
@@ -192,7 +193,11 @@ http::HttpResponse *AllocateResponseObj(
     return res;
   }
 
-  return new http::HttpResponse(location, epoll);
+  if (location->GetIsCgi()) {
+    return new http::HttpCgiResponse(location, epoll);
+  } else {
+    return new http::HttpResponse(location, epoll);
+  }
   // TODO: 以下のコードが実行できるようにする
   //  if (location->GetIsCgi()) {
   //    return new http::HttpCgiResponse(location, epoll);
