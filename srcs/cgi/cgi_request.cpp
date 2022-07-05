@@ -62,10 +62,11 @@ const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
 }
 
 bool CgiRequest::RunCgi() {
-  ParseCgiRequest();
+  bool result = false;
+  result |= ParseCgiRequest();
   CreateCgiMetaVariablesFromHttpRequest(request_, location_);
-  ForkAndExecuteCgi();
-  return true;
+  result |= ForkAndExecuteCgi();
+  return result;
 }
 
 // 作業中
