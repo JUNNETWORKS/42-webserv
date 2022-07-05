@@ -169,14 +169,16 @@ TEST(RequestParserTest, KOHeaderNotExistDquotePair) {
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
-// TEST(RequestParserTest, KOMethodNotAllowd) {
-//   http::HttpRequest req;
-//   utils::ByteVector buf = OpenFile("KOMethodNotAllowd.txt");
+TEST(RequestParserTest, KOMethodNotAllowd) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOMethodNotAllowd.txt");
+  const config::Config not_allowed_conf =
+      config::ParseConfig((kConfigurationDirPath + "NotAllowed.conf").c_str());
 
-//   req.ParseRequest(buf, default_conf, "8080");
-//   EXPECT_TRUE(req.IsCorrectStatus() == false);
-//   EXPECT_EQ(req.GetParseStatus(), NOT_ALLOWED);
-// }
+  req.ParseRequest(buf, not_allowed_conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), NOT_ALLOWED);
+}
 
 // TEST(RequestParserTest, KOMethodNotImplemented) {
 //   http::HttpRequest req;
