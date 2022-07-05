@@ -46,7 +46,6 @@ class HttpRequest {
     kError
   };
 
-  const config::Config &config_;
   std::string method_;
   std::string path_;
   int minor_version_;
@@ -63,7 +62,7 @@ class HttpRequest {
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
  public:
-  HttpRequest(const config::Config &config);
+  HttpRequest();
   HttpRequest(const HttpRequest &rhs);
   HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
@@ -83,7 +82,6 @@ class HttpRequest {
   const utils::ByteVector &GetBody();
 
  private:
-  HttpRequest();
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
   ParsingPhase ParseBodySize();
