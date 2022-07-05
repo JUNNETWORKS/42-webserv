@@ -11,6 +11,10 @@
 #include "result/result.hpp"
 #include "utils/ByteVector.hpp"
 
+namespace http {
+class HttpResponse;
+}
+
 namespace server {
 using namespace result;
 
@@ -56,7 +60,7 @@ class Socket {
 class ConnSocket : public Socket {
  private:
   std::deque<http::HttpRequest> requests_;
-  http::HttpResponse response_;
+  http::HttpResponse *response_;
   utils::ByteVector buffer_;
 
  public:
@@ -72,7 +76,8 @@ class ConnSocket : public Socket {
 
   bool HasParsedRequest();
 
-  http::HttpResponse &GetResponse();
+  http::HttpResponse *GetResponse();
+  void SetResponse(http::HttpResponse *response);
 
   utils::ByteVector &GetBuffer();
 

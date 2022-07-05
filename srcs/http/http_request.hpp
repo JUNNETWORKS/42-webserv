@@ -18,6 +18,7 @@
 #include "utils/string.hpp"
 
 namespace http {
+using namespace result;
 
 using namespace result;
 
@@ -69,7 +70,7 @@ class HttpRequest {
  public:
   HttpRequest();
   HttpRequest(const HttpRequest &rhs);
-  HttpRequest &operator=(const HttpRequest &rhs);
+  const HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
 
   const std::string &GetMethod() const;

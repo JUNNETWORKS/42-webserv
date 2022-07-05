@@ -4,6 +4,7 @@
 
 #include <deque>
 
+#include "http/http_response.hpp"
 #include "result/result.hpp"
 #include "server/epoll.hpp"
 #include "server/socket.hpp"
@@ -13,17 +14,22 @@ namespace server {
 
 namespace {
 
+// リクエストに応じたレスポンスを返す
+http::HttpResponse *AllocateResponseObj(
+    const config::VirtualServerConf *vserver, const http::HttpRequest &request,
+    Epoll *epoll);
+
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessRequest(ConnSocket *socket);
 
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
-bool ProcessResponse(ConnSocket *socket);
+bool ProcessResponse(ConnSocket *socket, Epoll *epoll);
 
-// HTTPリクエストのヘッダーに "Connection: close" が含まれているか
+// HTTPレスポンスのヘッダーに "Connection: close" が含まれているか
 //
 // request を const_reference で受け取っていないのは
-// HttpRequest.GetHeader() が const メソッドじゃないから
-bool RequestHeaderHasConnectionClose(http::HttpRequest &request);
+// HttpResponse.GetHeader() が const メソッドじゃないから
+bool ResponseHeaderHasConnectionClose(http::HttpResponse &response);
 
 }  // namespace
 
@@ -36,7 +42,7 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
     should_close_conn |= ProcessRequest(conn_sock);
   }
   if (events & kFdeWrite) {
-    should_close_conn |= ProcessResponse(conn_sock);
+    should_close_conn |= ProcessResponse(conn_sock, epoll);
   }
 
   if (conn_sock->HasParsedRequest()) {
@@ -114,13 +120,9 @@ bool ProcessRequest(ConnSocket *socket) {
   return false;
 }
 
-bool RequestHeaderHasConnectionClose(http::HttpRequest &request) {
-  Result<const std::vector<std::string> &> connection_header_res =
-      request.GetHeader("Connection");
-  if (connection_header_res.IsErr())
-    return false;
-  const std::vector<std::string> connection_header = connection_header_res.Ok();
-
+bool ResponseHeaderHasConnectionClose(http::HttpResponse &response) {
+  const std::vector<std::string> &connection_header =
+      response.GetHeader("Connection");
   for (std::vector<std::string>::const_iterator it = connection_header.begin();
        it != connection_header.end(); ++it) {
     if (*it == "close") {
@@ -130,7 +132,7 @@ bool RequestHeaderHasConnectionClose(http::HttpRequest &request) {
   return false;
 }
 
-bool ProcessResponse(ConnSocket *socket) {
+bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
   int conn_fd = socket->GetFd();
   const config::Config &config = socket->GetConfig();
   std::deque<http::HttpRequest> &requests = socket->GetRequests();
@@ -138,34 +140,68 @@ bool ProcessResponse(ConnSocket *socket) {
 
   if (socket->HasParsedRequest()) {
     http::HttpRequest &request = requests.front();
-    http::HttpResponse &response = socket->GetResponse();
-    const std::string &host = request.GetHeader("Host").Ok()[0];
-    // TODO vserverをrequestから取得する
 
+    // TODO vserverをリクエストから取得するようにする。
+    const std::string &host = request.GetHeader("Host").Ok()[0];
     const std::string &port = socket->GetPort();
 
     // ポートとHostヘッダーから VirtualServerConf を取得
     const config::VirtualServerConf *vserver =
         config.GetVirtualServerConf(port, host);
-    if (!vserver) {
-      // 404 Not Found を返す
-      response.MakeErrorResponse(NULL, request, http::NOT_FOUND);
-      response.Write(conn_fd);
-      response.Clear();
-      return should_close_conn;
+
+    if (socket->GetResponse() == NULL) {
+      // レスポンスオブジェクトがまだない
+      http::HttpResponse *response =
+          AllocateResponseObj(vserver, request, epoll);
+      socket->SetResponse(response);
+      response->MakeResponse(socket);
     }
 
-    response.MakeResponse(*vserver, request);
-    response.Write(conn_fd);
-    response.Clear();
-
-    // "Connection: close" がリクエストで指定されていた場合はソケット接続を切断
-    should_close_conn = RequestHeaderHasConnectionClose(request);
-
-    requests.pop_front();
+    http::HttpResponse *response = socket->GetResponse();
+    if (response->IsReadyToWrite()) {
+      // 書き込むデータが存在する
+      should_close_conn |= response->Write(conn_fd).IsErr();
+    } else if (response->IsAllDataWritingCompleted()) {
+      // "Connection: close"
+      // がレスポンスヘッダーに存在していればソケット接続を切断
+      should_close_conn |= ResponseHeaderHasConnectionClose(*response);
+      // 全て書き込み完了
+      delete response;
+      socket->SetResponse(NULL);
+      requests.pop_front();
+    } else {
+      // 書き込むデータはないがレスポンスは完成していない
+    }
   }
 
   return should_close_conn;
+}
+
+http::HttpResponse *AllocateResponseObj(
+    const config::VirtualServerConf *vserver, const http::HttpRequest &request,
+    Epoll *epoll) {
+  if (!vserver) {
+    http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
+    res->MakeErrorResponse(request, http::NOT_FOUND);
+    return res;
+  }
+  const config::LocationConf *location =
+      vserver->GetLocation(request.GetPath());
+  if (!location) {
+    http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
+    res->MakeErrorResponse(request, http::NOT_FOUND);
+    return res;
+  }
+
+  return new http::HttpResponse(location, epoll);
+  // TODO: 以下のコードが実行できるようにする
+  //  if (location->GetIsCgi()) {
+  //    return new http::HttpCgiResponse(location, epoll);
+  //  } else if (location->GetRedirectUrl()) {
+  //    return new http::HttpRedirectResponse(location, epoll);
+  //  } else {
+  //    return new http::HttpResponse(location, epoll);
+  //  }
 }
 
 }  // namespace

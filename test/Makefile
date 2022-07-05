@@ -23,7 +23,7 @@ g-test:
 
 .PHONY: cppcheck
 cppcheck:
-	docker run -t -v $(shell cd .. && pwd):/root/workdir --rm --entrypoint cppcheck test_webserv --enable=all --output-file=test/cppcheck-err-list srcs
+	docker run -t -v $(shell cd .. && pwd):/root/workdir --rm --entrypoint cppcheck test_webserv --enable=all --output-file=test/cppcheck-err-list srcs -I srcs
 	@echo
 	cat cppcheck-err-list
 
