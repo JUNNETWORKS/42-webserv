@@ -180,15 +180,6 @@ TEST(RequestParserTest, KOMethodNotAllowd) {
   EXPECT_EQ(req.GetParseStatus(), NOT_ALLOWED);
 }
 
-// TEST(RequestParserTest, KOMethodNotImplemented) {
-//   http::HttpRequest req;
-//   utils::ByteVector buf = OpenFile("KOMethodNotImplemented.txt");
-
-//   req.ParseRequest(buf, default_conf, "8080");
-//   EXPECT_TRUE(req.IsCorrectStatus() == false);
-//   EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
-// }
-
 TEST(RequestParserTest, KOUnknownMethod) {
   http::HttpRequest req;
   utils::ByteVector buf = OpenFile("KOUnknownMethod.txt");
