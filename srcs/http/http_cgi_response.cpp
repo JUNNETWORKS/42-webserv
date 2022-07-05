@@ -10,10 +10,13 @@ HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
       cgi_process_(new cgi::CgiProcess(location, epoll)) {}
 
 HttpCgiResponse::~HttpCgiResponse() {
-  if (cgi_process_->IsUnregistered()) {
+  printf("HttpCgiResponse::~HttpCgiResponse\n");
+  if (cgi_process_->IsRemovable()) {
+    fprintf(stderr, "delete cgi_process_\n");
     delete cgi_process_;
   } else {
-    cgi_process_->SetIsUnregistered(true);
+    epoll_->Unregister(cgi_process_->GetFde());
+    cgi_process_->SetIsRemovable(true);
   }
 }
 
@@ -80,7 +83,7 @@ bool HttpCgiResponse::IsAllDataWritingCompleted() {
 
   // Trueの場合
   // - CgiProcessが終了済み && バッファの全てのデータが書き込み完了
-  return cgi_process_->IsCgiFinished() &&
+  return cgi_process_->IsRemovable() &&
          cgi_process_->GetCgiResponse()->GetBody().empty();
 }
 
