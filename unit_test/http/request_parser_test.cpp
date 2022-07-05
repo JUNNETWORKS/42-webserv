@@ -205,6 +205,15 @@ TEST(RequestParserTest, KOURLTooLong) {
   EXPECT_EQ(req.GetParseStatus(), URI_TOO_LONG);
 }
 
+TEST(RequestParserTest, KOContentLengthTooLong) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOContentLengthTooLong.txt");
+
+  req.ParseRequest(buf, default_conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), PAYLOAD_TOO_LARGE);
+}
+
 TEST(RequestParserTest, KOVersioExistMultipleDot) {
   http::HttpRequest req;
   utils::ByteVector buf = OpenFile("KOVersioExistMultipleDot.txt");
