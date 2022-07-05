@@ -97,6 +97,15 @@ TEST(RequestParserTest, KOFormatNotExistHostHeader) {
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
+TEST(RequestParserTest, KOFormatExistMultipleHostHeader) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOFormatExistMultipleHostHeader.txt");
+
+  req.ParseRequest(buf, default_conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
 TEST(RequestParserTest, KOFormatNotExistMethod) {
   http::HttpRequest req;
   utils::ByteVector buf = OpenFile("KOFormatNotExistMethod.txt");
