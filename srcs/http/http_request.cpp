@@ -144,6 +144,11 @@ HttpRequest::ParsingPhase HttpRequest::LoadHeader(
     return kError;
   }
 
+  if (location_->IsMethodAllowed(method_) == false) {
+    parse_status_ = NOT_ALLOWED;
+    return kError;
+  }
+
   if (DecideBodySize() != OK)
     return kError;
   return kBody;
