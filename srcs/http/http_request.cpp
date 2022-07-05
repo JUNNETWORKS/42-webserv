@@ -272,8 +272,7 @@ HttpStatus HttpRequest::InterpretContentLength(
     return parse_status_ = BAD_REQUEST;
 
   body_size_ = result.Ok();
-  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
-  if (body_size_ > kMaxSize)
+  if (body_size_ > location_->GetClientMaxBodySize())
     return parse_status_ = PAYLOAD_TOO_LARGE;
 
   return parse_status_ = OK;
