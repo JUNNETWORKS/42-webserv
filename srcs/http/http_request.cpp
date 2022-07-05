@@ -42,6 +42,21 @@ HttpRequest::HttpRequest(const HttpRequest &rhs)
 
 HttpRequest::~HttpRequest() {}
 
+const HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
+  if (this != &rhs) {
+    method_ = rhs.method_;
+    path_ = rhs.path_;
+    minor_version_ = rhs.minor_version_;
+    headers_ = rhs.headers_;
+    phase_ = rhs.phase_;
+    parse_status_ = rhs.parse_status_;
+    body_ = rhs.body_;
+    body_size_ = rhs.body_size_;
+    is_chunked_ = rhs.is_chunked_;
+  }
+  return *this;
+}
+
 //========================================================================
 // getter
 
