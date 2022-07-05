@@ -25,6 +25,13 @@ bool ForwardMatch(std::string str, std::string pattern);
 //      str="/static/style.css", pattern="/upload/" then return false
 bool BackwardMatch(std::string str, std::string pattern);
 
+template <typename T>
+std::string ConvertToStr(const T &val) {
+  std::stringstream ss;
+  ss << val;
+  return ss.str();
+}
+
 // std::string を int に変換したものを返す｡
 // 変換がが失敗した場合は例外(std::invalid_argument, std::out_of_range)
 //   を投げる｡
