@@ -11,6 +11,16 @@ struct CgiExecution {};
 using namespace server;
 
 class CgiProcess {
+ public:
+  enum StatusTypes {
+    kExecuted = 1,
+    kFinished = 1 << 1,
+    kError = 1 << 2,
+    // HttpCgiResponse と Epoll から参照されるので､
+    // use-after-free を防ぐために参照カウントのようなものを持たせる｡
+    kRemovable = 1 << 3
+  };
+
  private:
   static const unsigned long kDataPerRead = 1024;   // 1KB
   static const unsigned long kDataPerWrite = 1024;  // 1KB
@@ -24,13 +34,9 @@ class CgiProcess {
   const config::LocationConf *location_;
   Epoll *epoll_;
 
-  bool is_executed_;
-  bool is_err_;
-  bool is_finished_;
+  FdEvent *fde_;
 
-  // HttpCgiResponse と Epoll から参照されるので､
-  // use-after-free を防ぐために参照カウントのようなものを持たせる｡
-  bool is_unregistered_;
+  int status_;
 
  public:
   CgiProcess(const config::LocationConf *location, Epoll *epoll);
@@ -45,10 +51,15 @@ class CgiProcess {
   //========================================================================
   // Getter and Setter
   bool IsCgiExecuted() const;
-  bool IsCgiFinished() const;
-  bool IsUnregistered() const;
-  void SetIsUnregistered(bool is_unregistered);
+  bool IsRemovable() const;
+  bool IsError() const;
+
+  void SetIsExecuted(bool is_executed);
+  void SetIsRemovable(bool is_unregistered);
+  void SetIsError(bool is_error);
+
   CgiResponse *GetCgiResponse();
+  FdEvent *GetFde();
 
  private:
   CgiProcess(const CgiProcess &rhs);

@@ -2,6 +2,7 @@
 
 #include <signal.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 namespace cgi {
@@ -13,17 +14,32 @@ CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll)
       cgi_output_buffer_(),
       location_(location),
       epoll_(epoll),
-      is_executed_(false),
-      is_err_(false),
-      is_finished_(false) {}
+      fde_(NULL),
+      status_(0) {}
 
 CgiProcess::~CgiProcess() {
+  if (cgi_request_) {
+    // Cgiプロセスが生存している場合はKILL
+    int wstats;
+    if (waitpid(cgi_request_->GetPid(), &wstats, WNOHANG) == 0) {
+      // KILL & wait
+      KillCgi();
+      waitpid(cgi_request_->GetPid(), &wstats, 0);
+    }
+  }
+
+  if (fde_) {
+    // Unixドメインソケットを閉じる
+    close(fde_->fd);
+  }
+
+  delete fde_;
   delete cgi_request_;
   delete cgi_response_;
 }
 
 Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
-  is_executed_ = true;
+  SetIsExecuted(true);
 
   cgi_request_ = AllocateCgiRequest(request);
   cgi_response_ = new CgiResponse();
@@ -42,6 +58,7 @@ Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
   epoll_->Register(fde);
   epoll_->Add(fde, kFdeWrite);
   epoll_->Add(fde, kFdeRead);
+  fde_ = fde;
   return Result<void>();
 }
 
@@ -55,38 +72,60 @@ cgi::CgiRequest *CgiProcess::AllocateCgiRequest(http::HttpRequest &request) {
 }
 
 bool CgiProcess::IsCgiExecuted() const {
-  return is_executed_;
+  return status_ & kExecuted;
 }
 
-bool CgiProcess::IsCgiFinished() const {
-  return is_finished_;
+bool CgiProcess::IsRemovable() const {
+  return status_ & kRemovable;
 }
 
-bool CgiProcess::IsUnregistered() const {
-  return is_unregistered_;
+bool CgiProcess::IsError() const {
+  return status_ & kError;
 }
 
-void CgiProcess::SetIsUnregistered(bool is_unregistered) {
-  is_unregistered_ = is_unregistered;
+void CgiProcess::SetIsExecuted(bool is_executed) {
+  if (is_executed) {
+    status_ |= kExecuted;
+  } else {
+    status_ &= ~kExecuted;
+  }
+}
+
+void CgiProcess::SetIsRemovable(bool is_unregistered) {
+  if (is_unregistered) {
+    status_ |= kRemovable;
+  } else {
+    status_ &= ~kRemovable;
+  }
+}
+
+void CgiProcess::SetIsError(bool is_error) {
+  if (is_error) {
+    status_ |= kError;
+  } else {
+    status_ &= ~kError;
+  }
 }
 
 CgiResponse *CgiProcess::GetCgiResponse() {
   return cgi_response_;
 }
 
+FdEvent *CgiProcess::GetFde() {
+  return fde_;
+}
+
 void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                                 Epoll *epoll) {
   (void)fde;
   (void)epoll;
+
+  printf("HandleCgiEvent()\n");
+
   CgiProcess *cgi_process = reinterpret_cast<CgiProcess *>(data);
+
   CgiRequest *cgi_request = cgi_process->cgi_request_;
   CgiResponse *cgi_response = cgi_process->cgi_response_;
-
-  if (events & kFdeError) {
-    // Error
-    cgi_process->is_err_ = true;
-    return;
-  }
 
   if (events & kFdeWrite) {
     // Write request's body to unisock
@@ -94,21 +133,44 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                               cgi_process->cgi_input_buffer_.data(),
                               cgi_process->cgi_input_buffer_.size());
     if (write_res < 0) {
-      cgi_process->is_err_ = true;
+      cgi_process->SetIsError(true);
       return;
     }
     cgi_process->cgi_input_buffer_.EraseHead(write_res);
+    if (cgi_process->cgi_input_buffer_.empty()) {
+      epoll->Del(fde, kFdeWrite);
+    }
   }
   if (events & kFdeRead) {
     // Read data from unisock and store data in buffer
     utils::Byte buf[kDataPerRead];
     ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
+    printf("HandleCgiEvent() read_res == %ld\n", read_res);
     if (read_res < 0) {
-      cgi_process->is_err_ = true;
+      cgi_process->SetIsError(true);
+      return;
+    }
+    if (read_res == 0) {
+      // 子プロセス側のソケットが終了
+      if (cgi_process->IsRemovable()) {
+        delete cgi_process;
+      } else {
+        // Unregister する
+        epoll->Unregister(fde);
+        cgi_process->SetIsRemovable(true);
+      }
       return;
     }
     cgi_process->cgi_output_buffer_.AppendDataToBuffer(buf, read_res);
     cgi_response->Parse(cgi_process->cgi_output_buffer_);
+  }
+
+  if (events & kFdeError) {
+    // Error
+    cgi_process->SetIsError(true);
+    epoll->Unregister(fde);
+    cgi_process->SetIsRemovable(true);
+    return;
   }
 }
 
