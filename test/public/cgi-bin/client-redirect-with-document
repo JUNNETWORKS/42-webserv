@@ -1,0 +1,5 @@
+#!/bin/bash
+
+printf "Location:https://www.google.com/search?q=pikachu\n"
+printf "ExtensionField: hoge\n"
+printf "\n"

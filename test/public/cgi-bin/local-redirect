@@ -1,0 +1,4 @@
+#!/bin/bash
+
+printf "Location:/users?q=jun\n"
+printf "\n"

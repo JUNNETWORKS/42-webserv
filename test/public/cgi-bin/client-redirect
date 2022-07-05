@@ -1,0 +1,11 @@
+#!/bin/bash
+
+printf "Location:https://www.google.com/search?q=pikachu\n"
+printf "Status: 302 Found\n"
+printf "Content-Type: text/html\n"
+printf "ExtensionField: hoge\n"
+printf "ProtocolField: fuga\n"
+printf "\n"
+printf "<HTML>\n"
+printf "<body><p>Let's redirect!!</p></body>\n"
+printf "</HTML>"
