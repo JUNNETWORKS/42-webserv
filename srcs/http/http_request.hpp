@@ -67,7 +67,7 @@ class HttpRequest {
  public:
   HttpRequest();
   HttpRequest(const HttpRequest &rhs);
-  HttpRequest &operator=(const HttpRequest &rhs);
+  const HttpRequest &operator=(const HttpRequest &rhs);
   ~HttpRequest();
 
   const std::string &GetMethod() const;
