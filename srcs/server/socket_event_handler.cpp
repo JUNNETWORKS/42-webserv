@@ -159,9 +159,11 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 
     http::HttpResponse *response = socket->GetResponse();
     if (response->IsReadyToWrite()) {
+      printf("response->IsReadyToWrite() TRUE\n");
       // 書き込むデータが存在する
       should_close_conn |= response->Write(conn_fd).IsErr();
     } else if (response->IsAllDataWritingCompleted()) {
+      printf("response->IsAllDataWritingCompleted() TRUE\n");
       // "Connection: close"
       // がレスポンスヘッダーに存在していればソケット接続を切断
       should_close_conn |= ResponseHeaderHasConnectionClose(*response);
@@ -170,7 +172,8 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       socket->SetResponse(NULL);
       requests.pop_front();
     } else {
-      // 書き込むデータはないがレスポンスは完成していない
+      printf("else\n");
+      // TODO: 書き込むデータはないがレスポンスは完成していない
     }
   }
 

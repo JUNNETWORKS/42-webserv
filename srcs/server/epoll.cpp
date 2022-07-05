@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include <cassert>
+#include <cstdio>
 #include <vector>
 
 #include "result/result.hpp"
@@ -35,7 +36,19 @@ FdEventEvent CalculateFdEventEvent(FdEvent *fde, epoll_event epev) {
   if ((epev.events & EPOLLOUT) && (fde->state & kFdeWrite)) {
     events |= kFdeWrite;
   }
+  if (epev.events & EPOLLRDHUP) {
+    events |= kFdeRead | kFdeError;
+  }
   if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+    if (epev.events & EPOLLERR) {
+      printf("CalculateFdEventEvent: EPOLLERR\n");
+    }
+    if (epev.events & EPOLLHUP) {
+      printf("CalculateFdEventEvent: EPOLLHUP\n");
+    }
+    if (epev.events & EPOLLRDHUP) {
+      printf("CalculateFdEventEvent: EPOLLRDHUP\n");
+    }
     // EPOLLRDHUP は TCP FIN を受信した場合にフラグが立つが､
     // ネットワークの回線の都合で先に送ったデータよりも後に送った TCP FIN
     // が先に到着する可能性がある｡ これを避けるためには EPOLLRDHUP
