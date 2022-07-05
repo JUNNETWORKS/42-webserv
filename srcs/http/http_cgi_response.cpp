@@ -112,6 +112,7 @@ void HttpCgiResponse::MakeClientRedirectResponse() {
 Result<void> HttpCgiResponse::Write(int fd) {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
+  // TODO: Connection: close などのHTTPヘッダーをセットする
   Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
   if (status_header_res.IsErr()) {
     return status_header_res.Err();
@@ -122,6 +123,9 @@ Result<void> HttpCgiResponse::Write(int fd) {
     return Result<void>();
   }
 
+  // TODO: Content-Length の設定
+  // - chunked-encoding
+  // - もしくはCGIスクリプトの実行が終了するまで待ってからWriteするようにするか｡
   utils::ByteVector &response_body = cgi_response->GetBody();
   if (!response_body.empty()) {
     ssize_t write_res = write(fd, response_body.data(), response_body.size());
