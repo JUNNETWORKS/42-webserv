@@ -243,14 +243,14 @@ TEST(RequestParserTest, KOVersionInvalidMajorLower) {
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
-// TEST(RequestParserTest, KOVersionInvalidMajorUpper) {
-//   http::HttpRequest req;
-//   utils::ByteVector buf = OpenFile("KOVersionInvalidMajorUpper.txt");
+TEST(RequestParserTest, KOVersionInvalidMajorUpper) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOVersionInvalidMajorUpper.txt");
 
-//   req.ParseRequest(buf, default_conf, "8080");
-//   EXPECT_TRUE(req.IsCorrectStatus() == false);
-//   EXPECT_EQ(req.GetParseStatus(), HTTP_VERSION_NOT_SUPPORTED);
-// }
+  req.ParseRequest(buf, default_conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), HTTP_VERSION_NOT_SUPPORTED);
+}
 
 TEST(RequestParserTest, KOVersionInvalidPrefix) {
   http::HttpRequest req;
