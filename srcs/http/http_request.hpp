@@ -20,8 +20,6 @@
 namespace http {
 using namespace result;
 
-using namespace result;
-
 namespace method_strs {
 const std::string kGet = "GET";
 const std::string kPost = "POST";
