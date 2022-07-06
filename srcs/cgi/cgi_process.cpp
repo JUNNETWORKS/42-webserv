@@ -134,6 +134,8 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                               cgi_process->cgi_input_buffer_.size());
     if (write_res < 0) {
       cgi_process->SetIsError(true);
+      epoll->Unregister(fde);
+      cgi_process->SetIsRemovable(true);
       return;
     }
     cgi_process->cgi_input_buffer_.EraseHead(write_res);
@@ -148,6 +150,8 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
     printf("HandleCgiEvent() read_res == %ld\n", read_res);
     if (read_res < 0) {
       cgi_process->SetIsError(true);
+      epoll->Unregister(fde);
+      cgi_process->SetIsRemovable(true);
       return;
     }
     if (read_res == 0) {
