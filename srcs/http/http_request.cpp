@@ -288,9 +288,17 @@ bool HttpRequest::IsCorrectStatus() {
 
 // ========================================================================
 // Getter and Setter
-const std::vector<std::string> &HttpRequest::GetHeader(std::string header) {
+
+Result<const std::vector<std::string> &> HttpRequest::GetHeader(
+    std::string header) const {
   std::transform(header.begin(), header.end(), header.begin(), toupper);
-  return headers_[header];
+  for (HeaderMap::const_iterator it = headers_.begin(); it != headers_.end();
+       ++it) {
+    if (it->first == header) {
+      return it->second;
+    }
+  }
+  return Error();
 }
 
 HttpStatus HttpRequest::GetParseStatus() const {

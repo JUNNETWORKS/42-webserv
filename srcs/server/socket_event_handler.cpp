@@ -140,8 +140,8 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
   if (socket->HasParsedRequest()) {
     http::HttpRequest &request = requests.front();
 
-    const std::string &host =
-        request.GetHeader("Host").empty() ? "" : request.GetHeader("Host")[0];
+    // TODO vserverをリクエストから取得するようにする。
+    const std::string &host = request.GetHeader("Host").Ok()[0];
     const std::string &port = socket->GetPort();
 
     // ポートとHostヘッダーから VirtualServerConf を取得
