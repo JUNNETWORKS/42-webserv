@@ -69,7 +69,10 @@ const std::string &HttpRequest::GetPath() const {
 void HttpRequest::ParseRequest(utils::ByteVector &buffer,
                                const config::Config &conf,
                                const config::PortType &port) {
-  // TODO 長すぎるbufferは捨ててエラーにする
+  if (buffer.size() > kMaxBufferLength) {
+    parse_status_ = BAD_REQUEST;
+    phase_ = kError;
+  }
   if (phase_ == kRequestLine)
     phase_ = ParseRequestLine(buffer);
   if (phase_ == kHeaderField)
