@@ -380,6 +380,15 @@ TEST(RequestParserTest, KOBodyChunkSizeTooLarge) {
   EXPECT_EQ(req.GetParseStatus(), PAYLOAD_TOO_LARGE);
 }
 
+TEST(RequestParserTest, KOBufferTooLarge) {
+  http::HttpRequest req;
+  utils::ByteVector buf(std::string(1024 * 1024 + 1, 'G'));
+
+  req.ParseRequest(buf, default_conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
+}
+
 TEST(RequestParserTest, KOBodyInvalidChunkSizeLower) {
   http::HttpRequest req;
   utils::ByteVector buf = OpenFile("KOBodyInvalidChunkSizeLower.txt");
