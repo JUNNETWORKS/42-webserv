@@ -140,7 +140,7 @@ HttpRequest::ParsingPhase HttpRequest::LoadHeader(
   }
 
   if (LoadLocation() == false) {
-    parse_status_ = BAD_REQUEST;  // TODO BAD_REQUESTじゃないかも
+    parse_status_ = NOT_FOUND;
     return kError;
   }
 
