@@ -286,6 +286,17 @@ TEST(RequestParserTest, OKCorrectNewLine) {
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
+TEST(RequestParserTest, KOLocationNotFound) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOLocationNotFound.txt");
+  const config::Config conf = config::ParseConfig(
+      (kConfigurationDirPath + "LocationNotFound.conf").c_str());
+
+  req.ParseRequest(buf, conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), NOT_FOUND);
+}
+
 TEST(RequestParserTest, OKCorrect) {
   http::HttpRequest req;
   utils::ByteVector buf = OpenFile("OKCorrect.txt");
