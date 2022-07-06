@@ -1,3 +1,5 @@
+#include <signal.h>
+
 #include "config/config.hpp"
 #include "result/result.hpp"
 #include "server/epoll.hpp"
@@ -11,6 +13,10 @@
 
 int main(int argc, char const *argv[]) {
   using namespace result;
+
+  // 多くのアプリケーションではSIGPIPEを無視し､write() の返り値で判定する
+  // https://stackoverflow.com/questions/3469567/broken-pipe-error
+  signal(SIGPIPE, SIG_IGN);
 
   setbuf(stdout, NULL);
   config::Config config;
