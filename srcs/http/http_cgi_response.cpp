@@ -39,12 +39,12 @@ void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
       http::HttpRequest &request = conn_sock->GetRequests().front();
       MakeErrorResponse(request, SERVER_ERROR);
     } else if (type == cgi::CgiResponse::kDocumentResponse) {
-      MakeDocumentResponse();
+      MakeDocumentResponse(conn_sock);
     } else if (type == cgi::CgiResponse::kLocalRedirect) {
       MakeLocalRedirectResponse(conn_sock);
     } else if (type == cgi::CgiResponse::kClientRedirect ||
                type == cgi::CgiResponse::kClientRedirectWithDocument) {
-      MakeClientRedirectResponse();
+      MakeClientRedirectResponse(conn_sock);
     } else {
       // Not Identified
     }
@@ -87,9 +87,15 @@ bool HttpCgiResponse::IsAllDataWritingCompleted() {
          cgi_process_->GetCgiResponse()->GetBody().empty();
 }
 
-void HttpCgiResponse::MakeDocumentResponse() {
+void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
+  http::HttpRequest &request = conn_sock->GetRequests().front();
+
   SetStatusFromCgiResponse();
   SetHeadersFromCgiResponse();
+
+  if (IsRequestHasConnectionClose(request)) {
+    SetHeader("Connection", "close");
+  }
 }
 
 void HttpCgiResponse::MakeLocalRedirectResponse(server::ConnSocket *conn_sock) {
@@ -99,14 +105,21 @@ void HttpCgiResponse::MakeLocalRedirectResponse(server::ConnSocket *conn_sock) {
   requests.insert(requests.begin() + 1, new_request);
 }
 
-void HttpCgiResponse::MakeClientRedirectResponse() {
+void HttpCgiResponse::MakeClientRedirectResponse(
+    server::ConnSocket *conn_sock) {
+  http::HttpRequest &request = conn_sock->GetRequests().front();
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
+
   if (cgi_response->GetHeader("Status").IsOk()) {
     SetStatusFromCgiResponse();
   } else {
     SetStatus(FOUND);
   }
   SetHeadersFromCgiResponse();
+
+  if (IsRequestHasConnectionClose(request)) {
+    SetHeader("Connection", "close");
+  }
 }
 
 Result<void> HttpCgiResponse::Write(int fd) {

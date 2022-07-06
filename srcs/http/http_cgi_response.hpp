@@ -25,9 +25,9 @@ class HttpCgiResponse : public HttpResponse {
   virtual bool IsAllDataWritingCompleted();
 
  private:
-  void MakeDocumentResponse();
+  void MakeDocumentResponse(server::ConnSocket *conn_sock);
   void MakeLocalRedirectResponse(server::ConnSocket *conn_sock);
-  void MakeClientRedirectResponse();
+  void MakeClientRedirectResponse(server::ConnSocket *conn_sock);
 
   void SetStatusFromCgiResponse();
   void SetHeadersFromCgiResponse();
