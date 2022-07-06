@@ -100,6 +100,8 @@ class HttpResponse {
   void SetHeader(const std::string &header, const std::string &value);
   void AppendHeader(const std::string &header, const std::string &value);
 
+  static bool IsRequestHasConnectionClose(HttpRequest &request);
+
  private:
   HttpResponse();
   HttpResponse(const HttpResponse &rhs);
@@ -114,8 +116,6 @@ class HttpResponse {
 
   static std::string MakeAutoIndex(const std::string &root_path,
                                    const std::string &relative_path);
-
-  static bool IsRequestHasConnectionClose(HttpRequest &request);
 };
 
 }  // namespace http
