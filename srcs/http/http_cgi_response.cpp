@@ -34,7 +34,6 @@ Result<void> HttpCgiResponse::Write(int fd) {
     return Result<void>();
   }
 
-  // TODO: refactoring
   // エラーのレスポンスを返す
   if (!body_bytes_.empty()) {
     Result<ssize_t> result = WriteBody(fd);
@@ -43,9 +42,7 @@ Result<void> HttpCgiResponse::Write(int fd) {
     }
   }
 
-  // TODO: Content-Length の設定
-  // - chunked-encoding
-  // - もしくはCGIスクリプトの実行が終了するまで待ってからWriteするようにするか｡
+  // TODO: chunked-encoding の設定
   utils::ByteVector &response_body = cgi_response->GetBody();
   if (!response_body.empty()) {
     ssize_t write_res = write(fd, response_body.data(), response_body.size());
@@ -92,6 +89,8 @@ Result<void> HttpCgiResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   if (type == cgi::CgiResponse::kParseError) {
     http::HttpRequest &request = conn_sock->GetRequests().front();
     MakeErrorResponse(request, SERVER_ERROR);
+    // TODO:CGIプロセスがまだ生きている可能性があるので､
+    // CGIプロセスの出力をWrite()しないようにする必要がある｡
   } else if (type == cgi::CgiResponse::kDocumentResponse) {
     MakeDocumentResponse(conn_sock);
   } else if (type == cgi::CgiResponse::kLocalRedirect) {
