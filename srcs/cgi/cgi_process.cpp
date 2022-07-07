@@ -118,9 +118,6 @@ FdEvent *CgiProcess::GetFde() {
 
 void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                                 Epoll *epoll) {
-  (void)fde;
-  (void)epoll;
-
   printf("HandleCgiEvent()\n");
 
   CgiProcess *cgi_process = reinterpret_cast<CgiProcess *>(data);

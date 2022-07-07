@@ -6,8 +6,6 @@
 
 namespace cgi {
 
-struct CgiExecution {};
-
 using namespace server;
 
 class CgiProcess {
