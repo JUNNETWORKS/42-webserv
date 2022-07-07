@@ -90,19 +90,27 @@ bool HttpCgiResponse::IsReadyToWrite() {
   //   && CGIスクリプトが LocalRedirect ではない
   //   && (StatusとHeaderがまだ書き込まれていない
   //       || ボディにデータが追加されている)
-  return cgi_process_->IsCgiExecuted() &&
-         cgi_response->GetResponseType() != cgi::CgiResponse::kNotIdentified &&
-         !cgi_response->GetBody().empty();
+  return phase_ == kStatusAndHeader ||
+         (phase_ == kBody && cgi_process_->IsCgiExecuted() &&
+          (!cgi_response->GetBody().empty() ||
+           (!is_file_eof_ || !body_bytes_.empty())));
 }
 
 // すべてのデータの write が完了したか
 bool HttpCgiResponse::IsAllDataWritingCompleted() {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
+  // まだヘッダーやStatusなどの情報が確定していない場合はFalse
+  if (cgi_phase_ == kSetupCgiTypeSpecificInfo) {
+    return false;
+  }
+
   // LocalRedirectの場合はレスポンスを書き込まないので常にTrue
   if (cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
     return true;
   }
+
+  // TODO: エラーの場合にもちゃんと終了判定できるようにする
 
   // Trueの場合
   // - CgiProcessが終了済み && バッファの全てのデータが書き込み完了
@@ -128,6 +136,7 @@ void HttpCgiResponse::MakeLocalRedirectResponse(server::ConnSocket *conn_sock) {
   requests.insert(requests.begin() + 1, new_request);
 }
 
+// TODO: ClientRedirect(Documentなし) にてレスポンスを返せない
 void HttpCgiResponse::MakeClientRedirectResponse(
     server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
@@ -158,6 +167,10 @@ Result<void> HttpCgiResponse::Write(int fd) {
     // で書き込みが行われた後にノンブロッキングで書き込める保証はない
     return Result<void>();
   }
+
+  // TODO: エラーのレスポンスを返せるようにする
+  // 今はCGIのレスポンスしか返せないので､エラー時に HttpResponse::Write()
+  // と同じようにwrite()する
 
   // TODO: Content-Length の設定
   // - chunked-encoding
