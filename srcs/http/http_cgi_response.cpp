@@ -125,8 +125,8 @@ bool HttpCgiResponse::IsReadyToWrite() {
   //       || ボディにデータが追加されている)
   return phase_ == kStatusAndHeader ||
          (phase_ == kBody && cgi_process_->IsCgiExecuted() &&
-          (!cgi_response->GetBody().empty() ||
-           (!is_file_eof_ || !body_bytes_.empty())));
+          (!cgi_response->GetBody().empty() || IsReadyToWriteBody() ||
+           IsReadyToWriteFile()));
 }
 
 // すべてのデータの write が完了したか

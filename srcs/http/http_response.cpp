@@ -211,13 +211,20 @@ std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
 // Status checker
 
 bool HttpResponse::IsReadyToWrite() {
+  return IsReadyToWriteBody() || IsReadyToWriteFile();
+}
+
+bool HttpResponse::IsReadyToWriteBody() {
+  return phase_ == kStatusAndHeader ||
+         (phase_ == kBody && !body_bytes_.empty());
+}
+
+bool HttpResponse::IsReadyToWriteFile() {
   if (file_fd_ >= 0) {
     return phase_ == kStatusAndHeader ||
            (phase_ == kBody && (!is_file_eof_ || !body_bytes_.empty()));
-  } else {
-    return phase_ == kStatusAndHeader ||
-           (phase_ == kBody && !body_bytes_.empty());
   }
+  return false;
 }
 
 bool HttpResponse::IsAllDataWritingCompleted() {

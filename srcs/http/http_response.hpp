@@ -99,6 +99,9 @@ class HttpResponse {
   Result<ssize_t> ReadFile();
   Result<ssize_t> WriteBody(int fd);
 
+  bool IsReadyToWriteBody();
+  bool IsReadyToWriteFile();
+
   // ========================================================================
   // Getter and Setter
   void SetHttpVersion(const std::string &http_version);
