@@ -166,7 +166,6 @@ void HttpCgiResponse::MakeLocalRedirectResponse(server::ConnSocket *conn_sock) {
   requests.insert(requests.begin() + 1, new_request);
 }
 
-// TODO: ClientRedirect(Documentなし) にてレスポンスを返せない
 void HttpCgiResponse::MakeClientRedirectResponse(
     server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
