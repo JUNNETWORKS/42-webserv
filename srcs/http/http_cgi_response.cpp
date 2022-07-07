@@ -35,9 +35,20 @@ Result<void> HttpCgiResponse::Write(int fd) {
     return Result<void>();
   }
 
-  // TODO: エラーのレスポンスを返せるようにする
-  // 今はCGIのレスポンスしか返せないので､エラー時に HttpResponse::Write()
-  // と同じようにwrite()する
+  // TODO: refactoring
+  // エラーのレスポンスを返す
+  if (file_fd_ >= 0 && !is_file_eof_) {
+    Result<ssize_t> result = ReadFile();
+    if (result.IsErr()) {
+      return result.Err();
+    }
+  }
+  if (!body_bytes_.empty()) {
+    Result<ssize_t> result = WriteBody(fd);
+    if (result.IsErr()) {
+      return result.Err();
+    }
+  }
 
   // TODO: Content-Length の設定
   // - chunked-encoding
