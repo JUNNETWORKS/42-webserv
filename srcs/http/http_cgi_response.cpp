@@ -7,7 +7,8 @@ namespace http {
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
                                  server::Epoll *epoll)
     : HttpResponse(location, epoll),
-      cgi_process_(new cgi::CgiProcess(location, epoll)) {}
+      cgi_process_(new cgi::CgiProcess(location, epoll)),
+      cgi_phase_(kSetupCgiTypeSpecificInfo) {}
 
 HttpCgiResponse::~HttpCgiResponse() {
   printf("HttpCgiResponse::~HttpCgiResponse\n");
@@ -21,42 +22,64 @@ HttpCgiResponse::~HttpCgiResponse() {
 }
 
 void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
-  if (!cgi_process_->IsCgiExecuted()) {
-    http::HttpRequest &request = conn_sock->GetRequests().front();
-    if (cgi_process_->RunCgi(request).IsErr()) {
-      MakeErrorResponse(request, SERVER_ERROR);
-      return;
-    }
-  } else {
-    // CGIプロセスのレスポンスタイプを確認する
-    //   - DocumentResponse        -> HttpResponseのメンバー変数を設定する
-    //   - LocalRedirect           -> ConnSock.requestsからrequestを取り出し､
-    //                                書き換えたrequestを挿入
-    //   - ClientRedirect(WithDoc) -> HttpResponseのメンバー変数を設定する
-    cgi::CgiResponse::ResponseType type =
-        cgi_process_->GetCgiResponse()->GetResponseType();
-    if (type == cgi::CgiResponse::kParseError) {
+  http::HttpRequest &request = conn_sock->GetRequests().front();
+  // TODO: 現在 cgi_request.RunCgi()
+  // ではファイルの有無に関するエラーチェックをしていないので､
+  // 存在しないCGIへのリクエストをするとバグる
+  if (cgi_process_->RunCgi(request).IsErr()) {
+    MakeErrorResponse(request, SERVER_ERROR);
+    cgi_phase_ = kWritingToInetSocket;
+    return;
+  }
+}
+
+void HttpCgiResponse::GrowResponse(server::ConnSocket *conn_sock) {
+  if (cgi_phase_ != kSetupCgiTypeSpecificInfo) {
+    return;
+  }
+
+  // CGIプロセスのレスポンスタイプを確認する
+  //   - DocumentResponse        -> HttpResponseのメンバー変数を設定する
+  //   - LocalRedirect           -> ConnSock.requestsからrequestを取り出し､
+  //                                書き換えたrequestを挿入
+  //   - ClientRedirect(WithDoc) -> HttpResponseのメンバー変数を設定する
+  cgi::CgiResponse::ResponseType type =
+      cgi_process_->GetCgiResponse()->GetResponseType();
+  // printf("HttpCgiResponse::GrowResponse type(%d)\n", type);
+
+  if (type == cgi::CgiResponse::kNotIdentified) {
+    // CGIレスポンスタイプが決まっていないのに
+    // CgiProcessが削除可能な状態(Unisockが0を返してきている)ならエラーとする
+    if (cgi_process_->IsRemovable()) {
       http::HttpRequest &request = conn_sock->GetRequests().front();
       MakeErrorResponse(request, SERVER_ERROR);
-    } else if (type == cgi::CgiResponse::kDocumentResponse) {
-      MakeDocumentResponse(conn_sock);
-    } else if (type == cgi::CgiResponse::kLocalRedirect) {
-      MakeLocalRedirectResponse(conn_sock);
-    } else if (type == cgi::CgiResponse::kClientRedirect ||
-               type == cgi::CgiResponse::kClientRedirectWithDocument) {
-      MakeClientRedirectResponse(conn_sock);
-    } else {
-      // Not Identified
+      cgi_phase_ = kWritingToInetSocket;
     }
+    return;
   }
+
+  if (type == cgi::CgiResponse::kParseError) {
+    http::HttpRequest &request = conn_sock->GetRequests().front();
+    MakeErrorResponse(request, SERVER_ERROR);
+  } else if (type == cgi::CgiResponse::kDocumentResponse) {
+    MakeDocumentResponse(conn_sock);
+  } else if (type == cgi::CgiResponse::kLocalRedirect) {
+    MakeLocalRedirectResponse(conn_sock);
+  } else if (type == cgi::CgiResponse::kClientRedirect ||
+             type == cgi::CgiResponse::kClientRedirectWithDocument) {
+    MakeClientRedirectResponse(conn_sock);
+  }
+  cgi_phase_ = kWritingToInetSocket;
 }
 
 // データ書き込みが可能か
 bool HttpCgiResponse::IsReadyToWrite() {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
+  // まだヘッダーやStatusなどの情報が確定していない
   // LocalRedirectの場合はレスポンスを書き込まないので常にFalse
-  if (cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
+  if (cgi_phase_ == kSetupCgiTypeSpecificInfo ||
+      cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
     return false;
   }
 

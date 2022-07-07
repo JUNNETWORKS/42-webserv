@@ -164,6 +164,11 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   RegisterFile(abs_file_path);
 }
 
+void HttpResponse::GrowResponse(server::ConnSocket *conn_sock) {
+  (void)conn_sock;
+  return;
+}
+
 void HttpResponse::MakeErrorResponse(const HttpRequest &request,
                                      HttpStatus status) {
   (void)request;

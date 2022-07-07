@@ -43,6 +43,7 @@ Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
 
   cgi_request_ = AllocateCgiRequest(request);
   cgi_response_ = new CgiResponse();
+  // TODO: fork した後 execve に失敗した時のエラー検知と処理
   if (!cgi_request_->RunCgi() || cgi_request_->GetCgiUnisock() < 0) {
     delete cgi_request_;
     delete cgi_response_;

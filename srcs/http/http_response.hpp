@@ -62,7 +62,15 @@ class HttpResponse {
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpResponse();
 
+  // MakeResponse はレスポンスオブジェクトの初期化で使われる｡
   virtual void MakeResponse(server::ConnSocket *conn_sock);
+
+  // MakeResponse だけではResponseが作成できない場合に呼ぶメソッド｡
+  // 具体的には IsReadyToWrite() と IsAllDataWritingCompleted() が両方 False
+  // を返す場合に呼ばれる｡
+  // MakeResponse だけでResponseが作成出来る場合にはこの関数は呼ばれないので､
+  // 関数には特に何も定義しなくて良い｡
+  virtual void GrowResponse(server::ConnSocket *conn_sock);
 
   void MakeErrorResponse(const HttpRequest &request, HttpStatus status);
 

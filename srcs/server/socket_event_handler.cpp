@@ -172,8 +172,7 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       socket->SetResponse(NULL);
       requests.pop_front();
     } else {
-      printf("else\n");
-      // TODO: 書き込むデータはないがレスポンスは完成していない
+      response->GrowResponse(socket);
     }
   }
 

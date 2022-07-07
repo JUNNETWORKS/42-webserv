@@ -11,11 +11,15 @@ class HttpCgiResponse : public HttpResponse {
  private:
   cgi::CgiProcess *cgi_process_;
 
+  enum CgiPhase { kSetupCgiTypeSpecificInfo, kWritingToInetSocket };
+  CgiPhase cgi_phase_;
+
  public:
   HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpCgiResponse();
 
   virtual void MakeResponse(server::ConnSocket *conn_sock);
+  virtual void GrowResponse(server::ConnSocket *conn_sock);
   virtual Result<void> Write(int fd);
 
   // データ書き込みが可能か
