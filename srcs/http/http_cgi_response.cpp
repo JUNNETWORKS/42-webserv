@@ -21,6 +21,39 @@ HttpCgiResponse::~HttpCgiResponse() {
   }
 }
 
+Result<void> HttpCgiResponse::Write(int fd) {
+  cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
+
+  // TODO: Connection: close などのHTTPヘッダーをセットする
+  Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
+  if (status_header_res.IsErr()) {
+    return status_header_res.Err();
+  }
+  if (status_header_res.Ok() > 0) {
+    // WriteStatusAndHeader()
+    // で書き込みが行われた後にノンブロッキングで書き込める保証はない
+    return Result<void>();
+  }
+
+  // TODO: エラーのレスポンスを返せるようにする
+  // 今はCGIのレスポンスしか返せないので､エラー時に HttpResponse::Write()
+  // と同じようにwrite()する
+
+  // TODO: Content-Length の設定
+  // - chunked-encoding
+  // - もしくはCGIスクリプトの実行が終了するまで待ってからWriteするようにするか｡
+  utils::ByteVector &response_body = cgi_response->GetBody();
+  if (!response_body.empty()) {
+    ssize_t write_res = write(fd, response_body.data(), response_body.size());
+    if (write_res < 0) {
+      printf("HttpCgiReponse::Write write() return %ld", write_res);
+      return Error();
+    }
+    response_body.EraseHead(write_res);
+  }
+  return Result<void>();
+}
+
 void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
   // TODO: 現在 cgi_request.RunCgi()
@@ -152,38 +185,6 @@ void HttpCgiResponse::MakeClientRedirectResponse(
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
-}
-
-Result<void> HttpCgiResponse::Write(int fd) {
-  cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
-
-  // TODO: Connection: close などのHTTPヘッダーをセットする
-  Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
-  if (status_header_res.IsErr()) {
-    return status_header_res.Err();
-  }
-  if (status_header_res.Ok() > 0) {
-    // WriteStatusAndHeader()
-    // で書き込みが行われた後にノンブロッキングで書き込める保証はない
-    return Result<void>();
-  }
-
-  // TODO: エラーのレスポンスを返せるようにする
-  // 今はCGIのレスポンスしか返せないので､エラー時に HttpResponse::Write()
-  // と同じようにwrite()する
-
-  // TODO: Content-Length の設定
-  // - chunked-encoding
-  // - もしくはCGIスクリプトの実行が終了するまで待ってからWriteするようにするか｡
-  utils::ByteVector &response_body = cgi_response->GetBody();
-  if (!response_body.empty()) {
-    ssize_t write_res = write(fd, response_body.data(), response_body.size());
-    if (write_res < 0) {
-      return Error();
-    }
-    response_body.EraseHead(write_res);
-  }
-  return Result<void>();
 }
 
 void HttpCgiResponse::SetStatusFromCgiResponse() {
