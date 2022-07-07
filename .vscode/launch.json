@@ -25,6 +25,10 @@
           "description": "Set Disassembly Flavor to Intel",
           "text": "-gdb-set disassembly-flavor intel",
           "ignoreFailures": true
+        },
+        {
+          "description": "SIGPIPEは無視する",
+          "text": "handle SIGPIPE nostop noprint nopass"
         }
       ]
     },
