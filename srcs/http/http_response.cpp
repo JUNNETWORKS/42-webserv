@@ -67,12 +67,6 @@ Result<void> HttpResponse::Write(int fd) {
     return Result<void>();
   }
 
-  if (file_fd_ >= 0 && !is_file_eof_) {
-    Result<ssize_t> result = ReadFile();
-    if (result.IsErr()) {
-      return result.Err();
-    }
-  }
   if (!body_bytes_.empty()) {
     Result<ssize_t> result = WriteBody(fd);
     if (result.IsErr()) {
@@ -164,9 +158,15 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   RegisterFile(abs_file_path);
 }
 
-void HttpResponse::GrowResponse(server::ConnSocket *conn_sock) {
+Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   (void)conn_sock;
-  return;
+  if (file_fd_ >= 0 && !is_file_eof_) {
+    Result<ssize_t> result = ReadFile();
+    if (result.IsErr()) {
+      return result.Err();
+    }
+  }
+  return Result<void>();
 }
 
 void HttpResponse::MakeErrorResponse(const HttpRequest &request,

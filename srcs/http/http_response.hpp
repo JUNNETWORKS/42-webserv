@@ -70,7 +70,7 @@ class HttpResponse {
   // を返す場合に呼ばれる｡
   // MakeResponse だけでResponseが作成出来る場合にはこの関数は呼ばれないので､
   // 関数には特に何も定義しなくて良い｡
-  virtual void GrowResponse(server::ConnSocket *conn_sock);
+  virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
 
   void MakeErrorResponse(const HttpRequest &request, HttpStatus status);
 

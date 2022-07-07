@@ -36,12 +36,6 @@ Result<void> HttpCgiResponse::Write(int fd) {
 
   // TODO: refactoring
   // エラーのレスポンスを返す
-  if (file_fd_ >= 0 && !is_file_eof_) {
-    Result<ssize_t> result = ReadFile();
-    if (result.IsErr()) {
-      return result.Err();
-    }
-  }
   if (!body_bytes_.empty()) {
     Result<ssize_t> result = WriteBody(fd);
     if (result.IsErr()) {
@@ -76,9 +70,9 @@ void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
   }
 }
 
-void HttpCgiResponse::GrowResponse(server::ConnSocket *conn_sock) {
+Result<void> HttpCgiResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   if (cgi_phase_ != kSetupCgiTypeSpecificInfo) {
-    return;
+    return Result<void>();
   }
 
   cgi::CgiResponse::ResponseType type =
@@ -92,7 +86,7 @@ void HttpCgiResponse::GrowResponse(server::ConnSocket *conn_sock) {
       MakeErrorResponse(request, SERVER_ERROR);
       cgi_phase_ = kWritingToInetSocket;
     }
-    return;
+    return Result<void>();
   }
 
   if (type == cgi::CgiResponse::kParseError) {
@@ -107,6 +101,7 @@ void HttpCgiResponse::GrowResponse(server::ConnSocket *conn_sock) {
     MakeClientRedirectResponse(conn_sock);
   }
   cgi_phase_ = kWritingToInetSocket;
+  return Result<void>();
 }
 
 // データ書き込みが可能か

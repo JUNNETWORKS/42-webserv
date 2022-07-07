@@ -19,7 +19,7 @@ class HttpCgiResponse : public HttpResponse {
   virtual ~HttpCgiResponse();
 
   virtual void MakeResponse(server::ConnSocket *conn_sock);
-  virtual void GrowResponse(server::ConnSocket *conn_sock);
+  virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
   virtual Result<void> Write(int fd);
 
   // データ書き込みが可能か
