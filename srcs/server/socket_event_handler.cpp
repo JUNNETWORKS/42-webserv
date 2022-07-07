@@ -158,13 +158,12 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
     }
 
     http::HttpResponse *response = socket->GetResponse();
-    response->PrepareToWrite(socket);
-    if (response->IsReadyToWrite()) {
-      printf("response->IsReadyToWrite() TRUE\n");
+    should_close_conn |= response->PrepareToWrite(socket).IsErr();
+    if (!should_close_conn && response->IsReadyToWrite()) {
       // 書き込むデータが存在する
       should_close_conn |= response->Write(conn_fd).IsErr();
     }
-    if (response->IsAllDataWritingCompleted()) {
+    if (!should_close_conn && response->IsAllDataWritingCompleted()) {
       // "Connection: close"
       // がレスポンスヘッダーに存在していればソケット接続を切断
       should_close_conn |= ResponseHeaderHasConnectionClose(*response);
