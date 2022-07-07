@@ -50,6 +50,12 @@ ConnSocket::ConnSocket(int fd, const std::string &port,
                        const config::Config &config)
     : Socket(fd, ListenSock, port, config), response_(NULL) {}
 
+ConnSocket::~ConnSocket() {
+  if (response_ != NULL) {
+    delete response_;
+  }
+}
+
 std::deque<http::HttpRequest> &ConnSocket::GetRequests() {
   return requests_;
 }
