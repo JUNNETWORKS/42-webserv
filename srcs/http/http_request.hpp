@@ -59,7 +59,7 @@ class HttpRequest {
   bool is_chunked_;
   const config::VirtualServerConf *vserver_;
   const config::LocationConf *location_;
-
+  static const unsigned long kMaxBufferLength = 1024 * 1024;
   // buffer内の文字列で処理を完了できない時、current_bufferに文字列を保持して処理を中断
   // 次のbufferが来るのを待つ
 

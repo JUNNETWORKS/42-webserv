@@ -15,7 +15,7 @@ bool IsTcharString(const std::string &str);
 bool IsCorrectHTTPVersion(const std::string &str);
 Result<std::vector<std::string> > ParseHeaderFieldValue(std::string &str);
 std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
-    utils::ByteVector &buffer);
+    utils::ByteVector &buffer, const unsigned long acceptable_size);
 }  // namespace
 
 HttpRequest::HttpRequest()
@@ -71,7 +71,10 @@ const std::string &HttpRequest::GetPath() const {
 void HttpRequest::ParseRequest(utils::ByteVector &buffer,
                                const config::Config &conf,
                                const config::PortType &port) {
-  // TODO 長すぎるbufferは捨ててエラーにする
+  if (buffer.size() > kMaxBufferLength) {
+    parse_status_ = BAD_REQUEST;
+    phase_ = kError;
+  }
   if (phase_ == kRequestLine)
     phase_ = ParseRequestLine(buffer);
   if (phase_ == kHeaderField)
@@ -146,6 +149,11 @@ HttpRequest::ParsingPhase HttpRequest::LoadHeader(
     return kError;
   }
 
+  if (location_->IsMethodAllowed(method_) == false) {
+    parse_status_ = NOT_ALLOWED;
+    return kError;
+  }
+
   if (DecideBodySize() != OK)
     return kError;
   return kBody;
@@ -178,8 +186,8 @@ HttpRequest::ParsingPhase HttpRequest::ParsePlainBody(
 HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
     utils::ByteVector &buffer) {
   while (buffer.empty() == false) {
-    std::pair<Chunk::ChunkStatus, Chunk> chunk_pair =
-        CheckChunkReceived(buffer);
+    std::pair<Chunk::ChunkStatus, Chunk> chunk_pair = CheckChunkReceived(
+        buffer, location_->GetClientMaxBodySize() - body_size_);
     switch (chunk_pair.first) {
       case Chunk::kWaiting:  // bufferにchunkが届ききっていない。
         return phase_;
@@ -201,6 +209,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseChunkedBody(
     body_.insert(body_.end(), buffer.begin(), buffer.begin() + chunk.data_size);
     buffer.erase(buffer.begin(),
                  buffer.begin() + chunk.data_size + kCrlf.size());
+    body_size_ += chunk_pair.second.data_size;
   }
   return phase_;
 }
@@ -274,8 +283,7 @@ HttpStatus HttpRequest::InterpretContentLength(
     return parse_status_ = BAD_REQUEST;
 
   body_size_ = result.Ok();
-  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
-  if (body_size_ > kMaxSize)
+  if (body_size_ > location_->GetClientMaxBodySize())
     return parse_status_ = PAYLOAD_TOO_LARGE;
 
   return parse_status_ = OK;
@@ -393,7 +401,7 @@ bool ValidateChunkDataFormat(const Chunk &chunk, utils::ByteVector &buffer) {
 }
 
 std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
-    utils::ByteVector &buffer) {
+    utils::ByteVector &buffer, const unsigned long acceptable_size) {
   Chunk res;
 
   Result<size_t> pos = buffer.FindString(kCrlf);
@@ -407,8 +415,7 @@ std::pair<Chunk::ChunkStatus, Chunk> CheckChunkReceived(
     return std::make_pair(Chunk::kErrorBadRequest, res);
   res.data_size = convert_res.Ok();
 
-  const unsigned long kMaxSize = 1073741824;  // TODO config読み込みに変更
-  if (res.data_size >= kMaxSize) {
+  if (res.data_size >= acceptable_size) {
     return std::make_pair(Chunk::kErrorLength, res);
   }
 

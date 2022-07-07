@@ -169,23 +169,16 @@ TEST(RequestParserTest, KOHeaderNotExistDquotePair) {
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
-// TEST(RequestParserTest, KOMethodNotAllowd) {
-//   http::HttpRequest req;
-//   utils::ByteVector buf = OpenFile("KOMethodNotAllowd.txt");
+TEST(RequestParserTest, KOMethodNotAllowd) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOMethodNotAllowd.txt");
+  const config::Config not_allowed_conf =
+      config::ParseConfig((kConfigurationDirPath + "NotAllowed.conf").c_str());
 
-//   req.ParseRequest(buf, default_conf, "8080");
-//   EXPECT_TRUE(req.IsCorrectStatus() == false);
-//   EXPECT_EQ(req.GetParseStatus(), NOT_ALLOWED);
-// }
-
-// TEST(RequestParserTest, KOMethodNotImplemented) {
-//   http::HttpRequest req;
-//   utils::ByteVector buf = OpenFile("KOMethodNotImplemented.txt");
-
-//   req.ParseRequest(buf, default_conf, "8080");
-//   EXPECT_TRUE(req.IsCorrectStatus() == false);
-//   EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
-// }
+  req.ParseRequest(buf, not_allowed_conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), NOT_ALLOWED);
+}
 
 TEST(RequestParserTest, KOUnknownMethod) {
   http::HttpRequest req;
@@ -203,6 +196,15 @@ TEST(RequestParserTest, KOURLTooLong) {
   req.ParseRequest(buf, default_conf, "8080");
   EXPECT_TRUE(req.IsCorrectStatus() == false);
   EXPECT_EQ(req.GetParseStatus(), URI_TOO_LONG);
+}
+
+TEST(RequestParserTest, KOContentLengthTooLong) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOContentLengthTooLong.txt");
+
+  req.ParseRequest(buf, default_conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), PAYLOAD_TOO_LARGE);
 }
 
 TEST(RequestParserTest, KOVersioExistMultipleDot) {
@@ -241,14 +243,14 @@ TEST(RequestParserTest, KOVersionInvalidMajorLower) {
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
-// TEST(RequestParserTest, KOVersionInvalidMajorUpper) {
-//   http::HttpRequest req;
-//   utils::ByteVector buf = OpenFile("KOVersionInvalidMajorUpper.txt");
+TEST(RequestParserTest, KOVersionInvalidMajorUpper) {
+  http::HttpRequest req;
+  utils::ByteVector buf = OpenFile("KOVersionInvalidMajorUpper.txt");
 
-//   req.ParseRequest(buf, default_conf, "8080");
-//   EXPECT_TRUE(req.IsCorrectStatus() == false);
-//   EXPECT_EQ(req.GetParseStatus(), HTTP_VERSION_NOT_SUPPORTED);
-// }
+  req.ParseRequest(buf, default_conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), HTTP_VERSION_NOT_SUPPORTED);
+}
 
 TEST(RequestParserTest, KOVersionInvalidPrefix) {
   http::HttpRequest req;
@@ -376,6 +378,15 @@ TEST(RequestParserTest, KOBodyChunkSizeTooLarge) {
   req.ParseRequest(buf, default_conf, "8080");
   EXPECT_TRUE(req.IsCorrectStatus() == false);
   EXPECT_EQ(req.GetParseStatus(), PAYLOAD_TOO_LARGE);
+}
+
+TEST(RequestParserTest, KOBufferTooLarge) {
+  http::HttpRequest req;
+  utils::ByteVector buf(std::string(1024 * 1024 + 1, 'G'));
+
+  req.ParseRequest(buf, default_conf, "8080");
+  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
 TEST(RequestParserTest, KOBodyInvalidChunkSizeLower) {
