@@ -94,6 +94,7 @@ bool CgiRequest::ForkAndExecuteCgi() {
     // Error
     exit(EXIT_FAILURE);  // TODO :
   }
+  // TODO: UnixDomainSocketを O_NONBLOCK に設定
 
   int parentsock = sockfds[0];
   int childsock = sockfds[1];
