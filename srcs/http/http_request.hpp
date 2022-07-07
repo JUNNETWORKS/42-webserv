@@ -42,7 +42,7 @@ class HttpRequest {
   enum ParsingPhase {
     kRequestLine,
     kHeaderField,
-    kBodySize,
+    kLoadHeader,
     kBody,
     kParsed,
     kError
@@ -57,6 +57,8 @@ class HttpRequest {
   utils::ByteVector body_;  // HTTP リクエストのボディ
   unsigned long body_size_;
   bool is_chunked_;
+  const config::VirtualServerConf *vserver_;
+  const config::LocationConf *location_;
 
   // buffer内の文字列で処理を完了できない時、current_bufferに文字列を保持して処理を中断
   // 次のbufferが来るのを待つ
@@ -73,7 +75,8 @@ class HttpRequest {
   const std::string &GetPath() const;
   HttpStatus GetParseStatus() const;
 
-  void ParseRequest(utils::ByteVector &buffer);
+  void ParseRequest(utils::ByteVector &buffer, const config::Config &conf,
+                    const config::PortType &port);
   bool IsCorrectRequest();
   bool IsCorrectStatus();
   bool IsParsed();
@@ -86,7 +89,8 @@ class HttpRequest {
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
-  ParsingPhase ParseBodySize();
+  ParsingPhase LoadHeader(const config::Config &conf,
+                          const config::PortType &conn_sock);
   ParsingPhase ParseBody(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(const std::string &method);
   HttpStatus InterpretPath(const std::string &path);
@@ -100,6 +104,9 @@ class HttpRequest {
   ParsingPhase ParseChunkedBody(utils::ByteVector &buffer);
 
   HttpStatus DecideBodySize();
+  bool LoadVirtualServer(const config::Config &conf,
+                         const config::PortType &port);
+  bool LoadLocation();
   void PrintRequestInfo();
 };
 

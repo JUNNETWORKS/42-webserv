@@ -27,7 +27,9 @@ HttpRequest::HttpRequest()
       parse_status_(OK),
       body_(),
       body_size_(0),
-      is_chunked_(false) {}
+      is_chunked_(false),
+      vserver_(NULL),
+      location_(NULL) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
   *this = rhs;
@@ -46,6 +48,8 @@ const HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     body_ = rhs.body_;
     body_size_ = rhs.body_size_;
     is_chunked_ = rhs.is_chunked_;
+    vserver_ = rhs.vserver_;
+    location_ = rhs.location_;
   }
   return *this;
 }
@@ -64,14 +68,16 @@ const std::string &HttpRequest::GetPath() const {
 //========================================================================
 // Parse系関数　内部でInterpret系関数を呼び出す　主にphaseで動作管理
 
-void HttpRequest::ParseRequest(utils::ByteVector &buffer) {
+void HttpRequest::ParseRequest(utils::ByteVector &buffer,
+                               const config::Config &conf,
+                               const config::PortType &port) {
   // TODO 長すぎるbufferは捨ててエラーにする
   if (phase_ == kRequestLine)
     phase_ = ParseRequestLine(buffer);
   if (phase_ == kHeaderField)
     phase_ = ParseHeaderField(buffer);
-  if (phase_ == kBodySize)
-    phase_ = ParseBodySize();
+  if (phase_ == kLoadHeader)
+    phase_ = LoadHeader(conf, port);
   if (phase_ == kBody)
     phase_ = ParseBody(buffer);
   PrintRequestInfo();
@@ -115,7 +121,7 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
     } else if (buffer.CompareHead(kHeaderBoundary)) {
       //先頭が\r\n\r\nなので終了処理
       buffer.EraseHead(kHeaderBoundary.size());
-      return kBodySize;
+      return kLoadHeader;
     } else {
       buffer.EraseHead(kCrlf.size());
     }
@@ -128,7 +134,18 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
   }
 }
 
-HttpRequest::ParsingPhase HttpRequest::ParseBodySize() {
+HttpRequest::ParsingPhase HttpRequest::LoadHeader(
+    const config::Config &conf, const config::PortType &port) {
+  if (LoadVirtualServer(conf, port) == false) {
+    parse_status_ = BAD_REQUEST;
+    return kError;
+  }
+
+  if (LoadLocation() == false) {
+    parse_status_ = NOT_FOUND;
+    return kError;
+  }
+
   if (DecideBodySize() != OK)
     return kError;
   return kBody;
@@ -288,7 +305,6 @@ bool HttpRequest::IsCorrectStatus() {
 
 // ========================================================================
 // Getter and Setter
-
 Result<const std::vector<std::string> &> HttpRequest::GetHeader(
     std::string header) const {
   std::transform(header.begin(), header.end(), header.begin(), toupper);
@@ -333,8 +349,29 @@ HttpStatus HttpRequest::DecideBodySize() {
   return OK;
 }
 
-namespace {
+bool HttpRequest::LoadVirtualServer(const config::Config &conf,
+                                    const config::PortType &port) {
+  Result<const std::vector<std::string> &> host_res = GetHeader("Host");
+  if (host_res.IsErr() || host_res.Ok().size() != 1)
+    return false;
 
+  vserver_ = conf.GetVirtualServerConf(port, host_res.Ok()[0]);
+  if (vserver_ == NULL)
+    return false;
+
+  return true;
+}
+
+bool HttpRequest::LoadLocation() {
+  if (vserver_ == NULL)
+    return false;
+  location_ = vserver_->GetLocation(path_);
+  if (location_ == NULL)
+    return false;
+  return true;
+}
+
+namespace {
 bool IsMethod(const std::string &token) {
   return token == method_strs::kGet || token == method_strs::kDelete ||
          token == method_strs::kPost;
