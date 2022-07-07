@@ -36,9 +36,6 @@ FdEventEvent CalculateFdEventEvent(FdEvent *fde, epoll_event epev) {
   if ((epev.events & EPOLLOUT) && (fde->state & kFdeWrite)) {
     events |= kFdeWrite;
   }
-  if (epev.events & EPOLLRDHUP) {
-    events |= kFdeRead | kFdeError;
-  }
   if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
     if (epev.events & EPOLLERR) {
       printf("CalculateFdEventEvent: EPOLLERR\n");
