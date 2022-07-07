@@ -24,7 +24,6 @@ HttpCgiResponse::~HttpCgiResponse() {
 Result<void> HttpCgiResponse::Write(int fd) {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
-  // TODO: Connection: close などのHTTPヘッダーをセットする
   Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
   if (status_header_res.IsErr()) {
     return status_header_res.Err();
@@ -69,7 +68,7 @@ void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
   // TODO: 現在 cgi_request.RunCgi()
   // ではファイルの有無に関するエラーチェックをしていないので､
-  // 存在しないCGIへのリクエストをするとバグる
+  // 存在しないCGIへのリクエストをするとInternalServerErrorが返ってくる｡
   if (cgi_process_->RunCgi(request).IsErr()) {
     MakeErrorResponse(request, SERVER_ERROR);
     cgi_phase_ = kWritingToInetSocket;
@@ -82,18 +81,12 @@ void HttpCgiResponse::GrowResponse(server::ConnSocket *conn_sock) {
     return;
   }
 
-  // CGIプロセスのレスポンスタイプを確認する
-  //   - DocumentResponse        -> HttpResponseのメンバー変数を設定する
-  //   - LocalRedirect           -> ConnSock.requestsからrequestを取り出し､
-  //                                書き換えたrequestを挿入
-  //   - ClientRedirect(WithDoc) -> HttpResponseのメンバー変数を設定する
   cgi::CgiResponse::ResponseType type =
       cgi_process_->GetCgiResponse()->GetResponseType();
-  // printf("HttpCgiResponse::GrowResponse type(%d)\n", type);
 
   if (type == cgi::CgiResponse::kNotIdentified) {
     // CGIレスポンスタイプが決まっていないのに
-    // CgiProcessが削除可能な状態(Unisockが0を返してきている)ならエラーとする
+    // CgiProcessが削除可能な状態(Unisockが0を返してきている)ならエラー
     if (cgi_process_->IsRemovable()) {
       http::HttpRequest &request = conn_sock->GetRequests().front();
       MakeErrorResponse(request, SERVER_ERROR);
@@ -154,11 +147,10 @@ bool HttpCgiResponse::IsAllDataWritingCompleted() {
     return true;
   }
 
-  // TODO: エラーの場合にもちゃんと終了判定できるようにする
-
   // Trueの場合
   // - CgiProcessが終了済み && バッファの全てのデータが書き込み完了
-  return cgi_process_->IsRemovable() &&
+  return HttpResponse::IsAllDataWritingCompleted() &&
+         cgi_process_->IsRemovable() &&
          cgi_process_->GetCgiResponse()->GetBody().empty();
 }
 
