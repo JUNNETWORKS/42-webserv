@@ -69,3 +69,9 @@ $(GTEST):
 	rm -rf release-1.11.0.tar.gz
 	python googletest-release-1.11.0/googletest/scripts/fuse_gtest_files.py $(GTEST_DIR)
 	mv googletest-release-1.11.0 $(GTEST_DIR)
+
+############ TEST2 ############
+.PHONY: test2
+test2: all
+	./webserv /root/configurations/sample-cgi.conf &
+	curl 127.0.0.1:8080/
