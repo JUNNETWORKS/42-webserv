@@ -75,6 +75,7 @@ $(GTEST):
 test2: all
 	./webserv test/webserv_configurations/sample-cgi.conf &
 	cd test/public && python3 -m http.server --cgi &
-	sleep 5
+	sleep 10
 	ps aux | grep "./webserv"
+	ps aux | grep "Python -m http.server --cgi"
 	cd test && python3 test.py --ORI_PORT=8000 --ORI_CGI_PORT=8000

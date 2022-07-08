@@ -47,8 +47,8 @@ def send_req(req_path, port):
         code = err.code
         body = err.read().decode()
     except urllib.error.URLError as err:
-        code = err.code
-        body = err.read().decode()
+        code = -1
+        body = "\nerror.URLError\n"
     except socket.timeout:
         code = -1
         body = TIMEOUT_MSG
