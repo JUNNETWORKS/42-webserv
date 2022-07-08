@@ -35,11 +35,14 @@ Result<void> HttpCgiResponse::Write(int fd) {
   }
 
   // エラーのレスポンスを返す
-  if (!body_bytes_.empty()) {
-    Result<ssize_t> result = WriteBody(fd);
-    if (result.IsErr()) {
-      return result.Err();
+  if (is_error_response_) {
+    if (!body_bytes_.empty()) {
+      Result<ssize_t> result = WriteBody(fd);
+      if (result.IsErr()) {
+        return result.Err();
+      }
     }
+    return Result<void>();
   }
 
   // TODO: chunked-encoding の設定
