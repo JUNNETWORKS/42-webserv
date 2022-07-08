@@ -114,13 +114,6 @@ bool HttpCgiResponse::IsReadyToWrite() {
     return false;
   }
 
-  // Trueの場合
-  // - MakeErrorResponseが呼ばれている
-  // - CGIスクリプトが正しく実行されている
-  //   && CGIスクリプト出力タイプが決定している
-  //   && CGIスクリプトが LocalRedirect ではない
-  //   && (StatusとHeaderがまだ書き込まれていない
-  //       || ボディにデータが追加されている)
   return phase_ == kStatusAndHeader ||
          (phase_ == kBody && cgi_process_->IsCgiExecuted() &&
           (!cgi_response->GetBody().empty() || IsReadyToWriteBody() ||
