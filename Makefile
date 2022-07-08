@@ -74,7 +74,7 @@ $(GTEST):
 .PHONY: test2
 test2: all
 	./webserv test/webserv_configurations/sample-cgi.conf &
-	sleep 3
-	ps a
-#	ps a | grep "./webserv"
-	curl 127.0.0.1:8080/
+	cd test/public && python3 -m http.server --cgi &
+	sleep 5
+	ps aux | grep "./webserv"
+	cd test && python3 test.py --python3 test.py --ORI_PORT=8000 --ORI_CGI_PORT=8000
