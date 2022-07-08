@@ -310,9 +310,13 @@ const std::vector<std::string> &HttpResponse::GetHeader(
 }
 
 bool HttpResponse::IsRequestHasConnectionClose(HttpRequest &request) {
-  return std::find(request.GetHeader("Connection").begin(),
-                   request.GetHeader("Connection").end(),
-                   "close") != request.GetHeader("Connection").end();
+  Result<const http::HeaderMap::mapped_type &> header_res =
+      request.GetHeader("Connection");
+  if (header_res.IsErr())
+    return false;
+  const http::HeaderMap::mapped_type &header = header_res.Ok();
+
+  return std::find(header.begin(), header.end(), "close") != header.end();
 }
 
 }  // namespace http
