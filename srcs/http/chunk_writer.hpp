@@ -20,6 +20,9 @@ class ChunkWriter {
   // 現在書き込んでいるチャンクの内何バイト書き込み完了したか
   unsigned long written_size_to_chunk_;
 
+  // last-chunk を書き込んだか
+  bool is_written_last_chunk_;
+
  public:
   ChunkWriter();
   ~ChunkWriter();
@@ -31,8 +34,10 @@ class ChunkWriter {
   // last-chunk は別の関数で処理する｡
   Result<void> WriteEndOfChunk(int sock_fd);
 
+  bool IsBufferEmpty();
+  bool IsWrittenLastChunk();
+
  private:
-  Result<void> WriteChunkHeader(int sock_fd);
   unsigned long CalculateChunkSize();
 };
 
