@@ -1,4 +1,4 @@
-name: Test
+name: REQ-TEST
 
 # プルリクエスト or 手動実行
 on: [pull_request, workflow_dispatch]
@@ -13,5 +13,5 @@ jobs:
       - name: checkout git repository
         uses: actions/checkout@v2
 
-      - name: req test
-        run: bash -c "make req-test"
+      - name: req-test
+        run: bash -c "timeout 300 make req-test"
