@@ -43,3 +43,4 @@
 /tester
 /test/diff.html
 /test/cppcheck-err-list
+/test/webserv_configurations/sample-cgi.conf.sed
