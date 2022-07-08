@@ -1,0 +1,25 @@
+#!/usr/bin/python3
+import os
+import sys
+
+n = 0
+if "QUERY_STRING" in os.environ:
+    query_parameters = os.environ["QUERY_STRING"].split("&")
+    qps = dict()
+    for query_parameter in query_parameters:
+        equal_idx = query_parameter.find("=")
+        if equal_idx == -1:
+            qps[query_parameter] = ""
+        else:
+            key = query_parameter[:equal_idx]
+            value = query_parameter[equal_idx + 1:]
+            qps[key] = value
+
+    if "n" in qps.keys():
+        n = int(qps["n"])
+
+print(f"n = {n}", file=sys.stderr)
+
+print(f"Location:/cgi-bin/local-redirect-loop1?n={n + 1}")
+# print(f"Location:/?n={n + 1}")
+print()
