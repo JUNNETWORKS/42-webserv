@@ -71,6 +71,7 @@ class ConnSocket : public Socket {
   static const long kDefaultTimeoutMs = 5 * 1000;
 
   ConnSocket(int fd, const std::string &port, const config::Config &config);
+  virtual ~ConnSocket();
 
   std::deque<http::HttpRequest> &GetRequests();
 

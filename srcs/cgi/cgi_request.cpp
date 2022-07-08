@@ -62,10 +62,11 @@ const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
 }
 
 bool CgiRequest::RunCgi() {
-  ParseCgiRequest();
+  bool result = false;
+  result |= ParseCgiRequest();
   CreateCgiMetaVariablesFromHttpRequest(request_, location_);
-  ForkAndExecuteCgi();
-  return true;
+  result |= ForkAndExecuteCgi();
+  return result;
 }
 
 // 作業中
@@ -93,6 +94,7 @@ bool CgiRequest::ForkAndExecuteCgi() {
     // Error
     exit(EXIT_FAILURE);  // TODO :
   }
+  // TODO: UnixDomainSocketを O_NONBLOCK に設定
 
   int parentsock = sockfds[0];
   int childsock = sockfds[1];

@@ -62,7 +62,15 @@ class HttpResponse {
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpResponse();
 
+  // MakeResponse はレスポンスオブジェクトの初期化で使われる｡
   virtual void MakeResponse(server::ConnSocket *conn_sock);
+
+  // MakeResponse だけではResponseが作成できない場合に呼ぶメソッド｡
+  // 具体的には IsReadyToWrite() と IsAllDataWritingCompleted() が両方 False
+  // を返す場合に呼ばれる｡
+  // MakeResponse だけでResponseが作成出来る場合にはこの関数は呼ばれないので､
+  // 関数には特に何も定義しなくて良い｡
+  virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
 
   void MakeErrorResponse(const HttpRequest &request, HttpStatus status);
 
@@ -91,6 +99,9 @@ class HttpResponse {
   Result<ssize_t> ReadFile();
   Result<ssize_t> WriteBody(int fd);
 
+  bool IsReadyToWriteBody();
+  bool IsReadyToWriteFile();
+
   // ========================================================================
   // Getter and Setter
   void SetHttpVersion(const std::string &http_version);
@@ -99,6 +110,8 @@ class HttpResponse {
   void SetStatusMessage(const std::string &status_message);
   void SetHeader(const std::string &header, const std::string &value);
   void AppendHeader(const std::string &header, const std::string &value);
+
+  static bool IsRequestHasConnectionClose(HttpRequest &request);
 
  private:
   HttpResponse();
@@ -114,8 +127,6 @@ class HttpResponse {
 
   static std::string MakeAutoIndex(const std::string &root_path,
                                    const std::string &relative_path);
-
-  static bool IsRequestHasConnectionClose(HttpRequest &request);
 };
 
 }  // namespace http

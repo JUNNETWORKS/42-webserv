@@ -4,6 +4,7 @@
 
 #include <deque>
 
+#include "http/http_cgi_response.hpp"
 #include "http/http_response.hpp"
 #include "result/result.hpp"
 #include "server/epoll.hpp"
@@ -158,19 +159,18 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
     }
 
     http::HttpResponse *response = socket->GetResponse();
-    if (response->IsReadyToWrite()) {
+    should_close_conn |= response->PrepareToWrite(socket).IsErr();
+    if (!should_close_conn && response->IsReadyToWrite()) {
       // 書き込むデータが存在する
       should_close_conn |= response->Write(conn_fd).IsErr();
-    } else if (response->IsAllDataWritingCompleted()) {
+    }
+    if (!should_close_conn && response->IsAllDataWritingCompleted()) {
       // "Connection: close"
       // がレスポンスヘッダーに存在していればソケット接続を切断
       should_close_conn |= ResponseHeaderHasConnectionClose(*response);
-      // 全て書き込み完了
       delete response;
       socket->SetResponse(NULL);
       requests.pop_front();
-    } else {
-      // 書き込むデータはないがレスポンスは完成していない
     }
   }
 
@@ -193,7 +193,11 @@ http::HttpResponse *AllocateResponseObj(
     return res;
   }
 
-  return new http::HttpResponse(location, epoll);
+  if (location->GetIsCgi()) {
+    return new http::HttpCgiResponse(location, epoll);
+  } else {
+    return new http::HttpResponse(location, epoll);
+  }
   // TODO: 以下のコードが実行できるようにする
   //  if (location->GetIsCgi()) {
   //    return new http::HttpCgiResponse(location, epoll);

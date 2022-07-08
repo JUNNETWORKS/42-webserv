@@ -102,7 +102,7 @@ Result<std::string> CgiResponse::GetHeader(const std::string key) const {
   return Error();
 }
 
-const utils::ByteVector &CgiResponse::GetBody() {
+utils::ByteVector &CgiResponse::GetBody() {
   return body_;
 }
 

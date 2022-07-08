@@ -72,6 +72,8 @@ class HttpRequest {
   ~HttpRequest();
 
   const std::string &GetMethod() const;
+  // LocalRedirect で使うために SetPath() を定義
+  void SetPath(const std::string &path);
   const std::string &GetPath() const;
   HttpStatus GetParseStatus() const;
 
