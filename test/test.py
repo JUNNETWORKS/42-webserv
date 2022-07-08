@@ -213,12 +213,16 @@ def run_req_test(
 # ========================================================================
 def simple_test():
     print("\n--- SIMPLE_TEST ---\n")
-    # TODO : ratio 1 にする予定。
-    run_req_test("/", body_ratio=0.99)
-    run_req_test("/hoge/", body_ratio=0.95)
     run_req_test("/sample.html")
     run_req_test("/hoge/hoge.html")
     run_req_test("/NotExist", body_ratio=0)  # code だけあってればいいので、 ratio 0
+
+
+def autoindex_test():
+    print("\n--- AUTOINDEX_TEST ---\n")
+    # TODO : ratio 1 にする予定。
+    run_req_test("/", body_ratio=0.99)
+    run_req_test("/hoge/", body_ratio=0.95)
 
 
 # python HTTPServer だとローカルリダイレクトとかできないらしい。
@@ -241,10 +245,6 @@ def cgi_test():
 # def path_test():
 #     print("\n--- PATH_TEST ---\n")
 #     test_file_path = "req/tpl-get-path-test.txt"
-#     run_test_for_file(test_file_path, [["{PATH}", "/"]])
-#     run_test_for_file(test_file_path, [["{PATH}", "/hoge"]])
-#     run_test_for_file(test_file_path, [["{PATH}", "/hoge/"]])
-#     run_test_for_file(test_file_path, [["{PATH}", "/hoge/hoge.html"]])
 #     run_test_for_file(test_file_path, [["{PATH}", "/hoge/fuga.html"]])
 #     run_test_for_file(test_file_path, [["{PATH}", "///"]])
 #     run_test_for_file(test_file_path, [["{PATH}", "./"]])
