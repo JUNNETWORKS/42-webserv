@@ -73,5 +73,7 @@ $(GTEST):
 ############ TEST2 ############
 .PHONY: test2
 test2: all
-	./webserv /root/configurations/sample-cgi.conf &
+	./webserv test/webserv_configurations/sample-cgi.conf &
+	sleep 3
+	ps a | grep "./webserv"
 	curl 127.0.0.1:8080/
