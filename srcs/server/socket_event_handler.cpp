@@ -135,7 +135,6 @@ bool ResponseHeaderHasConnectionClose(http::HttpResponse &response) {
 
 bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
   int conn_fd = socket->GetFd();
-  const config::Config &config = socket->GetConfig();
   std::deque<http::HttpRequest> &requests = socket->GetRequests();
   bool should_close_conn = false;
 
