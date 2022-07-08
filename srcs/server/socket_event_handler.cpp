@@ -167,6 +167,8 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       // "Connection: close"
       // がレスポンスヘッダーに存在していればソケット接続を切断
       should_close_conn |= ResponseHeaderHasConnectionClose(*response);
+      delete response;
+      socket->SetResponse(NULL);
       requests.pop_front();
     }
   }
