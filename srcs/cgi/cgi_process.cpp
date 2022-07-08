@@ -108,11 +108,11 @@ void CgiProcess::SetIsError(bool is_error) {
   }
 }
 
-CgiResponse *CgiProcess::GetCgiResponse() {
+CgiResponse *CgiProcess::GetCgiResponse() const {
   return cgi_response_;
 }
 
-FdEvent *CgiProcess::GetFde() {
+FdEvent *CgiProcess::GetFde() const {
   return fde_;
 }
 

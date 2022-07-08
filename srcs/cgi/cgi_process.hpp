@@ -56,8 +56,8 @@ class CgiProcess {
   void SetIsRemovable(bool is_unregistered);
   void SetIsError(bool is_error);
 
-  CgiResponse *GetCgiResponse();
-  FdEvent *GetFde();
+  CgiResponse *GetCgiResponse() const;
+  FdEvent *GetFde() const;
 
  private:
   CgiProcess(const CgiProcess &rhs);
