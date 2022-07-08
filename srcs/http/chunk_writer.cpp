@@ -18,7 +18,7 @@ void ChunkWriter::AppendDataToBuffer(utils::ByteVector &buf) {
   buffer_.insert(buffer_.end(), buf.begin(), buf.end());
 }
 
-Result<void> ChunkWriter::Write(int sock_fd) {
+Result<void> ChunkWriter::Write(const int sock_fd) {
   if (written_size_to_chunk_ == current_chunk_size_) {
     written_size_to_chunk_ = 0;
     current_chunk_size_ = CalculateChunkSize();
@@ -53,7 +53,7 @@ Result<void> ChunkWriter::Write(int sock_fd) {
   return Result<void>();
 }
 
-Result<void> ChunkWriter::WriteEndOfChunk(int sock_fd) {
+Result<void> ChunkWriter::WriteEndOfChunk(const int sock_fd) {
   is_written_last_chunk_ = true;
   std::string last_chunk = "0";
   last_chunk += kCrlf + kCrlf;

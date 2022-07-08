@@ -28,11 +28,11 @@ class ChunkWriter {
   ~ChunkWriter();
 
   void AppendDataToBuffer(utils::ByteVector &buf);
-  Result<void> Write(int sock_fd);
+  Result<void> Write(const int sock_fd);
 
   // データの追加が遅れている場合にチャンク終了を書き込まないように
   // last-chunk は別の関数で処理する｡
-  Result<void> WriteEndOfChunk(int sock_fd);
+  Result<void> WriteEndOfChunk(const int sock_fd);
 
   bool IsBufferEmpty();
   bool IsWrittenLastChunk();
