@@ -108,8 +108,12 @@ bool HttpCgiResponse::IsReadyToWrite() {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
   // まだヘッダーやStatusなどの情報が確定していない
+  if (cgi_phase_ == kSetupCgiTypeSpecificInfo) {
+    return false;
+  }
+
   // LocalRedirectの場合はレスポンスを書き込まないので常にFalse
-  if (cgi_phase_ == kSetupCgiTypeSpecificInfo ||
+  if (!is_error_response_ &&
       cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
     return false;
   }
@@ -130,7 +134,8 @@ bool HttpCgiResponse::IsAllDataWritingCompleted() {
   }
 
   // LocalRedirectの場合はレスポンスを書き込まないので常にTrue
-  if (cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
+  if (!is_error_response_ &&
+      cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
     return true;
   }
 
@@ -156,7 +161,11 @@ void HttpCgiResponse::MakeLocalRedirectResponse(server::ConnSocket *conn_sock) {
   // LocalRedirect を反映させた Request を2番目にinsertする
   std::deque<http::HttpRequest> &requests = conn_sock->GetRequests();
   HttpRequest new_request = CreateLocalRedirectRequest(requests.front());
-  requests.insert(requests.begin() + 1, new_request);
+  if (new_request.GetLocalRedirectCount() > 10) {
+    MakeErrorResponse(requests.front(), SERVER_ERROR);
+  } else {
+    requests.insert(requests.begin() + 1, new_request);
+  }
 }
 
 void HttpCgiResponse::MakeClientRedirectResponse(
@@ -220,6 +229,7 @@ HttpRequest HttpCgiResponse::CreateLocalRedirectRequest(
 
   HttpRequest new_request(request);
   new_request.SetPath(location.Ok());
+  new_request.SetLocalRedirectCount(request.GetLocalRedirectCount() + 1);
   return new_request;
 }
 

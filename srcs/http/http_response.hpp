@@ -58,6 +58,8 @@ class HttpResponse {
   int file_fd_;
   bool is_file_eof_;
 
+  bool is_error_response_;
+
  public:
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpResponse();
