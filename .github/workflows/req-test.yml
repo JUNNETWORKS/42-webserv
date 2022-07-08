@@ -13,5 +13,5 @@ jobs:
       - name: checkout git repository
         uses: actions/checkout@v2
 
-      - name: Run tests
-        run: bash -c "make test2"
+      - name: req test
+        run: bash -c "make req-test"

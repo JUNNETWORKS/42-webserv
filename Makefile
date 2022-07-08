@@ -70,14 +70,14 @@ $(GTEST):
 	python googletest-release-1.11.0/googletest/scripts/fuse_gtest_files.py $(GTEST_DIR)
 	mv googletest-release-1.11.0 $(GTEST_DIR)
 
-############ TEST2 ############
-.PHONY: test2
-test2: all
+############ REQ-TEST ############
+.PHONY: req-test
+req-test: all
 	sed -e "s|/public|$(shell pwd)/test/public|g" test/webserv_configurations/sample-cgi.conf > test/webserv_configurations/sample-cgi.conf.sed
 	./webserv test/webserv_configurations/sample-cgi.conf.sed &
 	cd test/public && python3 -m http.server --cgi &
 	sleep 10
 	ps aux | grep "./webserv"
 	ps aux | grep "Python -m http.server --cgi"
-	cd test/public && python3 test.py --FT__PORT=8080 --ORI_PORT=8000 --ORI_CGI_PORT=8000
+	cd test && python3 test.py --FT__PORT=8080 --ORI_PORT=8000 --ORI_CGI_PORT=8000
 	cat test/diff.html || :
