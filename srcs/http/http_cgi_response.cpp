@@ -42,17 +42,15 @@ Result<void> HttpCgiResponse::Write(int fd) {
     }
   }
 
-  // TODO: chunked-encoding の設定
   utils::ByteVector &response_body = cgi_response->GetBody();
   if (!response_body.empty()) {
-    ssize_t write_res = write(fd, response_body.data(), response_body.size());
-    if (write_res < 0) {
-      printf("HttpCgiReponse::Write write() return %ld", write_res);
-      return Error();
-    }
-    response_body.EraseHead(write_res);
+    chunk_writer_.AppendDataToBuffer(response_body);
+    response_body.clear();
   }
-  return Result<void>();
+  if (cgi_process_->IsRemovable() && chunk_writer_.IsBufferEmpty()) {
+    return chunk_writer_.WriteEndOfChunk(fd);
+  }
+  return chunk_writer_.Write(fd);
 }
 
 void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
@@ -116,8 +114,22 @@ bool HttpCgiResponse::IsReadyToWrite() {
 
   return phase_ == kStatusAndHeader ||
          (phase_ == kBody && cgi_process_->IsCgiExecuted() &&
-          (!cgi_response->GetBody().empty() || IsReadyToWriteBody() ||
+          (IsReadyToWriteCgi() || IsReadyToWriteBody() ||
            IsReadyToWriteFile()));
+}
+
+bool HttpCgiResponse::IsReadyToWriteCgi() {
+  cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
+
+  if (!cgi_process_->IsCgiExecuted()) {
+    return false;
+  }
+
+  bool is_ready_to_write_last_chunk =
+      cgi_process_->IsRemovable() && !chunk_writer_.IsWrittenLastChunk();
+
+  return !cgi_response->GetBody().empty() || !chunk_writer_.IsBufferEmpty() ||
+         is_ready_to_write_last_chunk;
 }
 
 // すべてのデータの write が完了したか
@@ -138,7 +150,8 @@ bool HttpCgiResponse::IsAllDataWritingCompleted() {
   // - CgiProcessが終了済み && バッファの全てのデータが書き込み完了
   return HttpResponse::IsAllDataWritingCompleted() &&
          cgi_process_->IsRemovable() &&
-         cgi_process_->GetCgiResponse()->GetBody().empty();
+         cgi_process_->GetCgiResponse()->GetBody().empty() &&
+         chunk_writer_.IsWrittenLastChunk();
 }
 
 void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
@@ -147,6 +160,7 @@ void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
   SetStatusFromCgiResponse();
   SetHeadersFromCgiResponse();
 
+  SetHeader("Transfer-Encoding", "chunked");
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
@@ -171,6 +185,7 @@ void HttpCgiResponse::MakeClientRedirectResponse(
   }
   SetHeadersFromCgiResponse();
 
+  SetHeader("Transfer-Encoding", "chunked");
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }

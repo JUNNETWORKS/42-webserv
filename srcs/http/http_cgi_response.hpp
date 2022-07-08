@@ -2,6 +2,7 @@
 #define HTTP_HTTP_CGI_RESPONSE_HPP_
 
 #include "cgi/cgi_process.hpp"
+#include "http/chunk_writer.hpp"
 #include "http/http_response.hpp"
 #include "http/http_status.hpp"
 
@@ -13,6 +14,8 @@ class HttpCgiResponse : public HttpResponse {
 
   enum CgiPhase { kSetupCgiTypeSpecificInfo, kWritingToInetSocket };
   CgiPhase cgi_phase_;
+
+  ChunkWriter chunk_writer_;
 
  public:
   HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll);
@@ -32,6 +35,8 @@ class HttpCgiResponse : public HttpResponse {
   void MakeDocumentResponse(server::ConnSocket *conn_sock);
   void MakeLocalRedirectResponse(server::ConnSocket *conn_sock);
   void MakeClientRedirectResponse(server::ConnSocket *conn_sock);
+
+  bool IsReadyToWriteCgi();
 
   void SetStatusFromCgiResponse();
   void SetHeadersFromCgiResponse();
