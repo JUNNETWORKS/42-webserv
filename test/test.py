@@ -259,6 +259,7 @@ def cgi_test():
 # ========================================================================
 def run_all_test():
     simple_test()
+    autoindex_test()
     # path_test()
     cgi_test()
 
