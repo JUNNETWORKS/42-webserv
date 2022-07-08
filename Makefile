@@ -75,5 +75,6 @@ $(GTEST):
 test2: all
 	./webserv test/webserv_configurations/sample-cgi.conf &
 	sleep 3
-	ps a | grep "./webserv"
+	ps a
+#	ps a | grep "./webserv"
 	curl 127.0.0.1:8080/
