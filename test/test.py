@@ -3,13 +3,62 @@ import io
 import time
 import sys
 import difflib
+import argparse
+
+# import requests
+import urllib.request
 
 WEBSERV_PORT = 49200
 NGINX_PORT = 49201
+APACHE_PORT = 49202
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--FT__PORT", type=int, default=WEBSERV_PORT)
+parser.add_argument("--ORI_PORT", type=int, default=NGINX_PORT)
+parser.add_argument("--ORI_CGI_PORT", type=int, default=APACHE_PORT)
+parser.add_argument("--TIMEOUT", type=int, default=10)
+
+args = parser.parse_args()
+
+FT__PORT = args.FT__PORT
+ORI_PORT = args.ORI_PORT
+ORI_CGI_PORT = args.ORI_CGI_PORT
+TIMEOUT = args.TIMEOUT
+
+GREEN = "\033[32m"
+RED = "\033[31m"
+RESET = "\033[39m"
+
+OK_MSG = GREEN + "OK" + RESET
+KO_MSG = RED + "KO" + RESET
+
+TIMEOUT_MSG = "\nTIMEOUT\n"
+
+#
+def send_req(req_path, port):
+    url = "http://127.0.0.1:" + str(port) + req_path
+    req = urllib.request.Request(url)
+
+    try:
+        with urllib.request.urlopen(req, timeout=TIMEOUT) as res:
+            code = res.code
+            body = res.read().decode()
+    except urllib.error.HTTPError as err:
+        code = err.code
+        body = err.read().decode()
+    except urllib.error.URLError as err:
+        code = err.code
+        body = err.read().decode()
+    except socket.timeout:
+        code = -1
+        body = TIMEOUT_MSG
+    return code, body
 
 
-def send_request(send_data, port):
-    timeout = 5
+# socket 通信でデータ送信
+# req.txt などから読み込んで request を送信
+def send_socket_request(send_data, port):
+    timeout = TIMEOUT
     try:
         s = socket.socket(socket.AF_INET)
         s.settimeout(timeout)
@@ -18,8 +67,8 @@ def send_request(send_data, port):
         time.sleep(0.1)
         return s.recv(10000).decode("utf-8")
     except socket.timeout:
-        print("TIMEOUT", file=sys.stderr)
-        return "TIMEOUT"
+        print(TIMEOUT_MSG)
+        return TIMEOUT_MSG
 
 
 def get_status_line(res):
@@ -46,16 +95,16 @@ def separate_head_body(s):
         return s[:pos], s[pos + 4 :]
 
 
-def check_body(webserv_res_body, nginx_res_body):
-    if webserv_res_body == nginx_res_body:
+def check_body(ft__res_body, ori_res_body):
+    if ft__res_body == ori_res_body:
         return True
     else:
         return False
 
 
 # ステータスラインのみチェック
-def check_status_line(webserv_res_head, nginx_res_head):
-    if get_status_line(webserv_res_head) == get_status_line(nginx_res_head):
+def check_status_line(ft__res_head, ori_res_head):
+    if get_status_line(ft__res_head) == get_status_line(ori_res_head):
         return True
     else:
         return False
@@ -68,83 +117,155 @@ def lst_replace(s, replace_lst):
     return s
 
 
-def make_diff_html(s1, s2):
-    df = difflib.HtmlDiff()
-    diff_html = df.make_file(s1.split("\n"), s2.split("\n"))
-    return diff_html
-
-
-def run_test(test_file_path, replace_lst=[]):
-    # ファイルの読み込みおよびreplace
-    send_data = get_file_data(test_file_path)
-    send_data = lst_replace(send_data, replace_lst)
-
-    # webserv と nginxに request を送信
-    try:
-        webserv_res = send_request(send_data, WEBSERV_PORT)
-        nginx_res = send_request(send_data, NGINX_PORT)
-    except ConnectionRefusedError:
-        print("----- ConnectionRefusedError -----", file=sys.stderr)
-        print("TEST FILE    :", test_file_path, replace_lst, file=sys.stderr)
-        print("\n", send_data, "\n", file=sys.stderr)
-        exit(1)
-
-    # 複数レスポンスに対応する必要あり
-    # レスポンスをheadとbodyに分割
-    webserv_res_head, webserv_res_body = separate_head_body(webserv_res)
-    nginx_res_head, nginx_res_body = separate_head_body(nginx_res)
-
-    # headとbodyの結果確認
-    is_status_line_ok = check_status_line(webserv_res_head, nginx_res_head)
-    is_message_body_ok = check_body(webserv_res_body, nginx_res_body)
-
-    print("TEST FILE    :", test_file_path, replace_lst)
-    print("STATUS LINE  :", is_status_line_ok)
-    print("MESSAGE BODY :", is_message_body_ok)
-    print()
-
-    if (is_status_line_ok and is_message_body_ok) == False:
-        global diff_html
-        diff_html += make_diff_html("", send_data)
-        diff_html += make_diff_html(webserv_res, nginx_res)
-        if len(diff_html) > 10 * 1000 * 1000:
-            print(len(diff_html))
-            print("diff_html too long", file=sys.stderr)
-            exit(1)
-
-    return is_status_line_ok and is_message_body_ok
-
-
-def path_test():
-    test_file_path = "req/tpl-get-path-test.txt"
-    run_test(test_file_path, [["{PATH}", "/"]])
-    run_test(test_file_path, [["{PATH}", "/hoge"]])
-    run_test(test_file_path, [["{PATH}", "/hoge/"]])
-    run_test(test_file_path, [["{PATH}", "/hoge/hoge.html"]])
-    run_test(test_file_path, [["{PATH}", "/hoge/fuga.html"]])
-    run_test(test_file_path, [["{PATH}", "///"]])
-    run_test(test_file_path, [["{PATH}", "./"]])
-    run_test(test_file_path, [["{PATH}", "/././."]])
-    run_test(test_file_path, [["{PATH}", "/NotExist/"]])
-    run_test(test_file_path, [["{PATH}", "/NotExist/.."]])
-    run_test(test_file_path, [["{PATH}", "/NotExist/NotExist/../.."]])
-    run_test(test_file_path, [["{PATH}", "/NotExist/../.."]])
-
+# difflib utils
+# ========================================================================
 
 diff_html = ""
 
 
-def main():
-    if len(sys.argv) == 2:
-        test_file = sys.argv[1]
-        run_test(test_file)
-    else:
-        test_file = "req/req1.txt"
-        path_test()
+def make_diff_html(s1, s2):
+    global diff_html
+    df = difflib.HtmlDiff()
+    diff_html += df.make_file(s1.split("\n"), s2.split("\n"))
+    if len(diff_html) > 10 * 1000 * 1000:
+        print(len(diff_html))
+        print("diff_html too long")
+        exit(1)
 
-    # diff.htmlの作成
+
+def get_diff_ratio(s1, s2):
+    s = difflib.SequenceMatcher(None, s1, s2)
+    return round(s.ratio(), 2)
+
+
+def save_diff_html():
     with open("diff.html", "w") as file:
         file.write(diff_html)
+
+
+# run_test_for_file
+# ========================================================================
+# 修正中...
+# # ファイルの読み込みおよびreplace
+# def run_test_for_file(test_file_path, replace_lst=[]):
+#     send_data = get_file_data(test_file_path)
+#     send_data = lst_replace(send_data, replace_lst)
+
+#     # webserv と nginxに request を送信
+#     try:
+#         ft__res = send_socket_request(send_data, FT__PORT)
+#         ori_res = send_socket_request(send_data, ORI_PORT)
+#     except ConnectionRefusedError:
+#         print("----- ConnectionRefusedError -----")
+#         print("TEST FILE    :", test_file_path, replace_lst)
+#         print("\n", send_data, "\n")
+#         exit(1)
+
+#     # 複数レスポンスに対応する必要あり
+#     # レスポンスをheadとbodyに分割
+#     ft__res_head, ft__res_body = separate_head_body(ft__res)
+#     ori_res_head, ori_res_body = separate_head_body(ori_res)
+
+#     # headとbodyの結果確認
+#     is_status_line_ok = check_status_line(ft__res_head, ori_res_head)
+#     is_message_body_ok = check_body(ft__res_body, ori_res_body)
+
+#     print("TEST FILE    :", test_file_path, replace_lst)
+#     print("STATUS LINE  :", is_status_line_ok)
+#     print("MESSAGE BODY :", is_message_body_ok)
+#     print()
+
+#     if (is_status_line_ok and is_message_body_ok) == False:
+#         make_diff_html("", send_data)
+#         make_diff_html(ft__res, ori_res)
+
+#     return is_status_line_ok and is_message_body_ok
+
+
+def run_req_test(
+    req_path, ft__port=FT__PORT, ori_port=ORI_PORT, ck_code=True, body_ratio=1.0
+) -> bool:
+    print(f"TESTING [ {req_path} ]")
+
+    ft__res = send_req(req_path, ft__port)
+    ori_res = send_req(req_path, ori_port)
+
+    is_success = True
+    is_code_ok = ft__res[0] == ori_res[0]
+    is_body_ok = get_diff_ratio(ft__res[1], ori_res[1]) >= body_ratio
+    if ck_code:
+        is_success = is_success and is_code_ok
+    if body_ratio != 0:
+        is_success = is_success and is_body_ok
+
+    log_msg = f"[ {req_path:<30} ], CODE:{is_code_ok}, BODY:{is_body_ok}, ratio {get_diff_ratio(ft__res[1], ori_res[1])}, port {ft__port}, {ori_port}"
+    if is_success:
+        print(f"{OK_MSG} :", log_msg)
+    else:
+        print(f"{KO_MSG} :", log_msg)
+        make_diff_html("", "\n" + log_msg + "\n")
+        make_diff_html(ft__res[1], ori_res[1])
+    print()
+    return is_success
+
+
+# TEST_LAUNCHER
+# ========================================================================
+def simple_test():
+    print("\n--- SIMPLE_TEST ---\n")
+    # TODO : ratio 1 にする予定。
+    run_req_test("/", body_ratio=0.99)
+    run_req_test("/hoge/", body_ratio=0.95)
+    run_req_test("/sample.html")
+    run_req_test("/hoge/hoge.html")
+    run_req_test("/NotExist", body_ratio=0)  # code だけあってればいいので、 ratio 0
+
+
+# python HTTPServer だとローカルリダイレクトとかできないらしい。
+def cgi_test():
+    print("\n--- CGI_TEST ---\n")
+    run_req_test("/cgi-bin/simple-cgi", ori_port=ORI_CGI_PORT)
+    # run_req_test("/cgi-bin/test-cgi", ori_port=ORI_CGI_PORT)
+
+    # TODO : リダイレクト先のデータ取得してしまうので一旦保留中。
+    # 後で読む
+    # [Pythonのurllib.requestでリダイレクトをさせない - 日記](https://azechi-n.hatenadiary.com/entry/2022/06/21/090414)
+    # run_req_test("/cgi-bin/client-redirect", ori_port=ORI_CGI_PORT)
+    # run_req_test("/cgi-bin/client-redirect-with-document", ori_port=ORI_CGI_PORT)
+    run_req_test("/cgi-bin/document-response", ori_port=ORI_CGI_PORT)
+    # run_req_test("/cgi-bin/document-response-with-status", ori_port=ORI_CGI_PORT)
+    run_req_test("/cgi-bin/local-redirect", ori_port=ORI_CGI_PORT)
+
+
+# 修正中
+# def path_test():
+#     print("\n--- PATH_TEST ---\n")
+#     test_file_path = "req/tpl-get-path-test.txt"
+#     run_test_for_file(test_file_path, [["{PATH}", "/"]])
+#     run_test_for_file(test_file_path, [["{PATH}", "/hoge"]])
+#     run_test_for_file(test_file_path, [["{PATH}", "/hoge/"]])
+#     run_test_for_file(test_file_path, [["{PATH}", "/hoge/hoge.html"]])
+#     run_test_for_file(test_file_path, [["{PATH}", "/hoge/fuga.html"]])
+#     run_test_for_file(test_file_path, [["{PATH}", "///"]])
+#     run_test_for_file(test_file_path, [["{PATH}", "./"]])
+#     run_test_for_file(test_file_path, [["{PATH}", "/././."]])
+#     run_test_for_file(test_file_path, [["{PATH}", "/NotExist/"]])
+#     run_test_for_file(test_file_path, [["{PATH}", "/NotExist/.."]])
+#     run_test_for_file(test_file_path, [["{PATH}", "/NotExist/NotExist/../.."]])
+#     run_test_for_file(test_file_path, [["{PATH}", "/NotExist/../.."]])
+
+
+# main
+# ========================================================================
+def run_all_test():
+    simple_test()
+    # path_test()
+    cgi_test()
+
+
+def main():
+    run_all_test()
+    save_diff_html()
 
 
 if __name__ == "__main__":
