@@ -73,7 +73,7 @@ $(GTEST):
 ############ TEST2 ############
 .PHONY: test2
 test2: all
-	sed -e "s|/public|$(shell pwd)/test/public |g" test/webserv_configurations/sample-cgi.conf > test/webserv_configurations/sample-cgi.conf.sed
+	sed -e "s|/public|$(shell pwd)/test/public|g" test/webserv_configurations/sample-cgi.conf > test/webserv_configurations/sample-cgi.conf.sed
 	./webserv test/webserv_configurations/sample-cgi.conf.sed &
 	cd test/public && python3 -m http.server --cgi &
 	sleep 10
