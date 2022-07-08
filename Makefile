@@ -78,4 +78,5 @@ test2: all
 	sleep 10
 	ps aux | grep "./webserv"
 	ps aux | grep "Python -m http.server --cgi"
-	cd test && python3 test.py --ORI_PORT=8000 --ORI_CGI_PORT=8000
+	cd test && python3 test.py --FT__PORT=8080 --ORI_PORT=8000 --ORI_CGI_PORT=8000
+	cat test/diff.html || :
