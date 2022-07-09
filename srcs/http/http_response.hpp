@@ -106,6 +106,8 @@ class HttpResponse {
   utils::ByteVector SerializeStatusLine() const;
   utils::ByteVector SerializeHeaders() const;
 
+  Result<WritingPhase> PrepareResponseBody();
+
   std::string MakeErrorResponseBody(HttpStatus status);
 
   static std::string MakeAutoIndex(const std::string &root_path,

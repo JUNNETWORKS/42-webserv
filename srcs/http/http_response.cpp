@@ -115,6 +115,17 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   RegisterFile(abs_file_path);
 }
 
+Result<HttpResponse::WritingPhase> HttpResponse::PrepareResponseBody() {
+  if (file_fd_ < 0)
+    return kComplete;
+  Result<bool> result = ReadFile();
+  if (result.IsErr()) {
+    return result.Err();
+  } else {
+    return result.Ok() ? kComplete : kBody;
+  }
+}
+
 Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   (void)conn_sock;
 
@@ -123,16 +134,11 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
     phase_ = kBody;
   }
   if (phase_ == kBody) {
-    if (file_fd_ >= 0) {
-      Result<bool> result = ReadFile();
-      if (result.IsErr()) {
-        return result.Err();
-      } else {
-        phase_ = result.Ok() ? kComplete : kBody;
-      }
-    } else {
-      phase_ = kComplete;
-    }
+    Result<HttpResponse::WritingPhase> body_result = PrepareResponseBody();
+    if (body_result.IsErr())
+      return body_result.Err();
+    else
+      phase_ = body_result.Ok();
   }
   return Result<void>();
 }
