@@ -79,6 +79,10 @@ int HttpRequest::GetLocalRedirectCount() const {
   return local_redirect_count_;
 }
 
+const config::VirtualServerConf *HttpRequest::GetVirtualServer() const {
+  return vserver_;
+}
+
 //========================================================================
 // Parse系関数　内部でInterpret系関数を呼び出す　主にphaseで動作管理
 
