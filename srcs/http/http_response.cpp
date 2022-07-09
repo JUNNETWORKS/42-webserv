@@ -68,16 +68,6 @@ Result<void> HttpResponse::WriteToSocket(const int fd) {
 }
 
 Result<void> HttpResponse::Write(int fd) {
-  Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
-  if (status_header_res.IsErr()) {
-    return status_header_res.Err();
-  }
-  if (status_header_res.Ok() > 0) {
-    // WriteStatusAndHeader()
-    // で書き込みが行われた後にノンブロッキングで書き込める保証はない
-    return Result<void>();
-  }
-
   if (!body_bytes_.empty()) {
     Result<ssize_t> result = WriteBody(fd);
     if (result.IsErr()) {
@@ -85,19 +75,6 @@ Result<void> HttpResponse::Write(int fd) {
     }
   }
   return Result<void>();
-}
-
-Result<ssize_t> HttpResponse::WriteStatusAndHeader(int) {
-  if (phase_ != kStatusAndHeader) {
-    return 0;
-  }
-  utils::ByteVector status_and_headers_bytes = SerializeStatusAndHeader();
-
-  write_buffer_.insert(write_buffer_.end(), status_and_headers_bytes.begin(),
-                       status_and_headers_bytes.end());
-  phase_ = kBody;
-  // この関数内のwrite後に呼び出し元でもwriteがノンブロッキングで可能かは保証されていない
-  return 0;
 }
 
 Result<ssize_t> HttpResponse::ReadFile() {
@@ -163,6 +140,15 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
 
 Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   (void)conn_sock;
+
+  if (phase_ == kStatusAndHeader) {
+    utils::ByteVector status_and_headers_bytes = SerializeStatusAndHeader();
+
+    write_buffer_.insert(write_buffer_.end(), status_and_headers_bytes.begin(),
+                         status_and_headers_bytes.end());
+    phase_ = kBody;
+  }
+
   if (file_fd_ >= 0 && !is_file_eof_) {
     Result<ssize_t> result = ReadFile();
     if (result.IsErr()) {

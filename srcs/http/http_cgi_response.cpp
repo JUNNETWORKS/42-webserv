@@ -24,15 +24,16 @@ HttpCgiResponse::~HttpCgiResponse() {
 Result<void> HttpCgiResponse::Write(int fd) {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
-  Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
-  if (status_header_res.IsErr()) {
-    return status_header_res.Err();
-  }
-  if (status_header_res.Ok() > 0) {
-    // WriteStatusAndHeader()
-    // で書き込みが行われた後にノンブロッキングで書き込める保証はない
-    return Result<void>();
-  }
+  // TODO
+  //  Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
+  //  if (status_header_res.IsErr()) {
+  //    return status_header_res.Err();
+  //  }
+  //  if (status_header_res.Ok() > 0) {
+  //    // WriteStatusAndHeader()
+  //    // で書き込みが行われた後にノンブロッキングで書き込める保証はない
+  //    return Result<void>();
+  //  }
 
   // エラーのレスポンスを返す
   if (!body_bytes_.empty()) {
