@@ -4,6 +4,10 @@ import time
 import sys
 import difflib
 import argparse
+import http
+
+# import requests
+import urllib.request
 
 # import requests
 import urllib.request
@@ -48,16 +52,21 @@ def send_req(req_path, port):
             code = res.code
             body = res.read().decode()
     except urllib.error.HTTPError as err:
-        print(err)
+        print("send_req err :", err, url, port)
         code = err.code
         body = err.read().decode()
     except urllib.error.URLError as err:
-        print(err)
+        print("send_req err :", err, url, port)
         code = -1
-        body = "\nerror.URLError\n"
-    except socket.timeout:
+        body = str(err)
+    except socket.timeout as err:
+        print("send_req err :", err, url, port)
         code = -1
-        body = TIMEOUT_MSG
+        body = str(err)
+    except http.client.RemoteDisconnected as err:
+        print("send_req err :", err, url, port)
+        code = -1
+        body = str(err)
     return code, body
 
 
