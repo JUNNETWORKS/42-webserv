@@ -2,7 +2,7 @@
 import os
 import sys
 
-n = 0
+n = 10
 if "QUERY_STRING" in os.environ:
     query_parameters = os.environ["QUERY_STRING"].split("&")
     qps = dict()
@@ -20,6 +20,9 @@ if "QUERY_STRING" in os.environ:
 
 print(f"n = {n}", file=sys.stderr)
 
-print(f"Location:/cgi-bin/local-redirect-loop2?n={n + 1}")
+if n == 0:
+    print(f"Location:/")
+else:
+    print(f"Location:/cgi-bin/local-redirect-loop2?n={n - 1}")
 # print(f"Location:/?n={n + 1}")
 print()
