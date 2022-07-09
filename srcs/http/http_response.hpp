@@ -74,10 +74,6 @@ class HttpResponse {
 
   void MakeErrorResponse(const HttpRequest &request, HttpStatus status);
 
-  virtual Result<void> Write(int fd);
-
-  // データ書き込みが可能か
-
   // すべてのデータの write が完了したか
   virtual bool IsAllDataWritingCompleted();
 
@@ -87,11 +83,7 @@ class HttpResponse {
  protected:
   // ファイルをopenし､Epollで監視する
   Result<void> RegisterFile(const std::string &file_path);
-
-  Result<ssize_t> WriteStatusAndHeader(int fd);
-
   Result<bool> ReadFile();
-  Result<ssize_t> WriteBody(int fd);
 
   // ========================================================================
   // Getter and Setter

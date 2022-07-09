@@ -66,16 +66,6 @@ Result<void> HttpResponse::WriteToSocket(const int fd) {
   return Result<void>();
 }
 
-Result<void> HttpResponse::Write(int fd) {
-  if (!body_bytes_.empty()) {
-    Result<ssize_t> result = WriteBody(fd);
-    if (result.IsErr()) {
-      return result.Err();
-    }
-  }
-  return Result<void>();
-}
-
 Result<bool> HttpResponse::ReadFile() {
   utils::Byte buf[kBytesPerRead];
   ssize_t read_res = read(file_fd_, buf, kBytesPerRead);
@@ -87,15 +77,6 @@ Result<bool> HttpResponse::ReadFile() {
     write_buffer_.AppendDataToBuffer(buf, read_res);
     return false;
   }
-}
-
-Result<ssize_t> HttpResponse::WriteBody(int fd) {
-  ssize_t write_res = write(fd, body_bytes_.data(), body_bytes_.size());
-  if (write_res < 0) {
-    return Error();
-  }
-  body_bytes_.EraseHead(write_res);
-  return write_res;
 }
 
 //========================================================================
