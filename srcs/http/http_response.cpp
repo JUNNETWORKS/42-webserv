@@ -57,6 +57,17 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
 //========================================================================
 // Writer
 
+Result<void> HttpResponse::WriteToSocket(const int fd) {
+  ssize_t write_size = write_buffer_.size() < kWriteMaxSize
+                           ? write_buffer_.size()
+                           : kWriteMaxSize;
+  ssize_t write_res = write(fd, write_buffer_.data(), write_size);
+  if (write_res < 0)
+    return Error();
+  write_buffer_.EraseHead(write_size);
+  return Result<void>();
+}
+
 Result<void> HttpResponse::Write(int fd) {
   Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
   if (status_header_res.IsErr()) {

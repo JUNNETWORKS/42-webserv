@@ -37,6 +37,7 @@ class HttpResponse {
 
   // デフォルトのHTTPバージョン(HTTP/1.1)
   static const std::string kDefaultHttpVersion;
+  static const ssize_t kWriteMaxSize = 1024 * 1024;
 
   // Status Line
   std::string http_version_;
@@ -104,6 +105,8 @@ class HttpResponse {
 
   bool IsReadyToWriteBody();
   bool IsReadyToWriteFile();
+
+  Result<void> WriteToSocket(const int fd);
 
   // ========================================================================
   // Getter and Setter
