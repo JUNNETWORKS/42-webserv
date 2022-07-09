@@ -57,7 +57,9 @@ Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
   FdEvent *fde =
       CreateFdEvent(cgi_request_->GetCgiUnisock(), HandleCgiEvent, this);
   epoll_->Register(fde);
-  epoll_->Add(fde, kFdeWrite);
+  if (!cgi_input_buffer_.empty()) {
+    epoll_->Add(fde, kFdeWrite);
+  }
   epoll_->Add(fde, kFdeRead);
   fde_ = fde;
   return Result<void>();
