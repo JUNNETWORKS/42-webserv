@@ -28,7 +28,6 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       status_(OK),
       status_message_(StatusCodes::GetMessage(OK)),
       headers_(),
-      status_and_headers_bytes_(),
       body_bytes_(),
       write_buffer_(),
       file_fd_(-1),
@@ -92,14 +91,11 @@ Result<ssize_t> HttpResponse::WriteStatusAndHeader(int) {
   if (phase_ != kStatusAndHeader) {
     return 0;
   }
-  if (status_and_headers_bytes_.empty()) {
-    status_and_headers_bytes_ = SerializeStatusAndHeader();
-  }
+  utils::ByteVector status_and_headers_bytes = SerializeStatusAndHeader();
 
-  write_buffer_.insert(write_buffer_.end(), status_and_headers_bytes_.begin(),
-                       status_and_headers_bytes_.end());
+  write_buffer_.insert(write_buffer_.end(), status_and_headers_bytes.begin(),
+                       status_and_headers_bytes.end());
   phase_ = kBody;
-  status_and_headers_bytes_.clear();
   // この関数内のwrite後に呼び出し元でもwriteがノンブロッキングで可能かは保証されていない
   return 0;
 }

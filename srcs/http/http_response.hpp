@@ -47,9 +47,6 @@ class HttpResponse {
   // Header
   HeaderMap headers_;
 
-  // Status Line と Headers のバイト列と書き込んだバイト数
-  utils::ByteVector status_and_headers_bytes_;
-
   // Body のバイト列と書き込んだバイト数
   utils::ByteVector body_bytes_;
 
@@ -93,12 +90,6 @@ class HttpResponse {
   // ファイルをopenし､Epollで監視する
   Result<void> RegisterFile(const std::string &file_path);
 
-  // status-line と header-lines を書き込む｡
-  // status_and_headers_bytes_ にデータが無い(初回呼び出し)ときには､
-  // データをセットする｡
-  //
-  // 返り値は今回書き込んだバイト数である｡
-  // 0ならば全てのバイト書き込みが完了したことになる｡
   Result<ssize_t> WriteStatusAndHeader(int fd);
 
   Result<ssize_t> ReadFile();
