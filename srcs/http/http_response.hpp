@@ -52,6 +52,9 @@ class HttpResponse {
   // Body のバイト列と書き込んだバイト数
   utils::ByteVector body_bytes_;
 
+  //書き込みのバッファ
+  utils::ByteVector write_buffer_;
+
   // File
   // 全てのレスポンスクラスはファイルを返せる必要がある｡
   // なぜならエラー時にファイルを扱う可能性があるからである｡
