@@ -137,8 +137,7 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
     Result<HttpResponse::WritingPhase> body_result = PrepareResponseBody();
     if (body_result.IsErr())
       return body_result.Err();
-    else
-      phase_ = body_result.Ok();
+    phase_ = body_result.Ok();
   }
   return Result<void>();
 }
