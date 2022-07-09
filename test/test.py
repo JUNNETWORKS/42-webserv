@@ -36,6 +36,10 @@ TIMEOUT_MSG = "\nTIMEOUT\n"
 
 #
 def send_req(req_path, port):
+    if req_path[0] != "/":
+        print("send_req invalid req_path", req_path)
+        return -1, "invalid req_path"
+
     url = "http://127.0.0.1:" + str(port) + req_path
     req = urllib.request.Request(url)
 
@@ -44,9 +48,11 @@ def send_req(req_path, port):
             code = res.code
             body = res.read().decode()
     except urllib.error.HTTPError as err:
+        print(err)
         code = err.code
         body = err.read().decode()
     except urllib.error.URLError as err:
+        print(err)
         code = -1
         body = "\nerror.URLError\n"
     except socket.timeout:
@@ -203,8 +209,8 @@ def run_req_test(
         print(f"{OK_MSG} :", log_msg)
     else:
         print(f"{KO_MSG} :", log_msg)
-        make_diff_html("", "\n" + log_msg + "\n")
-        make_diff_html(ft__res[1], ori_res[1])
+    make_diff_html("", "\n" + log_msg + "\n")
+    make_diff_html(ft__res[1], ori_res[1])
     print()
     return is_success
 
@@ -216,6 +222,18 @@ def simple_test():
     run_req_test("/sample.html")
     run_req_test("/hoge/hoge.html")
     run_req_test("/NotExist", body_ratio=0)  # code だけあってればいいので、 ratio 0
+
+
+def path_normaliz_test():
+    print("\n--- PATH_NORMALIZ_TEST ---\n")
+    run_req_test("///")
+    run_req_test("./")
+    run_req_test("/././.")
+    run_req_test("/..")
+    run_req_test("/../")
+    run_req_test("/NotExist/../..")
+    run_req_test("/NotExist/../sample.html")
+    run_req_test("/NotExist/NotExist/../../sample.html")
 
 
 def autoindex_test():
@@ -241,27 +259,61 @@ def cgi_test():
     run_req_test("/cgi-bin/local-redirect", ori_port=ORI_CGI_PORT)
 
 
-# 修正中
-# def path_test():
-#     print("\n--- PATH_TEST ---\n")
-#     test_file_path = "req/tpl-get-path-test.txt"
-#     run_test_for_file(test_file_path, [["{PATH}", "/hoge/fuga.html"]])
-#     run_test_for_file(test_file_path, [["{PATH}", "///"]])
-#     run_test_for_file(test_file_path, [["{PATH}", "./"]])
-#     run_test_for_file(test_file_path, [["{PATH}", "/././."]])
-#     run_test_for_file(test_file_path, [["{PATH}", "/NotExist/"]])
-#     run_test_for_file(test_file_path, [["{PATH}", "/NotExist/.."]])
-#     run_test_for_file(test_file_path, [["{PATH}", "/NotExist/NotExist/../.."]])
-#     run_test_for_file(test_file_path, [["{PATH}", "/NotExist/../.."]])
+# '/' %2f
+# '.' %2e
+# 'A' %41
+def cgi_parse_test():
+    print("\n--- CGI_PARSE_TEST ---\n")
+    # シンプルケース
+    run_req_test("/cgi-bin/test-cgi", ori_port=ORI_CGI_PORT)
+
+    # ? より後ろが QUERY_STRING になる。
+    run_req_test("/cgi-bin/test-cgi?hoge", ori_port=ORI_CGI_PORT)
+
+    # + でコマンドライン引数が区切られる。
+    run_req_test("/cgi-bin/test-cgi?arg1+arg2+arg3", ori_port=ORI_CGI_PORT)
+
+    # = が ある時はコマンドライン引数なしになる。
+    # QUERY_STRINGにはセットされる。
+    run_req_test("/cgi-bin/test-cgi?arg1+arg2+arg3+hoge=fuga", ori_port=ORI_CGI_PORT)
+
+    # コマンドライン引数にはデコードされた、文字列が入り、
+    # QUERY_STRING には、デコード前の文字列が入る。
+    run_req_test("/cgi-bin/test-cgi?A%20C", ori_port=ORI_CGI_PORT)
+
+    # QUERY_STRING にはパーセントデコードで、エラーが起きようがセットされる。
+    # TODO : 現状はargvでのデコードで、エラーを返している。
+    run_req_test("/cgi-bin/test-cgi/?%", ori_port=ORI_CGI_PORT)
+    run_req_test("/cgi-bin/test-cgi/?%0", ori_port=ORI_CGI_PORT)
+
+    # %00
+    run_req_test("/cgi-bin/test-cgi/?%00%", ori_port=ORI_CGI_PORT)
+    run_req_test("/cgi-bin/test-cgi/?A%01%C", ori_port=ORI_CGI_PORT)
+
+    # path_info
+    run_req_test("/cgi-bin/test-cgi/hoge", ori_port=ORI_CGI_PORT)
+
+    # path_info に スラッシュが入る。
+    run_req_test("/cgi-bin/test-cgi/", ori_port=ORI_CGI_PORT)
+
+    # path_info には デコードされた文字が入る。
+    run_req_test("/cgi-bin/test-cgi/%41%42%43", ori_port=ORI_CGI_PORT)
+
+    # path_info デコードで無効な文字が含まれていた場合、エラー
+    # TODO :
+    run_req_test("/cgi-bin/test-cgi/%", ori_port=ORI_CGI_PORT)
+    run_req_test("/cgi-bin/test-cgi/%00", ori_port=ORI_CGI_PORT)
+    run_req_test("/cgi-bin/test-cgi/%2f", ori_port=ORI_CGI_PORT)
 
 
 # main
 # ========================================================================
 def run_all_test():
     simple_test()
+    path_normaliz_test()
     autoindex_test()
-    # path_test()
     cgi_test()
+    cgi_parse_test()
 
 
 def main():
