@@ -29,7 +29,8 @@ HttpRequest::HttpRequest()
       body_size_(0),
       is_chunked_(false),
       vserver_(NULL),
-      location_(NULL) {}
+      location_(NULL),
+      local_redirect_count_(0) {}
 
 HttpRequest::HttpRequest(const HttpRequest &rhs) {
   *this = rhs;
@@ -50,6 +51,7 @@ const HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
     is_chunked_ = rhs.is_chunked_;
     vserver_ = rhs.vserver_;
     location_ = rhs.location_;
+    local_redirect_count_ = rhs.local_redirect_count_;
   }
   return *this;
 }
@@ -67,6 +69,14 @@ void HttpRequest::SetPath(const std::string &path) {
 
 const std::string &HttpRequest::GetPath() const {
   return path_;
+}
+
+void HttpRequest::SetLocalRedirectCount(int local_redirect_count) {
+  local_redirect_count_ = local_redirect_count;
+}
+
+int HttpRequest::GetLocalRedirectCount() const {
+  return local_redirect_count_;
 }
 
 const config::VirtualServerConf *HttpRequest::GetVirtualServer() const {

@@ -65,6 +65,8 @@ class HttpRequest {
 
   // ソケットからはデータを細切れでしか受け取れないので一旦バッファに保管し､行ごとに処理する｡
 
+  int local_redirect_count_;
+
  public:
   HttpRequest();
   HttpRequest(const HttpRequest &rhs);
@@ -77,6 +79,8 @@ class HttpRequest {
   const std::string &GetPath() const;
   const config::VirtualServerConf *GetVirtualServer() const;
   HttpStatus GetParseStatus() const;
+  void SetLocalRedirectCount(int local_redirect_count);
+  int GetLocalRedirectCount() const;
 
   void ParseRequest(utils::ByteVector &buffer, const config::Config &conf,
                     const config::PortType &port);
