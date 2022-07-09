@@ -75,6 +75,7 @@ class HttpRequest {
   // LocalRedirect で使うために SetPath() を定義
   void SetPath(const std::string &path);
   const std::string &GetPath() const;
+  const config::VirtualServerConf *GetVirtualServer() const;
   HttpStatus GetParseStatus() const;
 
   void ParseRequest(utils::ByteVector &buffer, const config::Config &conf,
