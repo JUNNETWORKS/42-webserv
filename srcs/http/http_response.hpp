@@ -87,6 +87,7 @@ class HttpResponse {
   virtual bool IsAllDataWritingCompleted();
 
   const std::vector<std::string> &GetHeader(const std::string &header);
+  Result<void> WriteToSocket(const int fd);
 
  protected:
   // ファイルをopenし､Epollで監視する
@@ -105,8 +106,6 @@ class HttpResponse {
 
   bool IsReadyToWriteBody();
   bool IsReadyToWriteFile();
-
-  Result<void> WriteToSocket(const int fd);
 
   // ========================================================================
   // Getter and Setter

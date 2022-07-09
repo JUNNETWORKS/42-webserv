@@ -163,6 +163,7 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
     if (!should_close_conn && response->IsReadyToWrite()) {
       // 書き込むデータが存在する
       should_close_conn |= response->Write(conn_fd).IsErr();
+      response->WriteToSocket(conn_fd);
     }
     if (!should_close_conn && response->IsAllDataWritingCompleted()) {
       // "Connection: close"

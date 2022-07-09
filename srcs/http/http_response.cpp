@@ -88,7 +88,7 @@ Result<void> HttpResponse::Write(int fd) {
   return Result<void>();
 }
 
-Result<ssize_t> HttpResponse::WriteStatusAndHeader(int fd) {
+Result<ssize_t> HttpResponse::WriteStatusAndHeader(int) {
   if (phase_ != kStatusAndHeader) {
     return 0;
   }
@@ -96,17 +96,12 @@ Result<ssize_t> HttpResponse::WriteStatusAndHeader(int fd) {
     status_and_headers_bytes_ = SerializeStatusAndHeader();
   }
 
-  ssize_t write_res = write(fd, status_and_headers_bytes_.data(),
-                            status_and_headers_bytes_.size());
-  if (write_res < 0) {
-    return Error();
-  }
-  status_and_headers_bytes_.EraseHead(write_res);
-  if (status_and_headers_bytes_.empty()) {
-    phase_ = kBody;
-  }
+  write_buffer_.insert(write_buffer_.end(), status_and_headers_bytes_.begin(),
+                       status_and_headers_bytes_.end());
+  phase_ = kBody;
+  status_and_headers_bytes_.clear();
   // この関数内のwrite後に呼び出し元でもwriteがノンブロッキングで可能かは保証されていない
-  return write_res;
+  return 0;
 }
 
 Result<ssize_t> HttpResponse::ReadFile() {
