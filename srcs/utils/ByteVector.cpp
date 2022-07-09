@@ -65,6 +65,10 @@ void ByteVector::AppendDataToBuffer(const Byte* buf, size_t size) {
   insert(end(), buf, buf + size);
   printf("current buf len: %lu\n", this->size());
 }
+void ByteVector::AppendDataToBuffer(const ByteVector& vec) {
+  insert(end(), vec.begin(), vec.end());
+  printf("current buf len: %lu\n", this->size());
+}
 
 const char* ByteVector::GetReinterpretedData() const {
   return reinterpret_cast<const char*>(data());
