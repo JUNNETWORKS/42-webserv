@@ -30,9 +30,9 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       headers_(),
       status_and_headers_bytes_(),
       body_bytes_(),
+      write_buffer_(),
       file_fd_(-1),
-      is_file_eof_(false),
-      write_buffer_() {
+      is_file_eof_(false) {
   assert(epoll_ != NULL);
 }
 
