@@ -30,8 +30,7 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       headers_(),
       body_bytes_(),
       write_buffer_(),
-      file_fd_(-1),
-      is_file_eof_(false) {
+      file_fd_(-1) {
   assert(epoll_ != NULL);
 }
 
@@ -78,16 +77,11 @@ Result<void> HttpResponse::Write(int fd) {
 }
 
 Result<bool> HttpResponse::ReadFile() {
-  if (is_file_eof_) {
-    return true;
-  }
   utils::Byte buf[kBytesPerRead];
   ssize_t read_res = read(file_fd_, buf, kBytesPerRead);
   if (read_res < 0) {
     return Error();
   } else if (read_res == 0) {
-    is_file_eof_ = true;
-    printf("helloooo\n");
     return true;
   } else {
     write_buffer_.AppendDataToBuffer(buf, read_res);
@@ -151,7 +145,7 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
     phase_ = kBody;
   }
   if (phase_ == kBody) {
-    if (file_fd_ >= 0 && !is_file_eof_) {
+    if (file_fd_ >= 0) {
       Result<bool> result = ReadFile();
       if (result.IsErr()) {
         return result.Err();
@@ -205,23 +199,6 @@ std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
 
 //========================================================================
 // Status checker
-
-bool HttpResponse::IsReadyToWrite() {
-  return IsReadyToWriteBody() || IsReadyToWriteFile();
-}
-
-bool HttpResponse::IsReadyToWriteBody() {
-  return phase_ == kStatusAndHeader ||
-         (phase_ == kBody && !body_bytes_.empty());
-}
-
-bool HttpResponse::IsReadyToWriteFile() {
-  if (file_fd_ >= 0) {
-    return phase_ == kStatusAndHeader ||
-           (phase_ == kBody && (!is_file_eof_ || !body_bytes_.empty()));
-  }
-  return false;
-}
 
 bool HttpResponse::IsAllDataWritingCompleted() {
   return phase_ == kComplete && write_buffer_.empty();

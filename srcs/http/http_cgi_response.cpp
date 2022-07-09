@@ -104,22 +104,22 @@ Result<void> HttpCgiResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   return Result<void>();
 }
 
-// データ書き込みが可能か
-bool HttpCgiResponse::IsReadyToWrite() {
-  cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
+// // データ書き込みが可能か
+// bool HttpCgiResponse::IsReadyToWrite() {
+//   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
-  // まだヘッダーやStatusなどの情報が確定していない
-  // LocalRedirectの場合はレスポンスを書き込まないので常にFalse
-  if (cgi_phase_ == kSetupCgiTypeSpecificInfo ||
-      cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
-    return false;
-  }
+//   // まだヘッダーやStatusなどの情報が確定していない
+//   // LocalRedirectの場合はレスポンスを書き込まないので常にFalse
+//   if (cgi_phase_ == kSetupCgiTypeSpecificInfo ||
+//       cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
+//     return false;
+//   }
 
-  return phase_ == kStatusAndHeader ||
-         (phase_ == kBody && cgi_process_->IsCgiExecuted() &&
-          (!cgi_response->GetBody().empty() || IsReadyToWriteBody() ||
-           IsReadyToWriteFile()));
-}
+//   return phase_ == kStatusAndHeader ||
+//          (phase_ == kBody && cgi_process_->IsCgiExecuted() &&
+//           (!cgi_response->GetBody().empty() || IsReadyToWriteBody() ||
+//            IsReadyToWriteFile()));
+// }
 
 // すべてのデータの write が完了したか
 bool HttpCgiResponse::IsAllDataWritingCompleted() {

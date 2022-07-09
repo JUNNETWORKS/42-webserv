@@ -23,7 +23,7 @@ class HttpCgiResponse : public HttpResponse {
   virtual Result<void> Write(int fd);
 
   // データ書き込みが可能か
-  virtual bool IsReadyToWrite();
+  // virtual bool IsReadyToWrite();
 
   // すべてのデータの write が完了したか
   virtual bool IsAllDataWritingCompleted();

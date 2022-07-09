@@ -57,7 +57,6 @@ class HttpResponse {
   // 全てのレスポンスクラスはファイルを返せる必要がある｡
   // なぜならエラー時にファイルを扱う可能性があるからである｡
   int file_fd_;
-  bool is_file_eof_;
 
  public:
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
@@ -78,7 +77,6 @@ class HttpResponse {
   virtual Result<void> Write(int fd);
 
   // データ書き込みが可能か
-  virtual bool IsReadyToWrite();
 
   // すべてのデータの write が完了したか
   virtual bool IsAllDataWritingCompleted();
@@ -94,9 +92,6 @@ class HttpResponse {
 
   Result<bool> ReadFile();
   Result<ssize_t> WriteBody(int fd);
-
-  bool IsReadyToWriteBody();
-  bool IsReadyToWriteFile();
 
   // ========================================================================
   // Getter and Setter
