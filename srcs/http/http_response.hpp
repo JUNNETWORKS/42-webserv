@@ -24,7 +24,7 @@ using namespace result;
 class HttpResponse {
  protected:
   // 次何を書き込むか
-  enum WritingPhase { kStatusAndHeader, kBody };
+  enum WritingPhase { kStatusAndHeader, kBody, kComplete };
 
   // 1回のreadで何バイト読み取るか
   static const unsigned long kBytesPerRead = 1024;  // 1KB
@@ -92,7 +92,7 @@ class HttpResponse {
 
   Result<ssize_t> WriteStatusAndHeader(int fd);
 
-  Result<ssize_t> ReadFile();
+  Result<bool> ReadFile();
   Result<ssize_t> WriteBody(int fd);
 
   bool IsReadyToWriteBody();

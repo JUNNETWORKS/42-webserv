@@ -77,9 +77,9 @@ Result<void> HttpResponse::Write(int fd) {
   return Result<void>();
 }
 
-Result<ssize_t> HttpResponse::ReadFile() {
+Result<bool> HttpResponse::ReadFile() {
   if (is_file_eof_) {
-    return 0;
+    return true;
   }
   utils::Byte buf[kBytesPerRead];
   ssize_t read_res = read(file_fd_, buf, kBytesPerRead);
@@ -87,10 +87,12 @@ Result<ssize_t> HttpResponse::ReadFile() {
     return Error();
   } else if (read_res == 0) {
     is_file_eof_ = true;
+    printf("helloooo\n");
+    return true;
   } else {
-    body_bytes_.AppendDataToBuffer(buf, read_res);
+    write_buffer_.AppendDataToBuffer(buf, read_res);
+    return false;
   }
-  return read_res;
 }
 
 Result<ssize_t> HttpResponse::WriteBody(int fd) {
@@ -148,11 +150,16 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
                          status_and_headers_bytes.end());
     phase_ = kBody;
   }
-
-  if (file_fd_ >= 0 && !is_file_eof_) {
-    Result<ssize_t> result = ReadFile();
-    if (result.IsErr()) {
-      return result.Err();
+  if (phase_ == kBody) {
+    if (file_fd_ >= 0 && !is_file_eof_) {
+      Result<bool> result = ReadFile();
+      if (result.IsErr()) {
+        return result.Err();
+      } else {
+        phase_ = result.Ok() ? kComplete : kBody;
+      }
+    } else {
+      phase_ = kComplete;
     }
   }
   return Result<void>();
@@ -217,11 +224,7 @@ bool HttpResponse::IsReadyToWriteFile() {
 }
 
 bool HttpResponse::IsAllDataWritingCompleted() {
-  if (file_fd_ >= 0) {
-    return phase_ != kStatusAndHeader && is_file_eof_ && body_bytes_.empty();
-  } else {
-    return phase_ != kStatusAndHeader && body_bytes_.empty();
-  }
+  return phase_ == kComplete && write_buffer_.empty();
 }
 
 //========================================================================
