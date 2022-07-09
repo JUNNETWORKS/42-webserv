@@ -119,10 +119,7 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   (void)conn_sock;
 
   if (phase_ == kStatusAndHeader) {
-    utils::ByteVector status_and_headers_bytes = SerializeStatusAndHeader();
-
-    write_buffer_.insert(write_buffer_.end(), status_and_headers_bytes.begin(),
-                         status_and_headers_bytes.end());
+    write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
     phase_ = kBody;
   }
   if (phase_ == kBody) {
