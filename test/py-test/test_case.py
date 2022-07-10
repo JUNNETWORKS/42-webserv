@@ -45,15 +45,17 @@ def exec_test(f, must_all_test_ok=True):
     test_func_name = f.__name__
     print("---", test_func_name.upper(), "---")
     f()
-    is_test_ok = is_test_success(test_func_name)
-    if is_test_ok == False and must_all_test_ok:
-        global test_exit_code
-        test_exit_code = 1
     print()
+    is_test_ok = is_test_success(test_func_name)
+    if must_all_test_ok == False:
+        return True
+    return is_test_ok
 
 
-def run_all_test():
-    exec_test(simple_test)
-    exec_test(not_found_test)
-    exec_test(autoindex_test)
-    exec_test(path_normaliz_test, must_all_test_ok=False)
+def run_all_test() -> bool:
+    is_all_test_ok = True
+    is_all_test_ok &= exec_test(simple_test)
+    is_all_test_ok &= exec_test(not_found_test)
+    is_all_test_ok &= exec_test(autoindex_test)
+    is_all_test_ok &= exec_test(path_normaliz_test, must_all_test_ok=False)
+    return is_all_test_ok
