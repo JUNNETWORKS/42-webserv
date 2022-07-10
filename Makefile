@@ -78,5 +78,5 @@ req-test: all
 	./webserv test/webserv_configurations/sample.conf.sed > /dev/null &
 	sleep 3
 	ps aux | grep "./webserv"
-	cd test && make py-test WEBSERV_PORT=$(WEBSERV_PORT)
+	cd test && make req-test WEBSERV_PORT=$(WEBSERV_PORT)
 	cat test/diff.html
