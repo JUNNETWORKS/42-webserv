@@ -15,7 +15,7 @@ re: fclean all
 
 .PHONY: py-test
 py-test:
-	python3 -m py-test
+	python3 -u -m py-test
 
 .PHONY: g-test
 g-test:
