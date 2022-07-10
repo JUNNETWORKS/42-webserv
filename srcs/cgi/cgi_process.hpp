@@ -21,6 +21,7 @@ class CgiProcess {
  private:
   static const unsigned long kDataPerRead = 1024;   // 1KB
   static const unsigned long kDataPerWrite = 1024;  // 1KB
+  static const long kUnisockTimeout = 5 * 1000;     // 5[sec]
 
   CgiRequest *cgi_request_;
   CgiResponse *cgi_response_;

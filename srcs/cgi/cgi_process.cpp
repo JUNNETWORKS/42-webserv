@@ -61,6 +61,7 @@ Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
     epoll_->Add(fde, kFdeWrite);
   }
   epoll_->Add(fde, kFdeRead);
+  epoll_->SetTimeout(fde, kUnisockTimeout);
   fde_ = fde;
   return Result<void>();
 }
@@ -130,6 +131,12 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
 
   CgiRequest *cgi_request = cgi_process->cgi_request_;
   CgiResponse *cgi_response = cgi_process->cgi_response_;
+
+  if (events & kFdeTimeout) {
+    printf("Timeout CGI\n");
+    DeleteCgiProcess(epoll, fde);
+    return;
+  }
 
   if (events & kFdeWrite) {
     // Write request's body to unisock
