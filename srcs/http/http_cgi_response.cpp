@@ -64,15 +64,8 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
   if (cgi_process_->IsCgiExecuted() == false) {
     if (cgi_process_->RunCgi(request).IsErr()) {
       MakeErrorResponse(SERVER_ERROR);
-      cgi_phase_ = kWritingToInetSocket;
-      return;
     }
-  }
-}
-
-Result<void> HttpCgiResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
-  if (cgi_phase_ != kSetupCgiTypeSpecificInfo) {
-    return Result<void>();
+    return;
   }
 
   cgi::CgiResponse::ResponseType type =
@@ -83,9 +76,8 @@ Result<void> HttpCgiResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
     // CgiProcessが削除可能な状態(Unisockが0を返してきている)ならエラー
     if (cgi_process_->IsRemovable()) {
       MakeErrorResponse(SERVER_ERROR);
-      cgi_phase_ = kWritingToInetSocket;
     }
-    return Result<void>();
+    return;
   }
 
   if (type == cgi::CgiResponse::kParseError) {
@@ -100,7 +92,9 @@ Result<void> HttpCgiResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
              type == cgi::CgiResponse::kClientRedirectWithDocument) {
     MakeClientRedirectResponse(conn_sock);
   }
-  cgi_phase_ = kWritingToInetSocket;
+}
+
+Result<void> HttpCgiResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   return Result<void>();
 }
 
