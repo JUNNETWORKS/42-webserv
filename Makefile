@@ -77,6 +77,5 @@ req-test: all
 	sed -e "s|/public|$(shell pwd)/test/public|g" test/webserv_configurations/sample.conf > test/webserv_configurations/sample.conf.sed
 	./webserv test/webserv_configurations/sample.conf.sed > /dev/null &
 	sleep 3
-	ps aux | grep "./webserv"
 	cd test && make req-test WEBSERV_PORT=$(WEBSERV_PORT)
 	cat test/diff.html
