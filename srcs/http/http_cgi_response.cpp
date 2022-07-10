@@ -21,41 +21,6 @@ HttpCgiResponse::~HttpCgiResponse() {
   }
 }
 
-Result<void> HttpCgiResponse::Write(int fd) {
-  cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
-
-  // TODO
-  //  Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
-  //  if (status_header_res.IsErr()) {
-  //    return status_header_res.Err();
-  //  }
-  //  if (status_header_res.Ok() > 0) {
-  //    // WriteStatusAndHeader()
-  //    // で書き込みが行われた後にノンブロッキングで書き込める保証はない
-  //    return Result<void>();
-  //  }
-
-  // エラーのレスポンスを返す
-  // if (!body_bytes_.empty()) {
-  //   Result<ssize_t> result = WriteBody(fd);
-  //   if (result.IsErr()) {
-  //     return result.Err();
-  //   }
-  // }
-
-  // TODO: chunked-encoding の設定
-  utils::ByteVector &response_body = cgi_response->GetBody();
-  if (!response_body.empty()) {
-    ssize_t write_res = write(fd, response_body.data(), response_body.size());
-    if (write_res < 0) {
-      printf("HttpCgiReponse::Write write() return %ld", write_res);
-      return Error();
-    }
-    response_body.EraseHead(write_res);
-  }
-  return Result<void>();
-}
-
 void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
   // TODO: 現在 cgi_request.RunCgi()
@@ -91,6 +56,22 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
   } else if (type == cgi::CgiResponse::kClientRedirect ||
              type == cgi::CgiResponse::kClientRedirectWithDocument) {
     MakeClientRedirectResponse(conn_sock);
+  }
+}
+
+Result<HttpCgiResponse::CreateResponsePhase>
+HttpCgiResponse::PrepareResponseBody() {
+  if (file_fd_ >= 0) {
+    Result<bool> file_res = ReadFile();
+    if (file_res.IsErr()) {
+      return file_res.Err();
+    } else {
+      return file_res.Ok() ? kComplete : kBody;
+    }
+  } else {
+    // TODO: chunked-encoding の設定
+    write_buffer_.AppendDataToBuffer(cgi_process_->GetCgiResponse()->GetBody());
+    return cgi_process_->IsRemovable() ? kComplete : kBody;
   }
 }
 

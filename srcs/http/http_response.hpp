@@ -99,7 +99,7 @@ class HttpResponse {
   utils::ByteVector SerializeHeaders() const;
   void SerializeResponse(const std::string &body);
 
-  Result<CreateResponsePhase> PrepareResponseBody();
+  virtual Result<CreateResponsePhase> PrepareResponseBody();
 
   std::string MakeErrorResponseBody(HttpStatus status);
 
