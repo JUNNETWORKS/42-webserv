@@ -74,8 +74,8 @@ $(GTEST):
 .PHONY: req-test
 req-test: WEBSERV_PORT := 8080
 req-test: all
-	sed -e "s|/public|$(shell pwd)/test/public|g" test/webserv_configurations/sample-cgi.conf > test/webserv_configurations/sample-cgi.conf.sed
-	./webserv test/webserv_configurations/sample-cgi.conf.sed > /dev/null &
+	sed -e "s|/public|$(shell pwd)/test/public|g" test/webserv_configurations/sample.conf > test/webserv_configurations/sample.conf.sed
+	./webserv test/webserv_configurations/sample.conf.sed > /dev/null &
 	sleep 3
 	ps aux | grep "./webserv"
 	cd test && make py-test WEBSERV_PORT=$(WEBSERV_PORT)

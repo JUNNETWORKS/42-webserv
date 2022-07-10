@@ -45,4 +45,4 @@
 /test/py-test/diff.html
 /test/py-test/__pycache__/
 /test/cppcheck-err-list
-/test/webserv_configurations/sample-cgi.conf.sed
+/test/webserv_configurations/sample.conf.sed
