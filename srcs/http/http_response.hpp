@@ -61,7 +61,7 @@ class HttpResponse {
 
   //レスポンスの内容を作る関数。
   //適宜write_buffer_につめてWriteできるようにする。
-  virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
+  Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
 
   void MakeErrorResponse(const HttpStatus status);
 

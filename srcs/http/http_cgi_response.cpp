@@ -94,10 +94,6 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
   }
 }
 
-Result<void> HttpCgiResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
-  return Result<void>();
-}
-
 // // データ書き込みが可能か
 // bool HttpCgiResponse::IsReadyToWrite() {
 //   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
