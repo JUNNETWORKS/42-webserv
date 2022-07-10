@@ -13,9 +13,9 @@ fclean: clean
 .PHONY: re
 re: fclean all
 
-.PHONY: test
-test:
-	python3 test.py
+.PHONY: py-test
+py-test:
+	python3 -m py-test
 
 .PHONY: g-test
 g-test:
