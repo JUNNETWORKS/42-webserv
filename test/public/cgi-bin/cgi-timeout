@@ -12,7 +12,7 @@ for _ in range(20):
     print(f"{datetime.datetime.now() - start_time}[sec]")
     time.sleep(0.5)
 
-# time.sleep(60)
-for _ in range(20):
+# CGIが出力しなくなってからどのくらいの時間プロセスが生きているか見るためのprint
+while True:
     print(f"{datetime.datetime.now() - start_time}[sec]", file=sys.stderr)
     time.sleep(0.5)
