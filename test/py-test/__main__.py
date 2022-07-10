@@ -54,19 +54,41 @@ def print_func_name(f):
     print("\n---", f.__name__.upper(), "---\n")
 
 
+# KO
+# ========================================================================
+ko_lst = []
+
+
+def append_ko_lst(case):
+    ko_lst.append(case)
+
+
+def print_ko_lst():
+    print("\n --- KO_LST ---\n")
+    print(f"KO COUNT : {len(ko_lst)}")
+    print()
+    for node in ko_lst:
+        print(node)
+
+
 # run Test
 # ========================================================================
-def run_test(req_path, expect_prm: prms, port=49200, ck_code=True, ck_body=True):
+def run_test(
+    req_path, expect_prm: prms, port=49200, ck_code=True, ck_body=True
+) -> bool:
     code, body = send_req_utils.send_req(req_path, port)
     ft_res_prm = prms(code=code, body=body)
 
     is_success = None
+    log_msg = f"req_path : {req_path}"
     if is_eq_prms(ft_res_prm, expect_prm, ck_code=ck_code, ck_body=ck_body):
         is_success = True
-        print(OK_MSG)
+        print(OK_MSG, log_msg)
     else:
         is_success = False
-        print(KO_MSG)
+        print(KO_MSG, log_msg)
+        append_ko_lst([log_msg])
+        diff_utils.make_diff_html(ft_res_prm.body, expect_prm.body)
     return is_success
 
 
@@ -92,6 +114,22 @@ def simple_test():
 def not_found_test():
     expect_prm = prms(404)
     run_test("/NotExist", expect_prm, ck_body=False)
+    run_test("/NotExist/NotExist", expect_prm, ck_body=False)
+    run_test("/hoge/NotExist", expect_prm, ck_body=False)
+
+
+def autoindex_test():
+    req_path = "/"
+    file_path = "public" + "/expect_autoindex.html"
+    expect_prm = prms(200, file_path=file_path)
+    run_test(req_path, expect_prm)
+
+
+def path_normaliz_test():
+    expect_prm = prms(200, file_path="public/sample.html")
+    run_test("///sample.html", expect_prm)
+    run_test("/./././sample.html", expect_prm)
+    run_test("/NotExist/../sample.html", expect_prm)
 
 
 def run_all_test():
@@ -101,11 +139,18 @@ def run_all_test():
     print_func_name(not_found_test)
     not_found_test()
 
+    print_func_name(autoindex_test)
+    autoindex_test()
+
+    print_func_name(path_normaliz_test)
+    path_normaliz_test()
+
 
 # main
 # ========================================================================
 def main():
     run_all_test()
+    print_ko_lst()
     diff_utils.save_diff_html()
 
 
