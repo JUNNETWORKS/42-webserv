@@ -18,7 +18,6 @@ class HttpCgiResponse : public HttpResponse {
   HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpCgiResponse();
 
-  virtual void MakeResponse(server::ConnSocket *conn_sock);
   virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
   virtual Result<void> Write(int fd);
 
@@ -29,6 +28,7 @@ class HttpCgiResponse : public HttpResponse {
   virtual bool IsAllDataWritingCompleted();
 
  private:
+  void LoadRequest(server::ConnSocket *conn_sock);
   void MakeDocumentResponse(server::ConnSocket *conn_sock);
   void MakeLocalRedirectResponse(server::ConnSocket *conn_sock);
   void MakeClientRedirectResponse(server::ConnSocket *conn_sock);

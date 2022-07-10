@@ -56,15 +56,17 @@ Result<void> HttpCgiResponse::Write(int fd) {
   return Result<void>();
 }
 
-void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
+void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
   // TODO: 現在 cgi_request.RunCgi()
   // ではファイルの有無に関するエラーチェックをしていないので､
   // 存在しないCGIへのリクエストをするとInternalServerErrorが返ってくる｡
-  if (cgi_process_->RunCgi(request).IsErr()) {
-    MakeErrorResponse(SERVER_ERROR);
-    cgi_phase_ = kWritingToInetSocket;
-    return;
+  if (cgi_process_->IsCgiExecuted() == false) {
+    if (cgi_process_->RunCgi(request).IsErr()) {
+      MakeErrorResponse(SERVER_ERROR);
+      cgi_phase_ = kWritingToInetSocket;
+      return;
+    }
   }
 }
 

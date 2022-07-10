@@ -92,7 +92,7 @@ class HttpResponse {
   HttpResponse(const HttpResponse &rhs);
   HttpResponse &operator=(const HttpResponse &rhs);
 
-  void LoadRequest(server::ConnSocket *conn_sock);
+  virtual void LoadRequest(server::ConnSocket *conn_sock);
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;
