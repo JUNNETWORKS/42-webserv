@@ -24,7 +24,7 @@ using namespace result;
 class HttpResponse {
  protected:
   // 次何を書き込むか
-  enum WritingPhase { kLoadRequest, kStatusAndHeader, kBody, kComplete };
+  enum CreateResponsePhase { kLoadRequest, kStatusAndHeader, kBody, kComplete };
 
   // 1回のreadで何バイト読み取るか
   static const unsigned long kBytesPerRead = 1024;  // 1KB
@@ -33,7 +33,7 @@ class HttpResponse {
   server::Epoll *epoll_;
 
   // 次何を書き込むか
-  WritingPhase phase_;
+  CreateResponsePhase phase_;
 
   // デフォルトのHTTPバージョン(HTTP/1.1)
   static const std::string kDefaultHttpVersion;
@@ -101,7 +101,7 @@ class HttpResponse {
   utils::ByteVector SerializeStatusLine() const;
   utils::ByteVector SerializeHeaders() const;
 
-  Result<WritingPhase> PrepareResponseBody();
+  Result<CreateResponsePhase> PrepareResponseBody();
 
   void SerializeResponse(const std::string &body);
   std::string MakeErrorResponseBody(HttpStatus status);
