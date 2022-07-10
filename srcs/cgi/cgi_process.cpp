@@ -134,14 +134,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
 
   if (events & kFdeTimeout) {
     printf("Timeout CGI\n");
-    if (cgi_process->IsRemovable()) {
-      delete cgi_process;
-    } else {
-      // Unregister する
-      cgi_process->SetIsError(true);
-      epoll->Unregister(fde);
-      cgi_process->SetIsRemovable(true);
-    }
+    DeleteCgiProcess(epoll, fde);
     return;
   }
 
