@@ -1,5 +1,6 @@
 import argparse
 
+from . import response_class as res
 from . import const_str
 from . import send_req_utils
 from . import diff_utils
@@ -15,37 +16,6 @@ WEBSERV_PORT = args.WEBSERV_PORT
 
 OK_MSG = const_str.GREEN + "[ OK ]" + const_str.RESET
 KO_MSG = const_str.RED + "[ KO ]" + const_str.RESET
-
-# response
-# ========================================================================
-class response:
-    def __init__(self, code=0, body="", file_path="") -> None:
-        self.code = code
-        self.set_body(body=body, file_path=file_path)
-
-    def set_body(self, body, file_path):
-        if body != "" and file_path != "":
-            print("body or file_paht", body, file_path)
-            exit(1)
-        if file_path != "":
-            self.body = io_utils.get_file_data(file_path)
-        else:
-            self.body = body
-
-
-def is_eq_params(response1, response2, ck_code=True, ck_body=True) -> bool:
-    is_code_ok = True
-    is_body_ok = True
-    if ck_code:
-        is_code_ok = response1.code == response2.code
-    if ck_body:
-        is_body_ok = response1.body == response2.body
-    return is_code_ok and is_body_ok
-
-
-def print_response(response: response) -> None:
-    print(f"response : {response.code}, {response.body}")
-
 
 # KO
 # ========================================================================
@@ -102,14 +72,20 @@ def all_test_result() -> bool:
 # run Test
 # ========================================================================
 def run_test(
-    req_path, expect_response: response, port=WEBSERV_PORT, ck_code=True, ck_body=True
+    req_path,
+    expect_response: res.response,
+    port=WEBSERV_PORT,
+    ck_code=True,
+    ck_body=True,
 ) -> bool:
     code, body = send_req_utils.send_req(req_path, port)
-    ft_res_response = response(code=code, body=body)
+    ft_res_response = res.response(code=code, body=body)
 
     is_success = None
     log_msg = f"req_path : {req_path}"
-    if is_eq_params(ft_res_response, expect_response, ck_code=ck_code, ck_body=ck_body):
+    if res.is_eq_response(
+        ft_res_response, expect_response, ck_code=ck_code, ck_body=ck_body
+    ):
         is_success = True
         print(OK_MSG, log_msg)
     else:
@@ -126,22 +102,22 @@ def run_test(
 def simple_test():
     req_path = "/sample.html"
     file_path = "public" + req_path
-    expect_response = response(200, file_path=file_path)
+    expect_response = res.response(200, file_path=file_path)
     run_test(req_path, expect_response)
 
     req_path = "/hoge/hoge.html"
     file_path = "public" + req_path
-    expect_response = response(200, file_path=file_path)
+    expect_response = res.response(200, file_path=file_path)
     run_test(req_path, expect_response)
 
     req_path = "/fuga/fuga.html"
     file_path = "public" + req_path
-    expect_response = response(200, file_path=file_path)
+    expect_response = res.response(200, file_path=file_path)
     run_test(req_path, expect_response)
 
 
 def not_found_test():
-    expect_response = response(404)
+    expect_response = res.response(404)
     run_test("/NotExist", expect_response, ck_body=False)
     run_test("/NotExist/NotExist", expect_response, ck_body=False)
     run_test("/hoge/NotExist", expect_response, ck_body=False)
@@ -149,12 +125,12 @@ def not_found_test():
 
 def autoindex_test():
     req_path = "/"
-    expect_response = response(200)
+    expect_response = res.response(200)
     run_test(req_path, expect_response, ck_body=False)
 
 
 def path_normaliz_test():
-    expect_response = response(200, file_path="public/sample.html")
+    expect_response = res.response(200, file_path="public/sample.html")
     run_test("///sample.html", expect_response)
     run_test("/./././sample.html", expect_response)
     run_test("/NotExist/../sample.html", expect_response)
