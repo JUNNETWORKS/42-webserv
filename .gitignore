@@ -43,5 +43,6 @@
 /tester
 /test/diff.html
 /test/py-test/diff.html
+/test/py-test/__pycache__/
 /test/cppcheck-err-list
 /test/webserv_configurations/sample-cgi.conf.sed
