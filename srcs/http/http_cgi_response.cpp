@@ -62,7 +62,7 @@ void HttpCgiResponse::MakeResponse(server::ConnSocket *conn_sock) {
   // ではファイルの有無に関するエラーチェックをしていないので､
   // 存在しないCGIへのリクエストをするとInternalServerErrorが返ってくる｡
   if (cgi_process_->RunCgi(request).IsErr()) {
-    MakeErrorResponse(request, SERVER_ERROR);
+    MakeErrorResponse(SERVER_ERROR);
     cgi_phase_ = kWritingToInetSocket;
     return;
   }
@@ -80,16 +80,14 @@ Result<void> HttpCgiResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
     // CGIレスポンスタイプが決まっていないのに
     // CgiProcessが削除可能な状態(Unisockが0を返してきている)ならエラー
     if (cgi_process_->IsRemovable()) {
-      http::HttpRequest &request = conn_sock->GetRequests().front();
-      MakeErrorResponse(request, SERVER_ERROR);
+      MakeErrorResponse(SERVER_ERROR);
       cgi_phase_ = kWritingToInetSocket;
     }
     return Result<void>();
   }
 
   if (type == cgi::CgiResponse::kParseError) {
-    http::HttpRequest &request = conn_sock->GetRequests().front();
-    MakeErrorResponse(request, SERVER_ERROR);
+    MakeErrorResponse(SERVER_ERROR);
     // TODO:CGIプロセスがまだ生きている可能性があるので､
     // CGIプロセスの出力をWrite()しないようにする必要がある｡
   } else if (type == cgi::CgiResponse::kDocumentResponse) {

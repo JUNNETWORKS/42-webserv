@@ -93,7 +93,7 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
       location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
   if (!utils::IsFileExist(abs_file_path)) {
-    MakeErrorResponse(request, NOT_FOUND);
+    MakeErrorResponse(NOT_FOUND);
     return;
   }
 
@@ -106,7 +106,7 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   }
 
   if (!utils::IsReadableFile(abs_file_path)) {
-    MakeErrorResponse(request, FORBIDDEN);
+    MakeErrorResponse(FORBIDDEN);
     return;
   }
 
@@ -142,25 +142,29 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   return Result<void>();
 }
 
-void HttpResponse::MakeErrorResponse(const HttpRequest &request,
-                                     HttpStatus status) {
-  (void)request;
-  // エラーレスポンスを作る前にメンバー変数を初期化したほうがいいかも?
-  SetStatus(status, StatusCodes::GetMessage(status));
-  SetHeader("Connection", "close");
-
-  if (!location_) {
-    body_bytes_ = MakeErrorResponseBody(status);
+void HttpResponse::SerializeResponse(const std::string &body) {
+  write_buffer_.clear();
+  if (body.empty() == false)
     SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
-    return;
-  }
+  write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
+  write_buffer_.AppendDataToBuffer(body);
+}
+
+void HttpResponse::MakeErrorResponse(const HttpStatus status) {
+  SetStatus(status, StatusCodes::GetMessage(status));
+
+  headers_.clear();
+  SetHeader("Connection", "close");
+  SetHeader("Content-Type", "text/html");
 
   const std::map<http::HttpStatus, std::string> &error_pages =
       location_->GetErrorPages();
   if (error_pages.find(status) == error_pages.end() ||
       RegisterFile(error_pages.at(status)).IsErr()) {
-    body_bytes_ = MakeErrorResponseBody(status);
-    SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
+    SerializeResponse(MakeErrorResponseBody(status));
+    phase_ = kComplete;
+  } else {
+    phase_ = kBody;
   }
 }
 

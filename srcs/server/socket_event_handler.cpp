@@ -182,14 +182,14 @@ http::HttpResponse *AllocateResponseObj(
     Epoll *epoll) {
   if (!vserver) {
     http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
-    res->MakeErrorResponse(request, http::NOT_FOUND);
+    res->MakeErrorResponse(http::NOT_FOUND);
     return res;
   }
   const config::LocationConf *location =
       vserver->GetLocation(request.GetPath());
   if (!location) {
     http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
-    res->MakeErrorResponse(request, http::NOT_FOUND);
+    res->MakeErrorResponse(http::NOT_FOUND);
     return res;
   }
 

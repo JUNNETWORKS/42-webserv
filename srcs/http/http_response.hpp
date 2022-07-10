@@ -72,7 +72,7 @@ class HttpResponse {
   // 関数には特に何も定義しなくて良い｡
   virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
 
-  void MakeErrorResponse(const HttpRequest &request, HttpStatus status);
+  void MakeErrorResponse(const HttpStatus status);
 
   // すべてのデータの write が完了したか
   virtual bool IsAllDataWritingCompleted();
@@ -108,6 +108,7 @@ class HttpResponse {
 
   Result<WritingPhase> PrepareResponseBody();
 
+  void SerializeResponse(const std::string &body);
   std::string MakeErrorResponseBody(HttpStatus status);
 
   static std::string MakeAutoIndex(const std::string &root_path,
