@@ -61,6 +61,7 @@ Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
     epoll_->Add(fde, kFdeWrite);
   }
   epoll_->Add(fde, kFdeRead);
+  epoll_->SetTimeout(fde, kUnisockTimeout);
   fde_ = fde;
   return Result<void>();
 }
