@@ -61,18 +61,24 @@ def append_test_result(test_name, is_success, data=None):
         test_dict[test_name].append([is_success, data])
 
 
-def get_success_fail_count(test_name) -> bool:
+def get_success_count(test_name):
     success_count = 0
-    fail_count = 0
     lst = test_dict[test_name]
     for l in lst:
         success_count += l[0] == True
+    return success_count
+
+
+def get_fail_count(test_name):
+    fail_count = 0
+    lst = test_dict[test_name]
+    for l in lst:
         fail_count += l[0] == False
-    return success_count, fail_count
+    return fail_count
 
 
 def test_result(test_name) -> bool:
-    success_count, fail_count = get_success_fail_count(test_name)
+    fail_count = get_fail_count(test_name)
     return fail_count == 0
 
 
@@ -83,7 +89,8 @@ def all_test_result() -> bool:
     all_success_count = 0
     all_fail_count = 0
     for test_name in test_dict:
-        success_count, fail_count = get_success_fail_count(test_name)
+        success_count = get_success_count(test_name)
+        fail_count = get_fail_count(test_name)
         print(f"{test_name.upper():<20} SUCCESS {success_count}, FAIL {fail_count}")
         all_success_count += success_count
         all_fail_count += fail_count
