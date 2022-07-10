@@ -16,9 +16,9 @@ WEBSERV_PORT = args.WEBSERV_PORT
 OK_MSG = const_str.GREEN + "[ OK ]" + const_str.RESET
 KO_MSG = const_str.RED + "[ KO ]" + const_str.RESET
 
-# prm
+# response
 # ========================================================================
-class prms:
+class response:
     def __init__(self, code=0, body="", file_path="") -> None:
         self.code = code
         self.set_body(body=body, file_path=file_path)
@@ -33,18 +33,18 @@ class prms:
             self.body = body
 
 
-def is_eq_prms(prm1, prm2, ck_code=True, ck_body=True) -> bool:
+def is_eq_params(response1, response2, ck_code=True, ck_body=True) -> bool:
     is_code_ok = True
     is_body_ok = True
     if ck_code:
-        is_code_ok = prm1.code == prm2.code
+        is_code_ok = response1.code == response2.code
     if ck_body:
-        is_body_ok = prm1.body == prm2.body
+        is_body_ok = response1.body == response2.body
     return is_code_ok and is_body_ok
 
 
-def print_prms(prm: prms) -> None:
-    print(f"prm : {prm.code}, {prm.body}")
+def print_response(response: response) -> None:
+    print(f"response : {response.code}, {response.body}")
 
 
 # KO
@@ -95,21 +95,21 @@ def all_test_result() -> bool:
 # run Test
 # ========================================================================
 def run_test(
-    req_path, expect_prm: prms, port=WEBSERV_PORT, ck_code=True, ck_body=True
+    req_path, expect_response: response, port=WEBSERV_PORT, ck_code=True, ck_body=True
 ) -> bool:
     code, body = send_req_utils.send_req(req_path, port)
-    ft_res_prm = prms(code=code, body=body)
+    ft_res_response = response(code=code, body=body)
 
     is_success = None
     log_msg = f"req_path : {req_path}"
-    if is_eq_prms(ft_res_prm, expect_prm, ck_code=ck_code, ck_body=ck_body):
+    if is_eq_params(ft_res_response, expect_response, ck_code=ck_code, ck_body=ck_body):
         is_success = True
         print(OK_MSG, log_msg)
     else:
         is_success = False
         print(KO_MSG, log_msg)
         # append_ko_lst(inspect_utils.get_caller_func_name(), [log_msg])
-        diff_utils.make_diff_html(ft_res_prm.body, expect_prm.body)
+        diff_utils.make_diff_html(ft_res_response.body, expect_response.body)
     append_test_result(inspect_utils.get_caller_func_name(), is_success, log_msg)
     return is_success
 
@@ -119,38 +119,38 @@ def run_test(
 def simple_test():
     req_path = "/sample.html"
     file_path = "public" + req_path
-    expect_prm = prms(200, file_path=file_path)
-    run_test(req_path, expect_prm)
+    expect_response = response(200, file_path=file_path)
+    run_test(req_path, expect_response)
 
     req_path = "/hoge/hoge.html"
     file_path = "public" + req_path
-    expect_prm = prms(200, file_path=file_path)
-    run_test(req_path, expect_prm)
+    expect_response = response(200, file_path=file_path)
+    run_test(req_path, expect_response)
 
     req_path = "/fuga/fuga.html"
     file_path = "public" + req_path
-    expect_prm = prms(200, file_path=file_path)
-    run_test(req_path, expect_prm)
+    expect_response = response(200, file_path=file_path)
+    run_test(req_path, expect_response)
 
 
 def not_found_test():
-    expect_prm = prms(404)
-    run_test("/NotExist", expect_prm, ck_body=False)
-    run_test("/NotExist/NotExist", expect_prm, ck_body=False)
-    run_test("/hoge/NotExist", expect_prm, ck_body=False)
+    expect_response = response(404)
+    run_test("/NotExist", expect_response, ck_body=False)
+    run_test("/NotExist/NotExist", expect_response, ck_body=False)
+    run_test("/hoge/NotExist", expect_response, ck_body=False)
 
 
 def autoindex_test():
     req_path = "/"
-    expect_prm = prms(200)
-    run_test(req_path, expect_prm, ck_body=False)
+    expect_response = response(200)
+    run_test(req_path, expect_response, ck_body=False)
 
 
 def path_normaliz_test():
-    expect_prm = prms(200, file_path="public/sample.html")
-    run_test("///sample.html", expect_prm)
-    run_test("/./././sample.html", expect_prm)
-    run_test("/NotExist/../sample.html", expect_prm)
+    expect_response = response(200, file_path="public/sample.html")
+    run_test("///sample.html", expect_response)
+    run_test("/./././sample.html", expect_response)
+    run_test("/NotExist/../sample.html", expect_response)
 
 
 def exec_test(f, must_all_test_ok=True):
