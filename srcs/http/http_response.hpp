@@ -111,6 +111,9 @@ class HttpResponse {
   void SerializeResponse(const std::string &body);
   std::string MakeErrorResponseBody(HttpStatus status);
 
+  void MakeAutoIndexResponse(const std::string &abs,
+                             const std::string &relative);
+
   static std::string MakeAutoIndex(const std::string &root_path,
                                    const std::string &relative_path);
 };

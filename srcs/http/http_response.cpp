@@ -92,16 +92,14 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   const std::string &abs_file_path =
       location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
+
   if (!utils::IsFileExist(abs_file_path)) {
     MakeErrorResponse(NOT_FOUND);
     return;
   }
 
   if (utils::IsDir(abs_file_path)) {
-    body_bytes_ = MakeAutoIndex(abs_file_path, request.GetPath());
-    SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
-    SetStatus(OK, StatusCodes::GetMessage(OK));
-    AppendHeader("Content-Type", "text/html");
+    MakeAutoIndexResponse(abs_file_path, request.GetPath());
     return;
   }
 
@@ -145,9 +143,23 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
 void HttpResponse::SerializeResponse(const std::string &body) {
   write_buffer_.clear();
   if (body.empty() == false)
-    SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
+    SetHeader("Content-Length", utils::ConvertToStr(body.size()));
   write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
   write_buffer_.AppendDataToBuffer(body);
+}
+
+void HttpResponse::MakeAutoIndexResponse(const std::string &abs,
+                                         const std::string &relative) {
+  // TODO AutoIndexの作成に失敗した時エラー
+  const std::string body = MakeAutoIndex(abs, relative);
+
+  SetStatus(OK, StatusCodes::GetMessage(OK));
+
+  headers_.clear();
+  SetHeader("Content-Type", "text/html");
+
+  SerializeResponse(body);
+  phase_ = kComplete;
 }
 
 void HttpResponse::MakeErrorResponse(const HttpStatus status) {
