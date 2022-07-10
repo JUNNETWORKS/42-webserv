@@ -155,7 +155,6 @@ void HttpResponse::MakeAutoIndexResponse(const std::string &abs,
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
 
-  headers_.clear();
   SetHeader("Content-Type", "text/html");
 
   SerializeResponse(body);
