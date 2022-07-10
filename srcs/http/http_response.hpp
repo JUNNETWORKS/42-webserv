@@ -23,7 +23,7 @@ using namespace result;
 
 class HttpResponse {
  protected:
-  // 次何を書き込むか
+  // レスポンスの作成状況
   enum CreateResponsePhase { kLoadRequest, kStatusAndHeader, kBody, kComplete };
 
   // 1回のreadで何バイト読み取るか
@@ -32,7 +32,7 @@ class HttpResponse {
   const config::LocationConf *location_;
   server::Epoll *epoll_;
 
-  // 次何を書き込むか
+  // レスポンスの作成状況
   CreateResponsePhase phase_;
 
   // デフォルトのHTTPバージョン(HTTP/1.1)
@@ -59,11 +59,8 @@ class HttpResponse {
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpResponse();
 
-  // MakeResponse だけではResponseが作成できない場合に呼ぶメソッド｡
-  // 具体的には IsReadyToWrite() と IsAllDataWritingCompleted() が両方 False
-  // を返す場合に呼ばれる｡
-  // MakeResponse だけでResponseが作成出来る場合にはこの関数は呼ばれないので､
-  // 関数には特に何も定義しなくて良い｡
+  //レスポンスの内容を作る関数。
+  //適宜write_buffer_につめてWriteできるようにする。
   virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
 
   void MakeErrorResponse(const HttpStatus status);
@@ -100,10 +97,10 @@ class HttpResponse {
   utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;
   utils::ByteVector SerializeHeaders() const;
+  void SerializeResponse(const std::string &body);
 
   Result<CreateResponsePhase> PrepareResponseBody();
 
-  void SerializeResponse(const std::string &body);
   std::string MakeErrorResponseBody(HttpStatus status);
 
   void MakeAutoIndexResponse(const std::string &abs,
