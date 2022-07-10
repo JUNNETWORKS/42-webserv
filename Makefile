@@ -74,10 +74,8 @@ $(GTEST):
 .PHONY: req-test
 req-test: all
 	sed -e "s|/public|$(shell pwd)/test/public|g" test/webserv_configurations/sample-cgi.conf > test/webserv_configurations/sample-cgi.conf.sed
-	./webserv test/webserv_configurations/sample-cgi.conf.sed &
-	cd test/public && python3 -m http.server --cgi &
-	sleep 10
+	./webserv test/webserv_configurations/sample-cgi.conf.sed & > /dev/null
+	sleep 5
 	ps aux | grep "./webserv"
-	ps aux | grep "Python -m http.server --cgi"
-	cd test && python3 test.py --FT__PORT=8080 --ORI_PORT=8000 --ORI_CGI_PORT=8000
+	cd test && make py-test
 	cat test/diff.html

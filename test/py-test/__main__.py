@@ -64,7 +64,7 @@ def append_ko_lst(case):
 
 
 def print_ko_lst():
-    print("\n --- KO_LST ---\n")
+    print("\n\n\n --- KO_LST ---\n")
     print(f"KO COUNT : {len(ko_lst)}")
     print()
     for node in ko_lst:
