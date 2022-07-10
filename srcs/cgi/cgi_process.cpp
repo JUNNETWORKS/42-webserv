@@ -128,6 +128,19 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
   CgiRequest *cgi_request = cgi_process->cgi_request_;
   CgiResponse *cgi_response = cgi_process->cgi_response_;
 
+  if (events & kFdeTimeout) {
+    printf("Timeout CGI\n");
+    if (cgi_process->IsRemovable()) {
+      delete cgi_process;
+    } else {
+      // Unregister する
+      cgi_process->SetIsError(true);
+      epoll->Unregister(fde);
+      cgi_process->SetIsRemovable(true);
+    }
+    return;
+  }
+
   if (events & kFdeWrite) {
     // Write request's body to unisock
     ssize_t write_res = write(cgi_request->GetCgiUnisock(),
