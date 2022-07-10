@@ -1,13 +1,13 @@
 from . import response_class as res
-from . import const_str
+from . import args_utils
 from . import send_req_utils
 from . import inspect_utils
 from . import diff_utils
-from . import const_str
+from . import args_utils
 
 
-OK_MSG = const_str.GREEN + "[ OK ]" + const_str.RESET
-KO_MSG = const_str.RED + "[ KO ]" + const_str.RESET
+OK_MSG = args_utils.GREEN + "[ OK ]" + args_utils.RESET
+KO_MSG = args_utils.RED + "[ KO ]" + args_utils.RESET
 
 # Test Stat
 # ========================================================================
@@ -66,7 +66,7 @@ def all_test_stat() -> bool:
 def run_test(
     req_path,
     expect_response: res.response,
-    port=const_str.WEBSERV_PORT,
+    port=args_utils.WEBSERV_PORT,
     ck_code=True,
     ck_body=True,
 ) -> bool:
