@@ -28,7 +28,6 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       status_(OK),
       status_message_(StatusCodes::GetMessage(OK)),
       headers_(),
-      body_bytes_(),
       write_buffer_(),
       file_fd_(-1) {
   assert(epoll_ != NULL);

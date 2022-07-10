@@ -47,9 +47,6 @@ class HttpResponse {
   // Header
   HeaderMap headers_;
 
-  // Body のバイト列と書き込んだバイト数
-  utils::ByteVector body_bytes_;
-
   //書き込みのバッファ
   utils::ByteVector write_buffer_;
 
