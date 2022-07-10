@@ -82,10 +82,6 @@ bool CgiProcess::IsRemovable() const {
   return status_ & kRemovable;
 }
 
-bool CgiProcess::IsError() const {
-  return status_ & kError;
-}
-
 void CgiProcess::SetIsExecuted(bool is_executed) {
   if (is_executed) {
     status_ |= kExecuted;
@@ -102,14 +98,6 @@ void CgiProcess::SetIsRemovable(bool is_unregistered) {
   }
 }
 
-void CgiProcess::SetIsError(bool is_error) {
-  if (is_error) {
-    status_ |= kError;
-  } else {
-    status_ &= ~kError;
-  }
-}
-
 CgiResponse *CgiProcess::GetCgiResponse() const {
   return cgi_response_;
 }
@@ -117,6 +105,22 @@ CgiResponse *CgiProcess::GetCgiResponse() const {
 FdEvent *CgiProcess::GetFde() const {
   return fde_;
 }
+
+namespace {
+
+void DeleteCgiProcess(Epoll *epoll, FdEvent *fde) {
+  CgiProcess *cgi_process = reinterpret_cast<CgiProcess *>(fde->data);
+
+  if (cgi_process->IsRemovable()) {
+    delete cgi_process;
+  } else {
+    epoll->Unregister(fde);
+    cgi_process->SetIsRemovable(true);
+  }
+  return;
+}
+
+}  // namespace
 
 void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                                 Epoll *epoll) {
@@ -133,9 +137,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                               cgi_process->cgi_input_buffer_.data(),
                               cgi_process->cgi_input_buffer_.size());
     if (write_res < 0) {
-      cgi_process->SetIsError(true);
-      epoll->Unregister(fde);
-      cgi_process->SetIsRemovable(true);
+      DeleteCgiProcess(epoll, fde);
       return;
     }
     cgi_process->cgi_input_buffer_.EraseHead(write_res);
@@ -149,20 +151,11 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
     ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
     printf("HandleCgiEvent() read_res == %ld\n", read_res);
     if (read_res < 0) {
-      cgi_process->SetIsError(true);
-      epoll->Unregister(fde);
-      cgi_process->SetIsRemovable(true);
+      DeleteCgiProcess(epoll, fde);
       return;
     }
     if (read_res == 0) {
-      // 子プロセス側のソケットが終了
-      if (cgi_process->IsRemovable()) {
-        delete cgi_process;
-      } else {
-        // Unregister する
-        epoll->Unregister(fde);
-        cgi_process->SetIsRemovable(true);
-      }
+      DeleteCgiProcess(epoll, fde);
       return;
     }
     cgi_process->cgi_output_buffer_.AppendDataToBuffer(buf, read_res);
@@ -171,9 +164,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
 
   if (events & kFdeError) {
     // Error
-    cgi_process->SetIsError(true);
-    epoll->Unregister(fde);
-    cgi_process->SetIsRemovable(true);
+    DeleteCgiProcess(epoll, fde);
     return;
   }
 }
