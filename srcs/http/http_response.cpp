@@ -31,7 +31,8 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       status_and_headers_bytes_(),
       body_bytes_(),
       file_fd_(-1),
-      is_file_eof_(false) {
+      is_file_eof_(false),
+      is_error_response_(false) {
   assert(epoll_ != NULL);
 }
 
@@ -172,6 +173,7 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
 void HttpResponse::MakeErrorResponse(const HttpRequest &request,
                                      HttpStatus status) {
   (void)request;
+  is_error_response_ = true;
   // エラーレスポンスを作る前にメンバー変数を初期化したほうがいいかも?
   SetStatus(status, StatusCodes::GetMessage(status));
   SetHeader("Connection", "close");
