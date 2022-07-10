@@ -24,7 +24,7 @@ using namespace result;
 class HttpResponse {
  protected:
   // 次何を書き込むか
-  enum WritingPhase { kStatusAndHeader, kBody, kComplete };
+  enum WritingPhase { kLoadRequest, kStatusAndHeader, kBody, kComplete };
 
   // 1回のreadで何バイト読み取るか
   static const unsigned long kBytesPerRead = 1024;  // 1KB
@@ -62,9 +62,6 @@ class HttpResponse {
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpResponse();
 
-  // MakeResponse はレスポンスオブジェクトの初期化で使われる｡
-  virtual void MakeResponse(server::ConnSocket *conn_sock);
-
   // MakeResponse だけではResponseが作成できない場合に呼ぶメソッド｡
   // 具体的には IsReadyToWrite() と IsAllDataWritingCompleted() が両方 False
   // を返す場合に呼ばれる｡
@@ -101,6 +98,7 @@ class HttpResponse {
   HttpResponse(const HttpResponse &rhs);
   HttpResponse &operator=(const HttpResponse &rhs);
 
+  void LoadRequest(server::ConnSocket *conn_sock);
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;

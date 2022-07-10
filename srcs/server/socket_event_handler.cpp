@@ -155,7 +155,6 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       http::HttpResponse *response =
           AllocateResponseObj(vserver, request, epoll);
       socket->SetResponse(response);
-      response->MakeResponse(socket);
     }
 
     http::HttpResponse *response = socket->GetResponse();

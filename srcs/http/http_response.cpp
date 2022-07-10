@@ -23,7 +23,7 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
                            server::Epoll *epoll)
     : location_(location),
       epoll_(epoll),
-      phase_(kStatusAndHeader),
+      phase_(kLoadRequest),
       http_version_(kDefaultHttpVersion),
       status_(OK),
       status_message_(StatusCodes::GetMessage(OK)),
@@ -82,7 +82,7 @@ Result<bool> HttpResponse::ReadFile() {
 //========================================================================
 // Reponse Maker
 
-void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
+void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
   if (IsRequestHasConnectionClose(request)) {
@@ -113,6 +113,8 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   Result<void> register_res = RegisterFile(abs_file_path);
   if (register_res.IsErr())
     MakeErrorResponse(SERVER_ERROR);  // TODO SERVERERRORじゃないかも
+  else
+    phase_ = kStatusAndHeader;
 }
 
 Result<HttpResponse::WritingPhase> HttpResponse::PrepareResponseBody() {
@@ -127,8 +129,9 @@ Result<HttpResponse::WritingPhase> HttpResponse::PrepareResponseBody() {
 }
 
 Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
-  (void)conn_sock;
-
+  if (phase_ == kLoadRequest) {
+    LoadRequest(conn_sock);
+  }
   if (phase_ == kStatusAndHeader) {
     write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
     phase_ = kBody;
