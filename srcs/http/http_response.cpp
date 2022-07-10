@@ -110,7 +110,9 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
   AppendHeader("Content-Type", "text/plain");
-  RegisterFile(abs_file_path);
+  Result<void> register_res = RegisterFile(abs_file_path);
+  if (register_res.IsErr())
+    MakeErrorResponse(SERVER_ERROR);  // TODO SERVERERRORじゃないかも
 }
 
 Result<HttpResponse::WritingPhase> HttpResponse::PrepareResponseBody() {
