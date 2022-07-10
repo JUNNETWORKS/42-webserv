@@ -4,6 +4,7 @@ from . import const_str
 from . import send_req_utils
 from . import diff_utils
 from . import io_utils
+from . import inspect_utils
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--WEBSERV_PORT", type=int, default=49200)
@@ -46,27 +47,49 @@ def print_prms(prm: prms) -> None:
     print(f"prm : {prm.code}, {prm.body}")
 
 
-# print
-# ========================================================================
-def print_func_name(f):
-    print("\n---", f.__name__.upper(), "---\n")
-
-
 # KO
 # ========================================================================
-ko_lst = []
+test_dict = {}
+test_res_lst = []
 
 
-def append_ko_lst(case):
-    ko_lst.append(case)
+def append_test_result(test_name, is_success, data=None):
+    if test_name in test_dict:
+        test_dict[test_name].append([is_success, data])
+    else:
+        test_dict[test_name] = []
+        test_dict[test_name].append([is_success, data])
 
 
-def print_ko_lst():
-    print("\n\n\n --- KO_LST ---\n")
-    print(f"KO COUNT : {len(ko_lst)}")
+def get_success_fail_count(test_name) -> bool:
+    success_count = 0
+    fail_count = 0
+    lst = test_dict[test_name]
+    for l in lst:
+        success_count += l[0] == True
+        fail_count += l[0] == False
+    return success_count, fail_count
+
+
+def test_result(test_name) -> bool:
+    success_count, fail_count = get_success_fail_count(test_name)
+    return fail_count == 0
+
+
+def all_test_result() -> bool:
     print()
-    for node in ko_lst:
-        print(node)
+    print("----- ALL_TEST_RESULT -----")
+    print()
+    all_success_count = 0
+    all_fail_count = 0
+    for test_name in test_dict:
+        success_count, fail_count = get_success_fail_count(test_name)
+        print(f"{test_name.upper():<20} SUCCESS {success_count}, FAIL {fail_count}")
+        all_success_count += success_count
+        all_fail_count += fail_count
+    print()
+    print(f"TOTAL : SUCCESS {all_success_count}, FAIL {all_fail_count}")
+    return all_fail_count == 0
 
 
 # run Test
@@ -85,8 +108,9 @@ def run_test(
     else:
         is_success = False
         print(KO_MSG, log_msg)
-        append_ko_lst([log_msg])
+        # append_ko_lst(inspect_utils.get_caller_func_name(), [log_msg])
         diff_utils.make_diff_html(ft_res_prm.body, expect_prm.body)
+    append_test_result(inspect_utils.get_caller_func_name(), is_success, log_msg)
     return is_success
 
 
@@ -118,9 +142,8 @@ def not_found_test():
 
 def autoindex_test():
     req_path = "/"
-    file_path = "public" + "/expect_autoindex.html"
-    expect_prm = prms(200, file_path=file_path)
-    run_test(req_path, expect_prm)
+    expect_prm = prms(200)
+    run_test(req_path, expect_prm, ck_body=False)
 
 
 def path_normaliz_test():
@@ -130,26 +153,35 @@ def path_normaliz_test():
     run_test("/NotExist/../sample.html", expect_prm)
 
 
+def exec_test(f, must_all_test_ok=True):
+    test_func_name = f.__name__
+    print("---", test_func_name.upper(), "---")
+    f()
+
+    is_test_ok = test_result(test_func_name)
+    if is_test_ok == False and must_all_test_ok:
+        global test_exit_code
+        test_exit_code = 1
+    print()
+
+
 def run_all_test():
-    print_func_name(simple_test)
-    simple_test()
-
-    print_func_name(not_found_test)
-    not_found_test()
-
-    print_func_name(autoindex_test)
-    autoindex_test()
-
-    print_func_name(path_normaliz_test)
-    path_normaliz_test()
+    exec_test(simple_test)
+    exec_test(not_found_test)
+    exec_test(autoindex_test)
+    exec_test(path_normaliz_test, must_all_test_ok=False)
 
 
 # main
 # ========================================================================
+test_exit_code = 0
+
+
 def main():
     run_all_test()
-    print_ko_lst()
+    all_test_result()
     diff_utils.save_diff_html()
+    exit(test_exit_code)
 
 
 if __name__ == "__main__":
