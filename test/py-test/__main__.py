@@ -1,21 +1,19 @@
 import argparse
-import sys
 
+from . import const_str
 from . import send_req_utils
 from . import diff_utils
 from . import io_utils
 
-GREEN = ""
-RED = ""
-RESET = ""
-if sys.stdout.isatty():
-    GREEN = "\033[32m"
-    RED = "\033[31m"
-    RESET = "\033[39m"
+parser = argparse.ArgumentParser()
+parser.add_argument("--WEBSERV_PORT", type=int, default=49200)
 
-OK_MSG = GREEN + "[ OK ]" + RESET
-KO_MSG = RED + "[ KO ]" + RESET
+args = parser.parse_args()
 
+WEBSERV_PORT = args.WEBSERV_PORT
+
+OK_MSG = const_str.GREEN + "[ OK ]" + const_str.RESET
+KO_MSG = const_str.RED + "[ KO ]" + const_str.RESET
 
 # prm
 # ========================================================================
@@ -74,7 +72,7 @@ def print_ko_lst():
 # run Test
 # ========================================================================
 def run_test(
-    req_path, expect_prm: prms, port=49200, ck_code=True, ck_body=True
+    req_path, expect_prm: prms, port=WEBSERV_PORT, ck_code=True, ck_body=True
 ) -> bool:
     code, body = send_req_utils.send_req(req_path, port)
     ft_res_prm = prms(code=code, body=body)

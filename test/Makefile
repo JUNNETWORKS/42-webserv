@@ -14,8 +14,9 @@ fclean: clean
 re: fclean all
 
 .PHONY: py-test
+py-test: WEBSERV_PORT := 49200
 py-test:
-	python3 -u -m py-test
+	python3 -u -m py-test --WEBSERV_PORT=$(WEBSERV_PORT)
 
 .PHONY: g-test
 g-test:
