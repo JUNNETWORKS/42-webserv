@@ -2,7 +2,7 @@ from . import response_class as res
 from .run_test import run_test
 from .run_test import is_test_success
 
-# launcher Test
+# TEST CASE
 # ========================================================================
 def simple_test():
     req_path = "/sample.html"
@@ -41,6 +41,8 @@ def path_normaliz_test():
     run_test("/NotExist/../sample.html", expect_response)
 
 
+# Exec Test
+# ========================================================================
 def exec_test(f, must_all_test_ok=True):
     test_func_name = f.__name__
     print("---", test_func_name.upper(), "---")

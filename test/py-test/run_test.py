@@ -44,9 +44,9 @@ def is_test_success(test_name) -> bool:
     return fail_count == 0
 
 
-def all_test_result() -> bool:
+def all_test_stat() -> bool:
     print()
-    print("----- ALL_TEST_RESULT -----")
+    print("----- ALL_TEST_STAT -----")
     print()
     all_success_count = 0
     all_fail_count = 0
