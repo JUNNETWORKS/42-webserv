@@ -111,7 +111,7 @@ void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
   AppendHeader("Content-Type", "text/plain");
   Result<void> register_res = RegisterFile(abs_file_path);
   if (register_res.IsErr())
-    MakeErrorResponse(SERVER_ERROR);  // TODO SERVERERRORじゃないかも
+    MakeErrorResponse(SERVER_ERROR);
   else
     phase_ = kStatusAndHeader;
 }
