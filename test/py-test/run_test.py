@@ -1,5 +1,5 @@
 from . import response_class as res
-from . import args_utils
+from . import cmd_args
 from . import send_req_utils
 from . import inspect_utils
 from . import diff_utils
@@ -66,7 +66,7 @@ def all_test_stat() -> bool:
 def run_test(
     req_path,
     expect_response: res.response,
-    port=args_utils.WEBSERV_PORT,
+    port=cmd_args.WEBSERV_PORT,
     ck_code=True,
     ck_body=True,
 ) -> bool:
