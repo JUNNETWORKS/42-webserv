@@ -37,12 +37,12 @@
 
 # Editor
 .vscode/*.log
+__pycache__
 
 # Test
 /google_test/
 /tester
 /test/diff.html
 /test/py-test/diff.html
-/test/py-test/__pycache__/
 /test/cppcheck-err-list
 /test/webserv_configurations/sample.conf.sed
