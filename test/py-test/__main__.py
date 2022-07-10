@@ -47,7 +47,7 @@ def get_fail_count(test_name):
     return fail_count
 
 
-def test_result(test_name) -> bool:
+def is_test_success(test_name) -> bool:
     fail_count = get_fail_count(test_name)
     return fail_count == 0
 
@@ -140,8 +140,7 @@ def exec_test(f, must_all_test_ok=True):
     test_func_name = f.__name__
     print("---", test_func_name.upper(), "---")
     f()
-
-    is_test_ok = test_result(test_func_name)
+    is_test_ok = is_test_success(test_func_name)
     if is_test_ok == False and must_all_test_ok:
         global test_exit_code
         test_exit_code = 1
