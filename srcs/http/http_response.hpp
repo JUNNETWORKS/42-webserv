@@ -66,7 +66,7 @@ class HttpResponse {
   void MakeErrorResponse(const HttpStatus status);
 
   // すべてのデータの write が完了したか
-  virtual bool IsAllDataWritingCompleted();
+  bool IsAllDataWritingCompleted();
 
   const std::vector<std::string> &GetHeader(const std::string &header);
   Result<void> WriteToSocket(const int fd);

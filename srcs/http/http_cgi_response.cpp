@@ -92,27 +92,6 @@ HttpCgiResponse::PrepareResponseBody() {
 //            IsReadyToWriteFile()));
 // }
 
-// すべてのデータの write が完了したか
-bool HttpCgiResponse::IsAllDataWritingCompleted() {
-  cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
-
-  // まだヘッダーやStatusなどの情報が確定していない場合はFalse
-  if (cgi_phase_ == kSetupCgiTypeSpecificInfo) {
-    return false;
-  }
-
-  // LocalRedirectの場合はレスポンスを書き込まないので常にTrue
-  if (cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
-    return true;
-  }
-
-  // Trueの場合
-  // - CgiProcessが終了済み && バッファの全てのデータが書き込み完了
-  return HttpResponse::IsAllDataWritingCompleted() &&
-         cgi_process_->IsRemovable() &&
-         cgi_process_->GetCgiResponse()->GetBody().empty();
-}
-
 void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
