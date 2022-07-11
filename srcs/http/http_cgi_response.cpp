@@ -101,7 +101,11 @@ void HttpCgiResponse::MakeLocalRedirectResponse(server::ConnSocket *conn_sock) {
   // LocalRedirect を反映させた Request を2番目にinsertする
   std::deque<http::HttpRequest> &requests = conn_sock->GetRequests();
   HttpRequest new_request = CreateLocalRedirectRequest(requests.front());
-  requests.insert(requests.begin() + 1, new_request);
+  if (new_request.GetLocalRedirectCount() > 10) {
+    MakeErrorResponse(SERVER_ERROR);
+  } else {
+    requests.insert(requests.begin() + 1, new_request);
+  }
 }
 
 void HttpCgiResponse::MakeClientRedirectResponse(
@@ -165,6 +169,7 @@ HttpRequest HttpCgiResponse::CreateLocalRedirectRequest(
 
   HttpRequest new_request(request);
   new_request.SetPath(location.Ok());
+  new_request.SetLocalRedirectCount(request.GetLocalRedirectCount() + 1);
   return new_request;
 }
 

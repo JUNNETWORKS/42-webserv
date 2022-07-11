@@ -13,9 +13,10 @@ fclean: clean
 .PHONY: re
 re: fclean all
 
-.PHONY: test
-test:
-	python3 test.py
+.PHONY: req-test
+req-test: WEBSERV_PORT := 49200
+req-test:
+	python3 -u -m py-test --WEBSERV_PORT=$(WEBSERV_PORT)
 
 .PHONY: g-test
 g-test:

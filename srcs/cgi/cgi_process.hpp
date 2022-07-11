@@ -13,15 +13,15 @@ class CgiProcess {
   enum StatusTypes {
     kExecuted = 1,
     kFinished = 1 << 1,
-    kError = 1 << 2,
     // HttpCgiResponse と Epoll から参照されるので､
     // use-after-free を防ぐために参照カウントのようなものを持たせる｡
-    kRemovable = 1 << 3
+    kRemovable = 1 << 2
   };
 
  private:
   static const unsigned long kDataPerRead = 1024;   // 1KB
   static const unsigned long kDataPerWrite = 1024;  // 1KB
+  static const long kUnisockTimeout = 5 * 1000;     // 5[sec]
 
   CgiRequest *cgi_request_;
   CgiResponse *cgi_response_;
@@ -50,11 +50,9 @@ class CgiProcess {
   // Getter and Setter
   bool IsCgiExecuted() const;
   bool IsRemovable() const;
-  bool IsError() const;
 
   void SetIsExecuted(bool is_executed);
   void SetIsRemovable(bool is_unregistered);
-  void SetIsError(bool is_error);
 
   CgiResponse *GetCgiResponse() const;
   FdEvent *GetFde() const;

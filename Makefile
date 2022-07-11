@@ -69,3 +69,12 @@ $(GTEST):
 	rm -rf release-1.11.0.tar.gz
 	python googletest-release-1.11.0/googletest/scripts/fuse_gtest_files.py $(GTEST_DIR)
 	mv googletest-release-1.11.0 $(GTEST_DIR)
+
+############ REQ-TEST ############
+.PHONY: req-test
+req-test: WEBSERV_PORT := 8080
+req-test: all
+	sed -e "s|/public|$(shell pwd)/test/public|g" test/webserv_configurations/sample.conf > test/webserv_configurations/sample.conf.sed
+	./webserv test/webserv_configurations/sample.conf.sed > /dev/null &
+	sleep 3
+	make -C test req-test WEBSERV_PORT=$(WEBSERV_PORT)
