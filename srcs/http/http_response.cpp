@@ -180,8 +180,7 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
       location_->GetErrorPages();
   if (error_pages.find(status) == error_pages.end() ||
       RegisterFile(error_pages.at(status)).IsErr()) {
-    MakeResponse(SerializeErrorResponseBody(status));
-    return kComplete;
+    return MakeResponse(SerializeErrorResponseBody(status));
   } else {
     return kBody;
   }
