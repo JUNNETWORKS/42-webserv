@@ -16,9 +16,8 @@ namespace server {
 namespace {
 
 // リクエストに応じたレスポンスを返す
-http::HttpResponse *AllocateResponseObj(
-    const config::VirtualServerConf *vserver, const http::HttpRequest &request,
-    Epoll *epoll);
+http::HttpResponse *AllocateResponseObj(const http::HttpRequest &request,
+                                        Epoll *epoll);
 
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessRequest(ConnSocket *socket);
@@ -141,13 +140,9 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
   if (socket->HasParsedRequest()) {
     http::HttpRequest &request = requests.front();
 
-    const config::VirtualServerConf *vserver = request.GetVirtualServer();
-    assert(vserver != NULL);
-
     if (socket->GetResponse() == NULL) {
       // レスポンスオブジェクトがまだない
-      http::HttpResponse *response =
-          AllocateResponseObj(vserver, request, epoll);
+      http::HttpResponse *response = AllocateResponseObj(request, epoll);
       socket->SetResponse(response);
     }
 
@@ -170,23 +165,9 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
   return should_close_conn;
 }
 
-http::HttpResponse *AllocateResponseObj(
-    const config::VirtualServerConf *vserver, const http::HttpRequest &request,
-    Epoll *epoll) {
-  // TODOこの辺ごっそり消える予定だからphaseは無視していい
-  if (!vserver) {
-    http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
-    res->MakeErrorResponse(http::NOT_FOUND);
-    return res;
-  }
-  const config::LocationConf *location =
-      vserver->GetLocation(request.GetPath());
-  if (!location) {
-    http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
-    res->MakeErrorResponse(http::NOT_FOUND);
-    return res;
-  }
-
+http::HttpResponse *AllocateResponseObj(const http::HttpRequest &request,
+                                        Epoll *epoll) {
+  const config::LocationConf *location = request.GetLocation();
   if (location->GetIsCgi()) {
     return new http::HttpCgiResponse(location, epoll);
   } else {
