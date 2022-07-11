@@ -13,7 +13,7 @@ class HttpCgiResponse : public HttpResponse {
 
  public:
   HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll);
-  virtual ~HttpCgiResponse();
+  ~HttpCgiResponse();
 
  private:
   void LoadRequest(server::ConnSocket *conn_sock);
