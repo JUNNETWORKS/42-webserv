@@ -86,7 +86,8 @@ HttpCgiResponse::MakeResponseBody() {
   }
 }
 
-void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
+HttpCgiResponse::CreateResponsePhase HttpCgiResponse::MakeDocumentResponse(
+    server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
   SetStatusFromCgiResponse();
@@ -95,21 +96,24 @@ void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
+  return kStatusAndHeader;
 }
 
-void HttpCgiResponse::MakeLocalRedirectResponse(server::ConnSocket *conn_sock) {
+HttpCgiResponse::CreateResponsePhase HttpCgiResponse::MakeLocalRedirectResponse(
+    server::ConnSocket *conn_sock) {
   // LocalRedirect を反映させた Request を2番目にinsertする
   std::deque<http::HttpRequest> &requests = conn_sock->GetRequests();
   HttpRequest new_request = CreateLocalRedirectRequest(requests.front());
   if (new_request.GetLocalRedirectCount() > 10) {
-    MakeErrorResponse(SERVER_ERROR);
+    return MakeErrorResponse(SERVER_ERROR);
   } else {
     requests.insert(requests.begin() + 1, new_request);
+    return kComplete;
   }
 }
 
-void HttpCgiResponse::MakeClientRedirectResponse(
-    server::ConnSocket *conn_sock) {
+HttpCgiResponse::CreateResponsePhase
+HttpCgiResponse::MakeClientRedirectResponse(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
@@ -123,6 +127,7 @@ void HttpCgiResponse::MakeClientRedirectResponse(
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
+  return kStatusAndHeader;
 }
 
 void HttpCgiResponse::SetStatusFromCgiResponse() {
