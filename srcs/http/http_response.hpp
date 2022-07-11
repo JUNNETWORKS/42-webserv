@@ -23,8 +23,8 @@ using namespace result;
 
 class HttpResponse {
  protected:
-  // 次何を書き込むか
-  enum WritingPhase { kStatusAndHeader, kBody };
+  // レスポンスの作成状況
+  enum CreateResponsePhase { kLoadRequest, kStatusAndHeader, kBody, kComplete };
 
   // 1回のreadで何バイト読み取るか
   static const unsigned long kBytesPerRead = 1024;  // 1KB
@@ -32,11 +32,12 @@ class HttpResponse {
   const config::LocationConf *location_;
   server::Epoll *epoll_;
 
-  // 次何を書き込むか
-  WritingPhase phase_;
+  // レスポンスの作成状況
+  CreateResponsePhase phase_;
 
   // デフォルトのHTTPバージョン(HTTP/1.1)
   static const std::string kDefaultHttpVersion;
+  static const ssize_t kWriteMaxSize = 1024 * 1024;
 
   // Status Line
   std::string http_version_;
@@ -46,63 +47,34 @@ class HttpResponse {
   // Header
   HeaderMap headers_;
 
-  // Status Line と Headers のバイト列と書き込んだバイト数
-  utils::ByteVector status_and_headers_bytes_;
-
-  // Body のバイト列と書き込んだバイト数
-  utils::ByteVector body_bytes_;
+  //書き込みのバッファ
+  utils::ByteVector write_buffer_;
 
   // File
   // 全てのレスポンスクラスはファイルを返せる必要がある｡
   // なぜならエラー時にファイルを扱う可能性があるからである｡
   int file_fd_;
-  bool is_file_eof_;
-
-  bool is_error_response_;
 
  public:
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpResponse();
 
-  // MakeResponse はレスポンスオブジェクトの初期化で使われる｡
-  virtual void MakeResponse(server::ConnSocket *conn_sock);
+  //レスポンスの内容を作る関数。
+  //適宜write_buffer_につめてWriteできるようにする。
+  Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
 
-  // MakeResponse だけではResponseが作成できない場合に呼ぶメソッド｡
-  // 具体的には IsReadyToWrite() と IsAllDataWritingCompleted() が両方 False
-  // を返す場合に呼ばれる｡
-  // MakeResponse だけでResponseが作成出来る場合にはこの関数は呼ばれないので､
-  // 関数には特に何も定義しなくて良い｡
-  virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
-
-  void MakeErrorResponse(const HttpRequest &request, HttpStatus status);
-
-  virtual Result<void> Write(int fd);
-
-  // データ書き込みが可能か
-  virtual bool IsReadyToWrite();
+  HttpResponse::CreateResponsePhase MakeErrorResponse(const HttpStatus status);
 
   // すべてのデータの write が完了したか
-  virtual bool IsAllDataWritingCompleted();
+  bool IsAllDataWritingCompleted();
 
   const std::vector<std::string> &GetHeader(const std::string &header);
+  Result<void> WriteToSocket(const int fd);
 
  protected:
   // ファイルをopenし､Epollで監視する
   Result<void> RegisterFile(const std::string &file_path);
-
-  // status-line と header-lines を書き込む｡
-  // status_and_headers_bytes_ にデータが無い(初回呼び出し)ときには､
-  // データをセットする｡
-  //
-  // 返り値は今回書き込んだバイト数である｡
-  // 0ならば全てのバイト書き込みが完了したことになる｡
-  Result<ssize_t> WriteStatusAndHeader(int fd);
-
-  Result<ssize_t> ReadFile();
-  Result<ssize_t> WriteBody(int fd);
-
-  bool IsReadyToWriteBody();
-  bool IsReadyToWriteFile();
+  Result<bool> ReadFile();
 
   // ========================================================================
   // Getter and Setter
@@ -120,12 +92,20 @@ class HttpResponse {
   HttpResponse(const HttpResponse &rhs);
   HttpResponse &operator=(const HttpResponse &rhs);
 
+  // CGIとFILEで処理が異なる部分
+  virtual CreateResponsePhase LoadRequest(server::ConnSocket *conn_sock);
+  virtual Result<CreateResponsePhase> MakeResponseBody();
+
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;
   utils::ByteVector SerializeHeaders() const;
+  CreateResponsePhase MakeResponse(const std::string &body);
 
-  std::string MakeErrorResponseBody(HttpStatus status);
+  std::string SerializeErrorResponseBody(HttpStatus status);
+
+  CreateResponsePhase MakeAutoIndexResponse(const std::string &abs,
+                                            const std::string &relative);
 
   static std::string MakeAutoIndex(const std::string &root_path,
                                    const std::string &relative_path);

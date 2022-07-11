@@ -23,16 +23,13 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
                            server::Epoll *epoll)
     : location_(location),
       epoll_(epoll),
-      phase_(kStatusAndHeader),
+      phase_(kLoadRequest),
       http_version_(kDefaultHttpVersion),
       status_(OK),
       status_message_(StatusCodes::GetMessage(OK)),
       headers_(),
-      status_and_headers_bytes_(),
-      body_bytes_(),
-      file_fd_(-1),
-      is_file_eof_(false),
-      is_error_response_(false) {
+      write_buffer_(),
+      file_fd_(-1) {
   assert(epoll_ != NULL);
 }
 
@@ -57,76 +54,35 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
 //========================================================================
 // Writer
 
-Result<void> HttpResponse::Write(int fd) {
-  Result<ssize_t> status_header_res = WriteStatusAndHeader(fd);
-  if (status_header_res.IsErr()) {
-    return status_header_res.Err();
-  }
-  if (status_header_res.Ok() > 0) {
-    // WriteStatusAndHeader()
-    // で書き込みが行われた後にノンブロッキングで書き込める保証はない
-    return Result<void>();
-  }
-
-  if (!body_bytes_.empty()) {
-    Result<ssize_t> result = WriteBody(fd);
-    if (result.IsErr()) {
-      return result.Err();
-    }
-  }
+Result<void> HttpResponse::WriteToSocket(const int fd) {
+  ssize_t write_size = write_buffer_.size() < kWriteMaxSize
+                           ? write_buffer_.size()
+                           : kWriteMaxSize;
+  ssize_t write_res = write(fd, write_buffer_.data(), write_size);
+  if (write_res < 0)
+    return Error();
+  write_buffer_.EraseHead(write_size);
   return Result<void>();
 }
 
-Result<ssize_t> HttpResponse::WriteStatusAndHeader(int fd) {
-  if (phase_ != kStatusAndHeader) {
-    return 0;
-  }
-  if (status_and_headers_bytes_.empty()) {
-    status_and_headers_bytes_ = SerializeStatusAndHeader();
-  }
-
-  ssize_t write_res = write(fd, status_and_headers_bytes_.data(),
-                            status_and_headers_bytes_.size());
-  if (write_res < 0) {
-    return Error();
-  }
-  status_and_headers_bytes_.EraseHead(write_res);
-  if (status_and_headers_bytes_.empty()) {
-    phase_ = kBody;
-  }
-  // この関数内のwrite後に呼び出し元でもwriteがノンブロッキングで可能かは保証されていない
-  return write_res;
-}
-
-Result<ssize_t> HttpResponse::ReadFile() {
-  if (is_file_eof_) {
-    return 0;
-  }
+Result<bool> HttpResponse::ReadFile() {
   utils::Byte buf[kBytesPerRead];
   ssize_t read_res = read(file_fd_, buf, kBytesPerRead);
   if (read_res < 0) {
     return Error();
   } else if (read_res == 0) {
-    is_file_eof_ = true;
+    return true;
   } else {
-    body_bytes_.AppendDataToBuffer(buf, read_res);
+    write_buffer_.AppendDataToBuffer(buf, read_res);
+    return false;
   }
-  return read_res;
-}
-
-Result<ssize_t> HttpResponse::WriteBody(int fd) {
-  ssize_t write_res = write(fd, body_bytes_.data(), body_bytes_.size());
-  if (write_res < 0) {
-    return Error();
-  }
-  body_bytes_.EraseHead(write_res);
-  return write_res;
 }
 
 //========================================================================
 // Reponse Maker
 
-void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
+HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
+    server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
   if (IsRequestHasConnectionClose(request)) {
@@ -136,65 +92,97 @@ void HttpResponse::MakeResponse(server::ConnSocket *conn_sock) {
   const std::string &abs_file_path =
       location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
-  if (!utils::IsFileExist(abs_file_path) ||
-      (utils::IsDir(abs_file_path) && !location_->GetAutoIndex())) {
-    MakeErrorResponse(request, NOT_FOUND);
-    return;
+
+  if (!utils::IsFileExist(abs_file_path)) {
+    return MakeErrorResponse(NOT_FOUND);
   }
 
   if (utils::IsDir(abs_file_path)) {
-    body_bytes_ = MakeAutoIndex(abs_file_path, request.GetPath());
-    SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
-    SetStatus(OK, StatusCodes::GetMessage(OK));
-    AppendHeader("Content-Type", "text/html");
-    return;
+    return MakeAutoIndexResponse(abs_file_path, request.GetPath());
   }
 
   if (!utils::IsReadableFile(abs_file_path)) {
-    MakeErrorResponse(request, FORBIDDEN);
-    return;
+    return MakeErrorResponse(FORBIDDEN);
   }
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
   AppendHeader("Content-Type", "text/plain");
-  RegisterFile(abs_file_path);
+  Result<void> register_res = RegisterFile(abs_file_path);
+  if (register_res.IsErr())
+    return MakeErrorResponse(SERVER_ERROR);
+  else
+    return kStatusAndHeader;
+}
+
+Result<HttpResponse::CreateResponsePhase> HttpResponse::MakeResponseBody() {
+  if (file_fd_ < 0)
+    return kComplete;
+  Result<bool> result = ReadFile();
+  if (result.IsErr()) {
+    return result.Err();
+  } else {
+    return result.Ok() ? kComplete : kBody;
+  }
 }
 
 Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
-  (void)conn_sock;
-  if (file_fd_ >= 0 && !is_file_eof_) {
-    Result<ssize_t> result = ReadFile();
-    if (result.IsErr()) {
-      return result.Err();
-    }
+  if (phase_ == kLoadRequest) {
+    phase_ = LoadRequest(conn_sock);
+  }
+  if (phase_ == kStatusAndHeader) {
+    write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
+    phase_ = kBody;
+  }
+  if (phase_ == kBody) {
+    Result<HttpResponse::CreateResponsePhase> body_result = MakeResponseBody();
+    if (body_result.IsErr())
+      return body_result.Err();
+    phase_ = body_result.Ok();
   }
   return Result<void>();
 }
 
-void HttpResponse::MakeErrorResponse(const HttpRequest &request,
-                                     HttpStatus status) {
-  (void)request;
-  is_error_response_ = true;
-  // エラーレスポンスを作る前にメンバー変数を初期化したほうがいいかも?
-  SetStatus(status, StatusCodes::GetMessage(status));
-  SetHeader("Connection", "close");
+HttpResponse::CreateResponsePhase HttpResponse::MakeResponse(
+    const std::string &body) {
+  write_buffer_.clear();
+  if (body.empty() == false)
+    SetHeader("Content-Length", utils::ConvertToStr(body.size()));
+  write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
+  write_buffer_.AppendDataToBuffer(body);
+  return kComplete;
+}
 
-  if (!location_) {
-    body_bytes_ = MakeErrorResponseBody(status);
-    SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
-    return;
-  }
+HttpResponse::CreateResponsePhase HttpResponse::MakeAutoIndexResponse(
+    const std::string &abs, const std::string &relative) {
+  // TODO AutoIndexの作成に失敗した時エラー
+  const std::string body = MakeAutoIndex(abs, relative);
+
+  SetStatus(OK, StatusCodes::GetMessage(OK));
+
+  SetHeader("Content-Type", "text/html");
+
+  return MakeResponse(body);
+}
+
+HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
+    const HttpStatus status) {
+  SetStatus(status, StatusCodes::GetMessage(status));
+
+  headers_.clear();
+  SetHeader("Connection", "close");
+  SetHeader("Content-Type", "text/html");
 
   const std::map<http::HttpStatus, std::string> &error_pages =
       location_->GetErrorPages();
   if (error_pages.find(status) == error_pages.end() ||
       RegisterFile(error_pages.at(status)).IsErr()) {
-    body_bytes_ = MakeErrorResponseBody(status);
-    SetHeader("Content-Length", utils::ConvertToStr(body_bytes_.size()));
+    return MakeResponse(SerializeErrorResponseBody(status));
+  } else {
+    return kBody;
   }
 }
 
-std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
+std::string HttpResponse::SerializeErrorResponseBody(HttpStatus status) {
   std::stringstream ss;
   ss << status;
   ss << " ";
@@ -213,29 +201,8 @@ std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
 //========================================================================
 // Status checker
 
-bool HttpResponse::IsReadyToWrite() {
-  return IsReadyToWriteBody() || IsReadyToWriteFile();
-}
-
-bool HttpResponse::IsReadyToWriteBody() {
-  return phase_ == kStatusAndHeader ||
-         (phase_ == kBody && !body_bytes_.empty());
-}
-
-bool HttpResponse::IsReadyToWriteFile() {
-  if (file_fd_ >= 0) {
-    return phase_ == kStatusAndHeader ||
-           (phase_ == kBody && (!is_file_eof_ || !body_bytes_.empty()));
-  }
-  return false;
-}
-
 bool HttpResponse::IsAllDataWritingCompleted() {
-  if (file_fd_ >= 0) {
-    return phase_ != kStatusAndHeader && is_file_eof_ && body_bytes_.empty();
-  } else {
-    return phase_ != kStatusAndHeader && body_bytes_.empty();
-  }
+  return phase_ == kComplete && write_buffer_.empty();
 }
 
 //========================================================================

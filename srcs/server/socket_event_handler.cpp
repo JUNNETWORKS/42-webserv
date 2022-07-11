@@ -149,14 +149,13 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
       http::HttpResponse *response =
           AllocateResponseObj(vserver, request, epoll);
       socket->SetResponse(response);
-      response->MakeResponse(socket);
     }
 
     http::HttpResponse *response = socket->GetResponse();
     should_close_conn |= response->PrepareToWrite(socket).IsErr();
-    if (!should_close_conn && response->IsReadyToWrite()) {
+    if (!should_close_conn && response->IsAllDataWritingCompleted() == false) {
       // 書き込むデータが存在する
-      should_close_conn |= response->Write(conn_fd).IsErr();
+      should_close_conn |= response->WriteToSocket(conn_fd).IsErr();
     }
     if (!should_close_conn && response->IsAllDataWritingCompleted()) {
       // "Connection: close"
@@ -174,16 +173,17 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 http::HttpResponse *AllocateResponseObj(
     const config::VirtualServerConf *vserver, const http::HttpRequest &request,
     Epoll *epoll) {
+  // TODOこの辺ごっそり消える予定だからphaseは無視していい
   if (!vserver) {
     http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
-    res->MakeErrorResponse(request, http::NOT_FOUND);
+    res->MakeErrorResponse(http::NOT_FOUND);
     return res;
   }
   const config::LocationConf *location =
       vserver->GetLocation(request.GetPath());
   if (!location) {
     http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
-    res->MakeErrorResponse(request, http::NOT_FOUND);
+    res->MakeErrorResponse(http::NOT_FOUND);
     return res;
   }
 
