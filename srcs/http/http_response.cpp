@@ -93,7 +93,8 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
       location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
 
-  if (!utils::IsFileExist(abs_file_path)) {
+  if (!utils::IsFileExist(abs_file_path) ||
+      (utils::IsDir(abs_file_path) && !location_->GetAutoIndex())) {
     return MakeErrorResponse(NOT_FOUND);
   }
 
