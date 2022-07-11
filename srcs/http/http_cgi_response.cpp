@@ -193,18 +193,32 @@ void HttpCgiResponse::SetStatusFromCgiResponse() {
 
   Result<std::string> status_result = cgi_response->GetHeader("Status");
   if (status_result.IsErr()) {
-    // TODO: エラーを返すべき?
+    // TODO: SERVER_ERROR にする
     return;
   }
 
-  std::string status_value = status_result.Ok();
-  std::size_t space_pos = status_value.find(" ");
+  std::string status_with_msg = status_result.Ok();
+  utils::TrimString(status_with_msg, " ");
+
+  // Status と Message を分ける
+  std::size_t space_pos = status_with_msg.find(" ");
   if (space_pos == std::string::npos) {
+    // TODO: SERVER_ERROR にする
     return;
   }
-  std::string status_str = status_value.substr(0, space_pos);
+  std::size_t msg_pos = space_pos;
+  while (msg_pos < status_with_msg.length() &&
+         status_with_msg[msg_pos] == ' ') {
+    msg_pos++;
+  }
+  if (msg_pos == status_with_msg.length()) {
+    // TODO: SERVER_ERROR にする
+    return;
+  }
+
+  std::string status_str = status_with_msg.substr(0, space_pos);
   Result<unsigned long> status = utils::Stoul(status_str);
-  std::string status_msg = status_value.substr(space_pos);
+  std::string status_msg = status_with_msg.substr(msg_pos);
   if (status.IsErr() || !StatusCodes::IsHttpStatus(status.Ok()) ||
       status_msg.empty()) {
     return;
