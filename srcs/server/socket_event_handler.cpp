@@ -110,8 +110,9 @@ bool ProcessRequest(ConnSocket *socket) {
       }
       requests.back().ParseRequest(buffer, socket->GetConfig(),
                                    socket->GetPort());
-      if (requests.back().IsCorrectStatus() == false) {
+      if (requests.back().IsErrorRequest()) {
         buffer.clear();
+        break;
       }
       if (buffer.empty() || requests.back().IsResponsible() == false) {
         break;

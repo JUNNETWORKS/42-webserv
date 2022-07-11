@@ -325,8 +325,13 @@ HttpStatus HttpRequest::InterpretTransferEncoding(
 bool HttpRequest::IsResponsible() {
   return phase_ == kParsed || phase_ == kError;
 }
-bool HttpRequest::IsCorrectStatus() {
-  return parse_status_ == OK;
+bool HttpRequest::IsErrorRequest() {
+  if (phase_ == kError) {
+    assert(parse_status_ >= 400);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 // ========================================================================
