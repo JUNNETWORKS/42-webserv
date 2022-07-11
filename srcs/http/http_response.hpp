@@ -100,9 +100,9 @@ class HttpResponse {
   utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;
   utils::ByteVector SerializeHeaders() const;
-  void SerializeResponse(const std::string &body);
+  CreateResponsePhase MakeResponse(const std::string &body);
 
-  std::string MakeErrorResponseBody(HttpStatus status);
+  std::string SerializeErrorResponseBody(HttpStatus status);
 
   void MakeAutoIndexResponse(const std::string &abs,
                              const std::string &relative);

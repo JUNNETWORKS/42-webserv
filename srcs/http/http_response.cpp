@@ -145,12 +145,14 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   return Result<void>();
 }
 
-void HttpResponse::SerializeResponse(const std::string &body) {
+HttpResponse::CreateResponsePhase HttpResponse::MakeResponse(
+    const std::string &body) {
   write_buffer_.clear();
   if (body.empty() == false)
     SetHeader("Content-Length", utils::ConvertToStr(body.size()));
   write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
   write_buffer_.AppendDataToBuffer(body);
+  return kComplete;
 }
 
 void HttpResponse::MakeAutoIndexResponse(const std::string &abs,
@@ -162,7 +164,7 @@ void HttpResponse::MakeAutoIndexResponse(const std::string &abs,
 
   SetHeader("Content-Type", "text/html");
 
-  SerializeResponse(body);
+  MakeResponse(body);
   phase_ = kComplete;
 }
 
@@ -178,14 +180,14 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
       location_->GetErrorPages();
   if (error_pages.find(status) == error_pages.end() ||
       RegisterFile(error_pages.at(status)).IsErr()) {
-    SerializeResponse(MakeErrorResponseBody(status));
+    MakeResponse(SerializeErrorResponseBody(status));
     return kComplete;
   } else {
     return kBody;
   }
 }
 
-std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
+std::string HttpResponse::SerializeErrorResponseBody(HttpStatus status) {
   std::stringstream ss;
   ss << status;
   ss << " ";
