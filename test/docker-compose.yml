@@ -25,7 +25,7 @@ services:
       - ./Nginx/default.conf:/etc/nginx/conf.d/default.conf
 
   apache:
-    image: httpd:latest
+    build: Apache
     container_name: apache
     ports:
       - 49202:80
