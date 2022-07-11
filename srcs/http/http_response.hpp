@@ -93,7 +93,7 @@ class HttpResponse {
   HttpResponse &operator=(const HttpResponse &rhs);
 
   // CGIとFILEで処理が異なる部分
-  virtual void LoadRequest(server::ConnSocket *conn_sock);
+  virtual CreateResponsePhase LoadRequest(server::ConnSocket *conn_sock);
   virtual Result<CreateResponsePhase> PrepareResponseBody();
 
   // StatusLine と Headers をバイト列にする

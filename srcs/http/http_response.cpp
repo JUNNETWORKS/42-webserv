@@ -81,7 +81,8 @@ Result<bool> HttpResponse::ReadFile() {
 //========================================================================
 // Reponse Maker
 
-void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
+HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
+    server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
   if (IsRequestHasConnectionClose(request)) {
@@ -93,27 +94,24 @@ void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
   printf("abs_path: %s\n", abs_file_path.c_str());
 
   if (!utils::IsFileExist(abs_file_path)) {
-    phase_ = MakeErrorResponse(NOT_FOUND);
-    return;
+    return MakeErrorResponse(NOT_FOUND);
   }
 
   if (utils::IsDir(abs_file_path)) {
-    phase_ = MakeAutoIndexResponse(abs_file_path, request.GetPath());
-    return;
+    return MakeAutoIndexResponse(abs_file_path, request.GetPath());
   }
 
   if (!utils::IsReadableFile(abs_file_path)) {
-    phase_ = MakeErrorResponse(FORBIDDEN);
-    return;
+    return MakeErrorResponse(FORBIDDEN);
   }
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
   AppendHeader("Content-Type", "text/plain");
   Result<void> register_res = RegisterFile(abs_file_path);
   if (register_res.IsErr())
-    phase_ = MakeErrorResponse(SERVER_ERROR);
+    return MakeErrorResponse(SERVER_ERROR);
   else
-    phase_ = kStatusAndHeader;
+    return kStatusAndHeader;
 }
 
 Result<HttpResponse::CreateResponsePhase> HttpResponse::PrepareResponseBody() {
@@ -129,7 +127,7 @@ Result<HttpResponse::CreateResponsePhase> HttpResponse::PrepareResponseBody() {
 
 Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   if (phase_ == kLoadRequest) {
-    LoadRequest(conn_sock);
+    phase_ = LoadRequest(conn_sock);
   }
   if (phase_ == kStatusAndHeader) {
     write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
