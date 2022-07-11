@@ -37,8 +37,6 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
 
   switch (type) {
     case cgi::CgiResponse::kParseError:
-      // TODO:CGIプロセスがまだ生きている可能性があるので､
-      // CGIプロセスの出力をWrite()しないようにする必要がある｡
       MakeErrorResponse(SERVER_ERROR);
       break;
 
