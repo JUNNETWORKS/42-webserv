@@ -16,7 +16,8 @@ class HttpCgiResponse : public HttpResponse {
   ~HttpCgiResponse();
 
  private:
-  void LoadRequest(server::ConnSocket *conn_sock);
+  HttpCgiResponse::CreateResponsePhase LoadRequest(
+      server::ConnSocket *conn_sock);
   Result<CreateResponsePhase> MakeResponseBody();
 
   CreateResponsePhase MakeDocumentResponse(server::ConnSocket *conn_sock);
