@@ -114,7 +114,7 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
     return kStatusAndHeader;
 }
 
-Result<HttpResponse::CreateResponsePhase> HttpResponse::PrepareResponseBody() {
+Result<HttpResponse::CreateResponsePhase> HttpResponse::MakeResponseBody() {
   if (file_fd_ < 0)
     return kComplete;
   Result<bool> result = ReadFile();
@@ -134,8 +134,7 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
     phase_ = kBody;
   }
   if (phase_ == kBody) {
-    Result<HttpResponse::CreateResponsePhase> body_result =
-        PrepareResponseBody();
+    Result<HttpResponse::CreateResponsePhase> body_result = MakeResponseBody();
     if (body_result.IsErr())
       return body_result.Err();
     phase_ = body_result.Ok();

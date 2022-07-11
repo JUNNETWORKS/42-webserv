@@ -94,7 +94,7 @@ class HttpResponse {
 
   // CGIとFILEで処理が異なる部分
   virtual CreateResponsePhase LoadRequest(server::ConnSocket *conn_sock);
-  virtual Result<CreateResponsePhase> PrepareResponseBody();
+  virtual Result<CreateResponsePhase> MakeResponseBody();
 
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;

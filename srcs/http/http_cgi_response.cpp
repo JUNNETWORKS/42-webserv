@@ -67,7 +67,7 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
 }
 
 Result<HttpCgiResponse::CreateResponsePhase>
-HttpCgiResponse::PrepareResponseBody() {
+HttpCgiResponse::MakeResponseBody() {
   if (file_fd_ >= 0) {
     Result<bool> file_res = ReadFile();
     if (file_res.IsErr()) {

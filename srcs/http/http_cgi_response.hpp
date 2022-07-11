@@ -17,7 +17,7 @@ class HttpCgiResponse : public HttpResponse {
 
  private:
   void LoadRequest(server::ConnSocket *conn_sock);
-  Result<CreateResponsePhase> PrepareResponseBody();
+  Result<CreateResponsePhase> MakeResponseBody();
 
   void MakeDocumentResponse(server::ConnSocket *conn_sock);
   void MakeLocalRedirectResponse(server::ConnSocket *conn_sock);
