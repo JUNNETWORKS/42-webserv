@@ -17,6 +17,8 @@ class HttpCgiResponse : public HttpResponse {
 
  private:
   void LoadRequest(server::ConnSocket *conn_sock);
+  Result<CreateResponsePhase> PrepareResponseBody();
+
   void MakeDocumentResponse(server::ConnSocket *conn_sock);
   void MakeLocalRedirectResponse(server::ConnSocket *conn_sock);
   void MakeClientRedirectResponse(server::ConnSocket *conn_sock);
@@ -26,8 +28,6 @@ class HttpCgiResponse : public HttpResponse {
 
   // LocalRedirect の結果に基づき新しいリクエストを作成
   HttpRequest CreateLocalRedirectRequest(const HttpRequest &request);
-
-  Result<CreateResponsePhase> PrepareResponseBody();
 };
 
 }  // namespace http
