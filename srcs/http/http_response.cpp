@@ -98,7 +98,7 @@ void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
   }
 
   if (utils::IsDir(abs_file_path)) {
-    MakeAutoIndexResponse(abs_file_path, request.GetPath());
+    phase_ = MakeAutoIndexResponse(abs_file_path, request.GetPath());
     return;
   }
 
