@@ -49,14 +49,17 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
     MakeErrorResponse(SERVER_ERROR);
     // TODO:CGIプロセスがまだ生きている可能性があるので､
     // CGIプロセスの出力をWrite()しないようにする必要がある｡
-  } else if (type == cgi::CgiResponse::kDocumentResponse) {
-    MakeDocumentResponse(conn_sock);
   } else if (type == cgi::CgiResponse::kLocalRedirect) {
     MakeLocalRedirectResponse(conn_sock);
+    phase_ = kComplete;
+    return;
+  } else if (type == cgi::CgiResponse::kDocumentResponse) {
+    MakeDocumentResponse(conn_sock);
   } else if (type == cgi::CgiResponse::kClientRedirect ||
              type == cgi::CgiResponse::kClientRedirectWithDocument) {
     MakeClientRedirectResponse(conn_sock);
   }
+  phase_ = kStatusAndHeader;
 }
 
 Result<HttpCgiResponse::CreateResponsePhase>
@@ -74,23 +77,6 @@ HttpCgiResponse::PrepareResponseBody() {
     return cgi_process_->IsRemovable() ? kComplete : kBody;
   }
 }
-
-// // データ書き込みが可能か
-// bool HttpCgiResponse::IsReadyToWrite() {
-//   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
-
-//   // まだヘッダーやStatusなどの情報が確定していない
-//   // LocalRedirectの場合はレスポンスを書き込まないので常にFalse
-//   if (cgi_phase_ == kSetupCgiTypeSpecificInfo ||
-//       cgi_response->GetResponseType() == cgi::CgiResponse::kLocalRedirect) {
-//     return false;
-//   }
-
-//   return phase_ == kStatusAndHeader ||
-//          (phase_ == kBody && cgi_process_->IsCgiExecuted() &&
-//           (!cgi_response->GetBody().empty() || IsReadyToWriteBody() ||
-//            IsReadyToWriteFile()));
-// }
 
 void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();

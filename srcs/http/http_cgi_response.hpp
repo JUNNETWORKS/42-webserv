@@ -18,15 +18,6 @@ class HttpCgiResponse : public HttpResponse {
   HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpCgiResponse();
 
-  virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
-  virtual Result<void> Write(int fd);
-
-  // データ書き込みが可能か
-  // virtual bool IsReadyToWrite();
-
-  // すべてのデータの write が完了したか
-  virtual bool IsAllDataWritingCompleted();
-
  private:
   void LoadRequest(server::ConnSocket *conn_sock);
   void MakeDocumentResponse(server::ConnSocket *conn_sock);
