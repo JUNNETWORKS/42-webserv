@@ -79,8 +79,8 @@ int HttpRequest::GetLocalRedirectCount() const {
   return local_redirect_count_;
 }
 
-const config::VirtualServerConf *HttpRequest::GetVirtualServer() const {
-  return vserver_;
+const config::LocationConf *HttpRequest::GetLocation() const {
+  return location_;
 }
 
 //========================================================================
