@@ -86,7 +86,7 @@ class HttpRequest {
                     const config::PortType &port);
   bool IsCorrectRequest();
   bool IsCorrectStatus();
-  bool IsParsed();
+  bool IsResponsible();
 
   // ========================================================================
   // Getter and Setter

@@ -322,8 +322,8 @@ HttpStatus HttpRequest::InterpretTransferEncoding(
 
 //========================================================================
 // Is系関数　外部から状態取得
-bool HttpRequest::IsParsed() {
-  return phase_ == kParsed;
+bool HttpRequest::IsResponsible() {
+  return phase_ == kParsed || phase_ == kError;
 }
 bool HttpRequest::IsCorrectStatus() {
   return parse_status_ == OK;

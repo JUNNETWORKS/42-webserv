@@ -105,7 +105,7 @@ bool ProcessRequest(ConnSocket *socket) {
 
     while (1) {
       std::deque<http::HttpRequest> &requests = socket->GetRequests();
-      if (requests.empty() || requests.back().IsParsed()) {
+      if (requests.empty() || requests.back().IsResponsible()) {
         requests.push_back(http::HttpRequest());
       }
       requests.back().ParseRequest(buffer, socket->GetConfig(),
@@ -113,7 +113,7 @@ bool ProcessRequest(ConnSocket *socket) {
       if (requests.back().IsCorrectStatus() == false) {
         buffer.clear();
       }
-      if (buffer.empty() || requests.back().IsParsed() == false) {
+      if (buffer.empty() || requests.back().IsResponsible() == false) {
         break;
       }
     }
