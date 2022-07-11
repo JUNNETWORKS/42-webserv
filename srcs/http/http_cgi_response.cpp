@@ -20,16 +20,17 @@ HttpCgiResponse::~HttpCgiResponse() {
   }
 }
 
-void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
+HttpCgiResponse::CreateResponsePhase HttpCgiResponse::LoadRequest(
+    server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
   // TODO: 現在 cgi_request.RunCgi()
   // ではファイルの有無に関するエラーチェックをしていないので､
   // 存在しないCGIへのリクエストをするとInternalServerErrorが返ってくる｡
   if (cgi_process_->IsCgiExecuted() == false) {
     if (cgi_process_->RunCgi(request).IsErr()) {
-      MakeErrorResponse(SERVER_ERROR);
+      return MakeErrorResponse(SERVER_ERROR);
     }
-    return;
+    return phase_;
   }
 
   cgi::CgiResponse::ResponseType type =
@@ -37,37 +38,30 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
 
   switch (type) {
     case cgi::CgiResponse::kParseError:
-      MakeErrorResponse(SERVER_ERROR);
-      break;
+      return MakeErrorResponse(SERVER_ERROR);
 
     case cgi::CgiResponse::kLocalRedirect:
-      MakeLocalRedirectResponse(conn_sock);
-      phase_ = kComplete;
-      break;
+      return MakeLocalRedirectResponse(conn_sock);
 
     case cgi::CgiResponse::kDocumentResponse:
-      MakeDocumentResponse(conn_sock);
-      phase_ = kStatusAndHeader;
-      break;
+      return MakeDocumentResponse(conn_sock);
 
     case cgi::CgiResponse::kClientRedirect:
     case cgi::CgiResponse::kClientRedirectWithDocument:
-      MakeClientRedirectResponse(conn_sock);
-      phase_ = kStatusAndHeader;
-      break;
+      return MakeClientRedirectResponse(conn_sock);
 
     default:  // kNotIdentified
       // CGIレスポンスタイプが決まっていないのに
       // CgiProcessが削除可能な状態(Unisockが0を返してきている)ならエラー
       if (cgi_process_->IsRemovable()) {
-        MakeErrorResponse(SERVER_ERROR);
+        return MakeErrorResponse(SERVER_ERROR);
       }
-      break;
+      return phase_;
   }
 }
 
 Result<HttpCgiResponse::CreateResponsePhase>
-HttpCgiResponse::PrepareResponseBody() {
+HttpCgiResponse::MakeResponseBody() {
   if (file_fd_ >= 0) {
     Result<bool> file_res = ReadFile();
     if (file_res.IsErr()) {
@@ -86,7 +80,8 @@ HttpCgiResponse::PrepareResponseBody() {
   }
 }
 
-void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
+HttpCgiResponse::CreateResponsePhase HttpCgiResponse::MakeDocumentResponse(
+    server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
   SetStatusFromCgiResponse();
@@ -95,21 +90,24 @@ void HttpCgiResponse::MakeDocumentResponse(server::ConnSocket *conn_sock) {
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
+  return kStatusAndHeader;
 }
 
-void HttpCgiResponse::MakeLocalRedirectResponse(server::ConnSocket *conn_sock) {
+HttpCgiResponse::CreateResponsePhase HttpCgiResponse::MakeLocalRedirectResponse(
+    server::ConnSocket *conn_sock) {
   // LocalRedirect を反映させた Request を2番目にinsertする
   std::deque<http::HttpRequest> &requests = conn_sock->GetRequests();
   HttpRequest new_request = CreateLocalRedirectRequest(requests.front());
   if (new_request.GetLocalRedirectCount() > 10) {
-    MakeErrorResponse(SERVER_ERROR);
+    return MakeErrorResponse(SERVER_ERROR);
   } else {
     requests.insert(requests.begin() + 1, new_request);
+    return kComplete;
   }
 }
 
-void HttpCgiResponse::MakeClientRedirectResponse(
-    server::ConnSocket *conn_sock) {
+HttpCgiResponse::CreateResponsePhase
+HttpCgiResponse::MakeClientRedirectResponse(server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
@@ -123,6 +121,7 @@ void HttpCgiResponse::MakeClientRedirectResponse(
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
+  return kStatusAndHeader;
 }
 
 void HttpCgiResponse::SetStatusFromCgiResponse() {

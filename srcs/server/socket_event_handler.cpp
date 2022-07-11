@@ -173,6 +173,7 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 http::HttpResponse *AllocateResponseObj(
     const config::VirtualServerConf *vserver, const http::HttpRequest &request,
     Epoll *epoll) {
+  // TODOこの辺ごっそり消える予定だからphaseは無視していい
   if (!vserver) {
     http::HttpResponse *res = new http::HttpResponse(NULL, epoll);
     res->MakeErrorResponse(http::NOT_FOUND);

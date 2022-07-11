@@ -63,7 +63,7 @@ class HttpResponse {
   //適宜write_buffer_につめてWriteできるようにする。
   Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
 
-  void MakeErrorResponse(const HttpStatus status);
+  HttpResponse::CreateResponsePhase MakeErrorResponse(const HttpStatus status);
 
   // すべてのデータの write が完了したか
   bool IsAllDataWritingCompleted();
@@ -93,19 +93,19 @@ class HttpResponse {
   HttpResponse &operator=(const HttpResponse &rhs);
 
   // CGIとFILEで処理が異なる部分
-  virtual void LoadRequest(server::ConnSocket *conn_sock);
-  virtual Result<CreateResponsePhase> PrepareResponseBody();
+  virtual CreateResponsePhase LoadRequest(server::ConnSocket *conn_sock);
+  virtual Result<CreateResponsePhase> MakeResponseBody();
 
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;
   utils::ByteVector SerializeHeaders() const;
-  void SerializeResponse(const std::string &body);
+  CreateResponsePhase MakeResponse(const std::string &body);
 
-  std::string MakeErrorResponseBody(HttpStatus status);
+  std::string SerializeErrorResponseBody(HttpStatus status);
 
-  void MakeAutoIndexResponse(const std::string &abs,
-                             const std::string &relative);
+  CreateResponsePhase MakeAutoIndexResponse(const std::string &abs,
+                                            const std::string &relative);
 
   static std::string MakeAutoIndex(const std::string &root_path,
                                    const std::string &relative_path);

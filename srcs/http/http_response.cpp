@@ -81,7 +81,8 @@ Result<bool> HttpResponse::ReadFile() {
 //========================================================================
 // Reponse Maker
 
-void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
+HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
+    server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
   if (IsRequestHasConnectionClose(request)) {
@@ -93,30 +94,27 @@ void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
   printf("abs_path: %s\n", abs_file_path.c_str());
 
   if (!utils::IsFileExist(abs_file_path)) {
-    MakeErrorResponse(NOT_FOUND);
-    return;
+    return MakeErrorResponse(NOT_FOUND);
   }
 
   if (utils::IsDir(abs_file_path)) {
-    MakeAutoIndexResponse(abs_file_path, request.GetPath());
-    return;
+    return MakeAutoIndexResponse(abs_file_path, request.GetPath());
   }
 
   if (!utils::IsReadableFile(abs_file_path)) {
-    MakeErrorResponse(FORBIDDEN);
-    return;
+    return MakeErrorResponse(FORBIDDEN);
   }
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
   AppendHeader("Content-Type", "text/plain");
   Result<void> register_res = RegisterFile(abs_file_path);
   if (register_res.IsErr())
-    MakeErrorResponse(SERVER_ERROR);
+    return MakeErrorResponse(SERVER_ERROR);
   else
-    phase_ = kStatusAndHeader;
+    return kStatusAndHeader;
 }
 
-Result<HttpResponse::CreateResponsePhase> HttpResponse::PrepareResponseBody() {
+Result<HttpResponse::CreateResponsePhase> HttpResponse::MakeResponseBody() {
   if (file_fd_ < 0)
     return kComplete;
   Result<bool> result = ReadFile();
@@ -129,15 +127,14 @@ Result<HttpResponse::CreateResponsePhase> HttpResponse::PrepareResponseBody() {
 
 Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   if (phase_ == kLoadRequest) {
-    LoadRequest(conn_sock);
+    phase_ = LoadRequest(conn_sock);
   }
   if (phase_ == kStatusAndHeader) {
     write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
     phase_ = kBody;
   }
   if (phase_ == kBody) {
-    Result<HttpResponse::CreateResponsePhase> body_result =
-        PrepareResponseBody();
+    Result<HttpResponse::CreateResponsePhase> body_result = MakeResponseBody();
     if (body_result.IsErr())
       return body_result.Err();
     phase_ = body_result.Ok();
@@ -145,16 +142,18 @@ Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   return Result<void>();
 }
 
-void HttpResponse::SerializeResponse(const std::string &body) {
+HttpResponse::CreateResponsePhase HttpResponse::MakeResponse(
+    const std::string &body) {
   write_buffer_.clear();
   if (body.empty() == false)
     SetHeader("Content-Length", utils::ConvertToStr(body.size()));
   write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
   write_buffer_.AppendDataToBuffer(body);
+  return kComplete;
 }
 
-void HttpResponse::MakeAutoIndexResponse(const std::string &abs,
-                                         const std::string &relative) {
+HttpResponse::CreateResponsePhase HttpResponse::MakeAutoIndexResponse(
+    const std::string &abs, const std::string &relative) {
   // TODO AutoIndexの作成に失敗した時エラー
   const std::string body = MakeAutoIndex(abs, relative);
 
@@ -162,11 +161,11 @@ void HttpResponse::MakeAutoIndexResponse(const std::string &abs,
 
   SetHeader("Content-Type", "text/html");
 
-  SerializeResponse(body);
-  phase_ = kComplete;
+  return MakeResponse(body);
 }
 
-void HttpResponse::MakeErrorResponse(const HttpStatus status) {
+HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
+    const HttpStatus status) {
   SetStatus(status, StatusCodes::GetMessage(status));
 
   headers_.clear();
@@ -177,14 +176,13 @@ void HttpResponse::MakeErrorResponse(const HttpStatus status) {
       location_->GetErrorPages();
   if (error_pages.find(status) == error_pages.end() ||
       RegisterFile(error_pages.at(status)).IsErr()) {
-    SerializeResponse(MakeErrorResponseBody(status));
-    phase_ = kComplete;
+    return MakeResponse(SerializeErrorResponseBody(status));
   } else {
-    phase_ = kBody;
+    return kBody;
   }
 }
 
-std::string HttpResponse::MakeErrorResponseBody(HttpStatus status) {
+std::string HttpResponse::SerializeErrorResponseBody(HttpStatus status) {
   std::stringstream ss;
   ss << status;
   ss << " ";
