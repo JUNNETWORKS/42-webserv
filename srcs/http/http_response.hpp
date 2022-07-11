@@ -61,12 +61,12 @@ class HttpResponse {
 
   //レスポンスの内容を作る関数。
   //適宜write_buffer_につめてWriteできるようにする。
-  virtual Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
+  Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
 
   void MakeErrorResponse(const HttpStatus status);
 
   // すべてのデータの write が完了したか
-  virtual bool IsAllDataWritingCompleted();
+  bool IsAllDataWritingCompleted();
 
   const std::vector<std::string> &GetHeader(const std::string &header);
   Result<void> WriteToSocket(const int fd);
@@ -92,14 +92,15 @@ class HttpResponse {
   HttpResponse(const HttpResponse &rhs);
   HttpResponse &operator=(const HttpResponse &rhs);
 
-  void LoadRequest(server::ConnSocket *conn_sock);
+  // CGIとFILEで処理が異なる部分
+  virtual void LoadRequest(server::ConnSocket *conn_sock);
+  virtual Result<CreateResponsePhase> PrepareResponseBody();
+
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;
   utils::ByteVector SerializeHeaders() const;
   void SerializeResponse(const std::string &body);
-
-  Result<CreateResponsePhase> PrepareResponseBody();
 
   std::string MakeErrorResponseBody(HttpStatus status);
 
