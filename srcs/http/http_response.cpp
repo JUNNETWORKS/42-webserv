@@ -155,8 +155,8 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeResponse(
   return kComplete;
 }
 
-void HttpResponse::MakeAutoIndexResponse(const std::string &abs,
-                                         const std::string &relative) {
+HttpResponse::CreateResponsePhase HttpResponse::MakeAutoIndexResponse(
+    const std::string &abs, const std::string &relative) {
   // TODO AutoIndexの作成に失敗した時エラー
   const std::string body = MakeAutoIndex(abs, relative);
 
@@ -164,8 +164,7 @@ void HttpResponse::MakeAutoIndexResponse(const std::string &abs,
 
   SetHeader("Content-Type", "text/html");
 
-  MakeResponse(body);
-  phase_ = kComplete;
+  return MakeResponse(body);
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
