@@ -92,14 +92,15 @@ class HttpResponse {
   HttpResponse(const HttpResponse &rhs);
   HttpResponse &operator=(const HttpResponse &rhs);
 
+  // CGIとFILEで処理が異なる部分
   virtual void LoadRequest(server::ConnSocket *conn_sock);
+  virtual Result<CreateResponsePhase> PrepareResponseBody();
+
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;
   utils::ByteVector SerializeHeaders() const;
   void SerializeResponse(const std::string &body);
-
-  virtual Result<CreateResponsePhase> PrepareResponseBody();
 
   std::string MakeErrorResponseBody(HttpStatus status);
 
