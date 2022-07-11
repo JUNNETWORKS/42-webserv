@@ -74,7 +74,7 @@ HttpCgiResponse::MakeResponseBody() {
   } else {
     utils::ByteVector &cgi_response_body =
         cgi_process_->GetCgiResponse()->GetBody();
-    write_buffer_.AppendDataToBuffer(ConvertChunkResponse(cgi_response_body));
+    write_buffer_.AppendDataToBuffer(ConvertToChunkResponse(cgi_response_body));
     cgi_response_body.clear();
 
     if (cgi_process_->IsRemovable()) {
@@ -86,7 +86,7 @@ HttpCgiResponse::MakeResponseBody() {
   }
 }
 
-std::string HttpCgiResponse::ConvertChunkResponse(utils::ByteVector data) {
+std::string HttpCgiResponse::ConvertToChunkResponse(utils::ByteVector data) {
   std::stringstream ss;
   while (data.empty() == false) {
     size_t chunk_size =
