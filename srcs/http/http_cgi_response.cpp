@@ -47,6 +47,7 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
 
   if (type == cgi::CgiResponse::kParseError) {
     MakeErrorResponse(SERVER_ERROR);
+    return;
     // TODO:CGIプロセスがまだ生きている可能性があるので､
     // CGIプロセスの出力をWrite()しないようにする必要がある｡
   } else if (type == cgi::CgiResponse::kLocalRedirect) {
