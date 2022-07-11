@@ -29,6 +29,7 @@ class ByteVector : public std::vector<Byte> {
   std::string CutSubstrBeforePos(size_t pos);
   std::string SubstrBeforePos(size_t pos) const;
   void AppendDataToBuffer(const Byte* buf, size_t size);
+  void AppendDataToBuffer(const ByteVector& vec);
 
  private:
   static const size_type kReserveSize_ = 2 * 1024;  // 2KB
