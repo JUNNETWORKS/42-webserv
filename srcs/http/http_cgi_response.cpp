@@ -35,31 +35,37 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
   cgi::CgiResponse::ResponseType type =
       cgi_process_->GetCgiResponse()->GetResponseType();
 
-  if (type == cgi::CgiResponse::kNotIdentified) {
-    // CGIレスポンスタイプが決まっていないのに
-    // CgiProcessが削除可能な状態(Unisockが0を返してきている)ならエラー
-    if (cgi_process_->IsRemovable()) {
+  switch (type) {
+    case cgi::CgiResponse::kParseError:
+      // TODO:CGIプロセスがまだ生きている可能性があるので､
+      // CGIプロセスの出力をWrite()しないようにする必要がある｡
       MakeErrorResponse(SERVER_ERROR);
-    }
-    return;
-  }
+      break;
 
-  if (type == cgi::CgiResponse::kParseError) {
-    MakeErrorResponse(SERVER_ERROR);
-    return;
-    // TODO:CGIプロセスがまだ生きている可能性があるので､
-    // CGIプロセスの出力をWrite()しないようにする必要がある｡
-  } else if (type == cgi::CgiResponse::kLocalRedirect) {
-    MakeLocalRedirectResponse(conn_sock);
-    phase_ = kComplete;
-    return;
-  } else if (type == cgi::CgiResponse::kDocumentResponse) {
-    MakeDocumentResponse(conn_sock);
-  } else if (type == cgi::CgiResponse::kClientRedirect ||
-             type == cgi::CgiResponse::kClientRedirectWithDocument) {
-    MakeClientRedirectResponse(conn_sock);
+    case cgi::CgiResponse::kLocalRedirect:
+      MakeLocalRedirectResponse(conn_sock);
+      phase_ = kComplete;
+      break;
+
+    case cgi::CgiResponse::kDocumentResponse:
+      MakeDocumentResponse(conn_sock);
+      phase_ = kStatusAndHeader;
+      break;
+
+    case cgi::CgiResponse::kClientRedirect:
+    case cgi::CgiResponse::kClientRedirectWithDocument:
+      MakeClientRedirectResponse(conn_sock);
+      phase_ = kStatusAndHeader;
+      break;
+
+    default:  // kNotIdentified
+      // CGIレスポンスタイプが決まっていないのに
+      // CgiProcessが削除可能な状態(Unisockが0を返してきている)ならエラー
+      if (cgi_process_->IsRemovable()) {
+        MakeErrorResponse(SERVER_ERROR);
+      }
+      break;
   }
-  phase_ = kStatusAndHeader;
 }
 
 Result<HttpCgiResponse::CreateResponsePhase>
