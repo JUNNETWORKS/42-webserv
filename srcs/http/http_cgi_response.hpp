@@ -11,9 +11,6 @@ class HttpCgiResponse : public HttpResponse {
  private:
   cgi::CgiProcess *cgi_process_;
 
-  enum CgiPhase { kSetupCgiTypeSpecificInfo, kWritingToInetSocket };
-  CgiPhase cgi_phase_;
-
  public:
   HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll);
   virtual ~HttpCgiResponse();

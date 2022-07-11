@@ -7,8 +7,7 @@ namespace http {
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
                                  server::Epoll *epoll)
     : HttpResponse(location, epoll),
-      cgi_process_(new cgi::CgiProcess(location, epoll)),
-      cgi_phase_(kSetupCgiTypeSpecificInfo) {}
+      cgi_process_(new cgi::CgiProcess(location, epoll)) {}
 
 HttpCgiResponse::~HttpCgiResponse() {
   printf("HttpCgiResponse::~HttpCgiResponse\n");
