@@ -4,6 +4,8 @@
 
 namespace http {
 
+const std::string HttpCgiResponse::kLastChunk = "0" + kCrlf + kCrlf;
+
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
                                  server::Epoll *epoll)
     : HttpResponse(location, epoll),
@@ -70,14 +72,32 @@ HttpCgiResponse::MakeResponseBody() {
       return file_res.Ok() ? kComplete : kBody;
     }
   } else {
-    // TODO: chunked-encoding の設定
     utils::ByteVector &cgi_response_body =
         cgi_process_->GetCgiResponse()->GetBody();
-    write_buffer_.AppendDataToBuffer(cgi_response_body);
+    write_buffer_.AppendDataToBuffer(ConvertChunkResponse(cgi_response_body));
     cgi_response_body.clear();
 
-    return cgi_process_->IsRemovable() ? kComplete : kBody;
+    if (cgi_process_->IsRemovable()) {
+      write_buffer_.AppendDataToBuffer(kLastChunk);
+      return kComplete;
+    } else {
+      return kBody;
+    }
   }
+}
+
+std::string HttpCgiResponse::ConvertChunkResponse(utils::ByteVector data) {
+  std::stringstream ss;
+  while (data.empty() == false) {
+    size_t chunk_size =
+        data.size() < kMaxChunkSize ? data.size() : kMaxChunkSize;
+    ss << std::hex << chunk_size;
+    ss << kCrlf;
+    ss << data.SubstrBeforePos(chunk_size);
+    ss << kCrlf;
+    data.erase(data.begin(), data.begin() + chunk_size);
+  }
+  return ss.str();
 }
 
 HttpCgiResponse::CreateResponsePhase HttpCgiResponse::MakeDocumentResponse(
