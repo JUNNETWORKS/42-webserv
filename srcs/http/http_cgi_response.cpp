@@ -74,7 +74,11 @@ HttpCgiResponse::PrepareResponseBody() {
     }
   } else {
     // TODO: chunked-encoding の設定
-    write_buffer_.AppendDataToBuffer(cgi_process_->GetCgiResponse()->GetBody());
+    utils::ByteVector &cgi_response_body =
+        cgi_process_->GetCgiResponse()->GetBody();
+    write_buffer_.AppendDataToBuffer(cgi_response_body);
+    cgi_response_body.clear();
+
     return cgi_process_->IsRemovable() ? kComplete : kBody;
   }
 }
