@@ -33,6 +33,20 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
   assert(epoll_ != NULL);
 }
 
+HttpResponse::HttpResponse(const HttpStatus status)
+    : location_(NULL),
+      epoll_(NULL),
+      phase_(kLoadRequest),
+      http_version_(kDefaultHttpVersion),
+      status_(OK),
+      status_message_(StatusCodes::GetMessage(OK)),
+      headers_(),
+      write_buffer_(),
+      file_fd_(-1) {
+  assert(status >= 400);
+  phase_ = MakeErrorResponse(status);
+}
+
 HttpResponse::~HttpResponse() {
   if (file_fd_ >= 0) {
     close(file_fd_);

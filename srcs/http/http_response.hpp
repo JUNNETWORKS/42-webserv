@@ -57,6 +57,7 @@ class HttpResponse {
 
  public:
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
+  HttpResponse(const HttpStatus status);
   virtual ~HttpResponse();
 
   //レスポンスの内容を作る関数。
