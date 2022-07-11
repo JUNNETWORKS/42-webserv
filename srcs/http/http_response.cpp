@@ -93,7 +93,7 @@ void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
   printf("abs_path: %s\n", abs_file_path.c_str());
 
   if (!utils::IsFileExist(abs_file_path)) {
-    MakeErrorResponse(NOT_FOUND);
+    phase_ = MakeErrorResponse(NOT_FOUND);
     return;
   }
 
@@ -103,7 +103,7 @@ void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
   }
 
   if (!utils::IsReadableFile(abs_file_path)) {
-    MakeErrorResponse(FORBIDDEN);
+    phase_ = MakeErrorResponse(FORBIDDEN);
     return;
   }
 
@@ -111,7 +111,7 @@ void HttpResponse::LoadRequest(server::ConnSocket *conn_sock) {
   AppendHeader("Content-Type", "text/plain");
   Result<void> register_res = RegisterFile(abs_file_path);
   if (register_res.IsErr())
-    MakeErrorResponse(SERVER_ERROR);
+    phase_ = MakeErrorResponse(SERVER_ERROR);
   else
     phase_ = kStatusAndHeader;
 }
@@ -166,7 +166,8 @@ void HttpResponse::MakeAutoIndexResponse(const std::string &abs,
   phase_ = kComplete;
 }
 
-void HttpResponse::MakeErrorResponse(const HttpStatus status) {
+HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
+    const HttpStatus status) {
   SetStatus(status, StatusCodes::GetMessage(status));
 
   headers_.clear();
@@ -178,9 +179,9 @@ void HttpResponse::MakeErrorResponse(const HttpStatus status) {
   if (error_pages.find(status) == error_pages.end() ||
       RegisterFile(error_pages.at(status)).IsErr()) {
     SerializeResponse(MakeErrorResponseBody(status));
-    phase_ = kComplete;
+    return kComplete;
   } else {
-    phase_ = kBody;
+    return kBody;
   }
 }
 

@@ -27,7 +27,7 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
   // 存在しないCGIへのリクエストをするとInternalServerErrorが返ってくる｡
   if (cgi_process_->IsCgiExecuted() == false) {
     if (cgi_process_->RunCgi(request).IsErr()) {
-      MakeErrorResponse(SERVER_ERROR);
+      phase_ = MakeErrorResponse(SERVER_ERROR);
     }
     return;
   }
@@ -37,7 +37,7 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
 
   switch (type) {
     case cgi::CgiResponse::kParseError:
-      MakeErrorResponse(SERVER_ERROR);
+      phase_ = MakeErrorResponse(SERVER_ERROR);
       break;
 
     case cgi::CgiResponse::kLocalRedirect:
@@ -60,7 +60,7 @@ void HttpCgiResponse::LoadRequest(server::ConnSocket *conn_sock) {
       // CGIレスポンスタイプが決まっていないのに
       // CgiProcessが削除可能な状態(Unisockが0を返してきている)ならエラー
       if (cgi_process_->IsRemovable()) {
-        MakeErrorResponse(SERVER_ERROR);
+        phase_ = MakeErrorResponse(SERVER_ERROR);
       }
       break;
   }

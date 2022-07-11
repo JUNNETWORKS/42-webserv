@@ -63,7 +63,7 @@ class HttpResponse {
   //適宜write_buffer_につめてWriteできるようにする。
   Result<void> PrepareToWrite(server::ConnSocket *conn_sock);
 
-  void MakeErrorResponse(const HttpStatus status);
+  HttpResponse::CreateResponsePhase MakeErrorResponse(const HttpStatus status);
 
   // すべてのデータの write が完了したか
   bool IsAllDataWritingCompleted();
