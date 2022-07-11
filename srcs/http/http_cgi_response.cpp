@@ -112,7 +112,9 @@ HttpCgiResponse::MakeClientRedirectResponse(server::ConnSocket *conn_sock) {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
   if (cgi_response->GetHeader("Status").IsOk()) {
-    SetStatusFromCgiResponse();
+    if (SetStatusFromCgiResponse().IsErr()) {
+      return MakeErrorResponse(SERVER_ERROR);
+    }
   } else {
     SetStatus(FOUND);
   }
@@ -124,13 +126,12 @@ HttpCgiResponse::MakeClientRedirectResponse(server::ConnSocket *conn_sock) {
   return kStatusAndHeader;
 }
 
-void HttpCgiResponse::SetStatusFromCgiResponse() {
+Result<void> HttpCgiResponse::SetStatusFromCgiResponse() {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
   Result<std::string> status_result = cgi_response->GetHeader("Status");
   if (status_result.IsErr()) {
-    // TODO: SERVER_ERROR にする
-    return;
+    return Error();
   }
 
   std::string status_with_msg = status_result.Ok();
@@ -139,8 +140,7 @@ void HttpCgiResponse::SetStatusFromCgiResponse() {
   // Status と Message を分ける
   std::size_t space_pos = status_with_msg.find(" ");
   if (space_pos == std::string::npos) {
-    // TODO: SERVER_ERROR にする
-    return;
+    return Error();
   }
   std::size_t msg_pos = space_pos;
   while (msg_pos < status_with_msg.length() &&
@@ -148,8 +148,7 @@ void HttpCgiResponse::SetStatusFromCgiResponse() {
     msg_pos++;
   }
   if (msg_pos == status_with_msg.length()) {
-    // TODO: SERVER_ERROR にする
-    return;
+    return Error();
   }
 
   std::string status_str = status_with_msg.substr(0, space_pos);
@@ -157,9 +156,10 @@ void HttpCgiResponse::SetStatusFromCgiResponse() {
   std::string status_msg = status_with_msg.substr(msg_pos);
   if (status.IsErr() || !StatusCodes::IsHttpStatus(status.Ok()) ||
       status_msg.empty()) {
-    return;
+    return Error();
   }
   SetStatus(static_cast<HttpStatus>(status.Ok()), status_msg);
+  return Result<void>();
 }
 
 void HttpCgiResponse::SetHeadersFromCgiResponse() {

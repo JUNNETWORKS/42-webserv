@@ -23,7 +23,7 @@ class HttpCgiResponse : public HttpResponse {
   CreateResponsePhase MakeLocalRedirectResponse(server::ConnSocket *conn_sock);
   CreateResponsePhase MakeClientRedirectResponse(server::ConnSocket *conn_sock);
 
-  void SetStatusFromCgiResponse();
+  Result<void> SetStatusFromCgiResponse();
   void SetHeadersFromCgiResponse();
 
   // LocalRedirect の結果に基づき新しいリクエストを作成
