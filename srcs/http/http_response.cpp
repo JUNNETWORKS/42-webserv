@@ -91,9 +91,21 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
     SetHeader("Connection", "close");
   }
 
-  const std::string &abs_file_path =
-      location_->GetAbsolutePath(request.GetPath());
+  std::string abs_file_path = location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
+
+  if (utils::IsDir(abs_file_path)) {
+    const std::vector<std::string> &index_pages = location_->GetIndexPages();
+    for (std::vector<std::string>::const_iterator it = index_pages.begin();
+         it != index_pages.end(); ++it) {
+      std::string abs_index_file_path =
+          location_->GetAbsolutePath(location_->GetPathPattern() + *it);
+      std::cout << "abs_index_file_path: " << abs_index_file_path << std::endl;
+      if (utils::IsFileExist(abs_index_file_path)) {
+        abs_file_path = abs_index_file_path;
+      }
+    }
+  }
 
   if (!utils::IsFileExist(abs_file_path) ||
       (utils::IsDir(abs_file_path) && !location_->GetAutoIndex())) {
