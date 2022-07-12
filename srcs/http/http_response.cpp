@@ -45,6 +45,7 @@ HttpResponse::HttpResponse(const HttpStatus status)
       file_fd_(-1) {
   assert(status >= 400);
   phase_ = MakeErrorResponse(status);
+  assert(phase_ == kComplete);
 }
 
 HttpResponse::~HttpResponse() {
@@ -190,6 +191,9 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
   headers_.clear();
   SetHeader("Connection", "close");
   SetHeader("Content-Type", "text/html");
+
+  if (location_ == NULL)
+    return MakeResponse(SerializeErrorResponseBody(status));
 
   const std::map<http::HttpStatus, std::string> &error_pages =
       location_->GetErrorPages();
