@@ -169,6 +169,8 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 http::HttpResponse *AllocateResponseObj(const http::HttpRequest &request,
                                         Epoll *epoll) {
   const config::LocationConf *location = request.GetLocation();
+  if (request.IsErrorRequest())
+    return new http::HttpResponse(request.GetParseStatus());
   if (location->GetIsCgi()) {
     return new http::HttpCgiResponse(location, epoll);
   } else {
