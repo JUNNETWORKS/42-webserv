@@ -72,6 +72,9 @@ Result<void> HttpResponse::WriteToSocket(const int fd) {
   ssize_t write_size = write_buffer_.size() < kWriteMaxSize
                            ? write_buffer_.size()
                            : kWriteMaxSize;
+  if (write_size == 0)
+    return Result<void>();
+
   ssize_t write_res = write(fd, write_buffer_.data(), write_size);
   if (write_res < 0)
     return Error();
