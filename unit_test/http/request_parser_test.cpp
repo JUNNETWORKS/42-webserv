@@ -30,7 +30,7 @@ TEST(RequestParserTest, KOFormatExistOBSfoldFirstHeader) {
   utils::ByteVector buf = OpenFile("KOFormatExistOBSfoldFirstHeader.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -39,7 +39,7 @@ TEST(RequestParserTest, KOFormatExistOBSfold) {
   utils::ByteVector buf = OpenFile("KOFormatExistOBSfold.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -48,7 +48,7 @@ TEST(RequestParserTest, KOFormatExistSPAfterVersion) {
   utils::ByteVector buf = OpenFile("KOFormatExistSPAfterVersion.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -57,7 +57,7 @@ TEST(RequestParserTest, KOFormatExistSPBeforeSpace) {
   utils::ByteVector buf = OpenFile("KOFormatExistSPBeforeSpace.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -66,7 +66,7 @@ TEST(RequestParserTest, KOFormatExistSPBetWeenMethodAndURL) {
   utils::ByteVector buf = OpenFile("KOFormatExistSPBetWeenMethodAndURL.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -75,7 +75,7 @@ TEST(RequestParserTest, KOFormatExistSPBetWeenURLAndVersion) {
   utils::ByteVector buf = OpenFile("KOFormatExistSPBetWeenURLAndVersion.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -84,7 +84,7 @@ TEST(RequestParserTest, KOFormatNotExistCRLF) {
   utils::ByteVector buf = OpenFile("KOFormatNotExistCRLF.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -93,7 +93,7 @@ TEST(RequestParserTest, KOFormatNotExistHostHeader) {
   utils::ByteVector buf = OpenFile("KOFormatNotExistHostHeader.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -102,7 +102,7 @@ TEST(RequestParserTest, KOFormatExistMultipleHostHeader) {
   utils::ByteVector buf = OpenFile("KOFormatExistMultipleHostHeader.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -111,7 +111,7 @@ TEST(RequestParserTest, KOFormatNotExistMethod) {
   utils::ByteVector buf = OpenFile("KOFormatNotExistMethod.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -120,7 +120,7 @@ TEST(RequestParserTest, KOFormatNotExistRequestLine) {
   utils::ByteVector buf = OpenFile("KOFormatNotExistRequestLine.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -129,7 +129,7 @@ TEST(RequestParserTest, KOFormatNotExistURL) {
   utils::ByteVector buf = OpenFile("KOFormatNotExistURL.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -138,7 +138,7 @@ TEST(RequestParserTest, KOFormatNotExistVersion) {
   utils::ByteVector buf = OpenFile("KOFormatNotExistVersion.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -147,7 +147,7 @@ TEST(RequestParserTest, KOHeaderExistSPBeforeColon) {
   utils::ByteVector buf = OpenFile("KOHeaderExistSPBeforeColon.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -156,7 +156,7 @@ TEST(RequestParserTest, KOHeaderExistTabBeforeColon) {
   utils::ByteVector buf = OpenFile("KOHeaderExistTabBeforeColon.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -165,7 +165,7 @@ TEST(RequestParserTest, KOHeaderNotExistDquotePair) {
   utils::ByteVector buf = OpenFile("KOHeaderNotExistDquotePair.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -176,7 +176,7 @@ TEST(RequestParserTest, KOMethodNotAllowd) {
       config::ParseConfig((kConfigurationDirPath + "NotAllowed.conf").c_str());
 
   req.ParseRequest(buf, not_allowed_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), NOT_ALLOWED);
 }
 
@@ -185,7 +185,7 @@ TEST(RequestParserTest, KOUnknownMethod) {
   utils::ByteVector buf = OpenFile("KOUnknownMethod.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
 }
 
@@ -194,7 +194,7 @@ TEST(RequestParserTest, KOURLTooLong) {
   utils::ByteVector buf = OpenFile("KOURLTooLong.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), URI_TOO_LONG);
 }
 
@@ -203,7 +203,7 @@ TEST(RequestParserTest, KOContentLengthTooLong) {
   utils::ByteVector buf = OpenFile("KOContentLengthTooLong.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), PAYLOAD_TOO_LARGE);
 }
 
@@ -212,7 +212,7 @@ TEST(RequestParserTest, KOVersioExistMultipleDot) {
   utils::ByteVector buf = OpenFile("KOVersioExistMultipleDot.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -221,7 +221,7 @@ TEST(RequestParserTest, KOVersioInvalidMinorLong) {
   utils::ByteVector buf = OpenFile("KOVersioInvalidMinorLong.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -230,7 +230,7 @@ TEST(RequestParserTest, KOVersionInvalidMajorLong) {
   utils::ByteVector buf = OpenFile("KOVersionInvalidMajorLong.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -239,7 +239,7 @@ TEST(RequestParserTest, KOVersionInvalidMajorLower) {
   utils::ByteVector buf = OpenFile("KOVersionInvalidMajorLower.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -248,7 +248,7 @@ TEST(RequestParserTest, KOVersionInvalidMajorUpper) {
   utils::ByteVector buf = OpenFile("KOVersionInvalidMajorUpper.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), HTTP_VERSION_NOT_SUPPORTED);
 }
 
@@ -257,7 +257,7 @@ TEST(RequestParserTest, KOVersionInvalidPrefix) {
   utils::ByteVector buf = OpenFile("KOVersionInvalidPrefix.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -266,7 +266,7 @@ TEST(RequestParserTest, KOVersioNotExistDot) {
   utils::ByteVector buf = OpenFile("KOVersioNotExistDot.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -275,7 +275,7 @@ TEST(RequestParserTest, OKCommaInDquote) {
   utils::ByteVector buf = OpenFile("OKCommaInDquote.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -284,7 +284,7 @@ TEST(RequestParserTest, OKCorrectNewLine) {
   utils::ByteVector buf = OpenFile("OKCorrectNewLine.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -295,7 +295,7 @@ TEST(RequestParserTest, KOLocationNotFound) {
       (kConfigurationDirPath + "LocationNotFound.conf").c_str());
 
   req.ParseRequest(buf, conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), NOT_FOUND);
 }
 
@@ -304,7 +304,7 @@ TEST(RequestParserTest, OKCorrect) {
   utils::ByteVector buf = OpenFile("OKCorrect.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -313,7 +313,7 @@ TEST(RequestParserTest, OKHeaderDquoteStringEscape) {
   utils::ByteVector buf = OpenFile("OKHeaderDquoteStringEscape.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -322,7 +322,7 @@ TEST(RequestParserTest, OKHeaderDquoteString) {
   utils::ByteVector buf = OpenFile("OKHeaderDquoteString.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -331,7 +331,7 @@ TEST(RequestParserTest, OKHeaderExistOWSBeforeValue) {
   utils::ByteVector buf = OpenFile("OKHeaderExistOWSBeforeValue.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -340,7 +340,7 @@ TEST(RequestParserTest, OKHeaderExistOWSftrerValue) {
   utils::ByteVector buf = OpenFile("OKHeaderExistOWSftrerValue.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -349,7 +349,7 @@ TEST(RequestParserTest, OKHeaderListMultipleLine) {
   utils::ByteVector buf = OpenFile("OKHeaderListMultipleLine.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -358,7 +358,7 @@ TEST(RequestParserTest, OKHeaderList) {
   utils::ByteVector buf = OpenFile("OKHeaderList.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -367,7 +367,7 @@ TEST(RequestParserTest, OKVersionMinorUpper) {
   utils::ByteVector buf = OpenFile("OKVersionMinorUpper.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 }
 
@@ -376,7 +376,7 @@ TEST(RequestParserTest, KOBodyChunkSizeTooLarge) {
   utils::ByteVector buf = OpenFile("KOBodyChunkSizeTooLarge.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), PAYLOAD_TOO_LARGE);
 }
 
@@ -385,7 +385,7 @@ TEST(RequestParserTest, KOBufferTooLarge) {
   utils::ByteVector buf(std::string(1024 * 1024 + 1, 'G'));
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -394,7 +394,7 @@ TEST(RequestParserTest, KOBodyInvalidChunkSizeLower) {
   utils::ByteVector buf = OpenFile("KOBodyInvalidChunkSizeLower.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -403,7 +403,7 @@ TEST(RequestParserTest, KOBodyInvalidChunkSizeUpper) {
   utils::ByteVector buf = OpenFile("KOBodyInvalidChunkSizeUpper.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -412,7 +412,7 @@ TEST(RequestParserTest, KOBodyNotExistChunkSize) {
   utils::ByteVector buf = OpenFile("KOBodyNotExistChunkSize.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), BAD_REQUEST);
 }
 
@@ -421,7 +421,7 @@ TEST(RequestParserTest, KOFieldInvalidTransferEncoding) {
   utils::ByteVector buf = OpenFile("KOFieldInvalidTransferEncoding.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == false);
+  EXPECT_TRUE(req.IsErrorRequest() == true);
   EXPECT_EQ(req.GetParseStatus(), NOT_IMPLEMENTED);
 }
 
@@ -430,7 +430,7 @@ TEST(RequestParserTest, OKBodyChunkSizeZero) {
   utils::ByteVector buf = OpenFile("OKBodyChunkSizeZero.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 
   const utils::ByteVector expect_body("");
@@ -443,7 +443,7 @@ TEST(RequestParserTest, OKBodyCorrectChunkHexadecimal) {
   utils::ByteVector buf = OpenFile("OKBodyCorrectChunkHexadecimal.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 
   const utils::ByteVector expect_body(
@@ -460,7 +460,7 @@ TEST(RequestParserTest, OKBodyCorrectChunk) {
   utils::ByteVector buf = OpenFile("OKBodyCorrectChunk.txt");
 
   req.ParseRequest(buf, default_conf, "8080");
-  EXPECT_TRUE(req.IsCorrectStatus() == true);
+  EXPECT_TRUE(req.IsErrorRequest() == false);
   EXPECT_EQ(req.GetParseStatus(), OK);
 
   const utils::ByteVector expect_body("12345abcde");

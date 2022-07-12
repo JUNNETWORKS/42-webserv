@@ -11,6 +11,9 @@ class HttpCgiResponse : public HttpResponse {
  private:
   cgi::CgiProcess *cgi_process_;
 
+  static const unsigned long kMaxChunkSize = 1024;  // 1KB
+  static const std::string kLastChunk;
+
  public:
   HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll);
   ~HttpCgiResponse();
@@ -23,11 +26,13 @@ class HttpCgiResponse : public HttpResponse {
   CreateResponsePhase MakeLocalRedirectResponse(server::ConnSocket *conn_sock);
   CreateResponsePhase MakeClientRedirectResponse(server::ConnSocket *conn_sock);
 
-  void SetStatusFromCgiResponse();
+  Result<void> SetStatusFromCgiResponse();
   void SetHeadersFromCgiResponse();
 
   // LocalRedirect の結果に基づき新しいリクエストを作成
   HttpRequest CreateLocalRedirectRequest(const HttpRequest &request);
+
+  static std::string ConvertToChunkResponse(utils::ByteVector data);
 };
 
 }  // namespace http

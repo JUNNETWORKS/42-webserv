@@ -4,6 +4,8 @@
 
 namespace http {
 
+const std::string HttpCgiResponse::kLastChunk = "0" + kCrlf + kCrlf;
+
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
                                  server::Epoll *epoll)
     : HttpResponse(location, epoll),
@@ -70,14 +72,32 @@ HttpCgiResponse::MakeResponseBody() {
       return file_res.Ok() ? kComplete : kBody;
     }
   } else {
-    // TODO: chunked-encoding の設定
     utils::ByteVector &cgi_response_body =
         cgi_process_->GetCgiResponse()->GetBody();
-    write_buffer_.AppendDataToBuffer(cgi_response_body);
+    write_buffer_.AppendDataToBuffer(ConvertToChunkResponse(cgi_response_body));
     cgi_response_body.clear();
 
-    return cgi_process_->IsRemovable() ? kComplete : kBody;
+    if (cgi_process_->IsRemovable()) {
+      write_buffer_.AppendDataToBuffer(kLastChunk);
+      return kComplete;
+    } else {
+      return kBody;
+    }
   }
+}
+
+std::string HttpCgiResponse::ConvertToChunkResponse(utils::ByteVector data) {
+  std::stringstream ss;
+  while (data.empty() == false) {
+    size_t chunk_size =
+        data.size() < kMaxChunkSize ? data.size() : kMaxChunkSize;
+    ss << std::hex << chunk_size;
+    ss << kCrlf;
+    ss << data.SubstrBeforePos(chunk_size);
+    ss << kCrlf;
+    data.erase(data.begin(), data.begin() + chunk_size);
+  }
+  return ss.str();
 }
 
 HttpCgiResponse::CreateResponsePhase HttpCgiResponse::MakeDocumentResponse(
@@ -90,6 +110,7 @@ HttpCgiResponse::CreateResponsePhase HttpCgiResponse::MakeDocumentResponse(
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
+  SetHeader("Transfer-Encoding", "chunked");
   return kStatusAndHeader;
 }
 
@@ -112,7 +133,9 @@ HttpCgiResponse::MakeClientRedirectResponse(server::ConnSocket *conn_sock) {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
   if (cgi_response->GetHeader("Status").IsOk()) {
-    SetStatusFromCgiResponse();
+    if (SetStatusFromCgiResponse().IsErr()) {
+      return MakeErrorResponse(SERVER_ERROR);
+    }
   } else {
     SetStatus(FOUND);
   }
@@ -121,31 +144,44 @@ HttpCgiResponse::MakeClientRedirectResponse(server::ConnSocket *conn_sock) {
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
+  SetHeader("Transfer-Encoding", "chunked");
   return kStatusAndHeader;
 }
 
-void HttpCgiResponse::SetStatusFromCgiResponse() {
+Result<void> HttpCgiResponse::SetStatusFromCgiResponse() {
   cgi::CgiResponse *cgi_response = cgi_process_->GetCgiResponse();
 
   Result<std::string> status_result = cgi_response->GetHeader("Status");
   if (status_result.IsErr()) {
-    // TODO: エラーを返すべき?
-    return;
+    return Error();
   }
 
-  std::string status_value = status_result.Ok();
-  std::size_t space_pos = status_value.find(" ");
+  std::string status_with_msg = status_result.Ok();
+  utils::TrimString(status_with_msg, " ");
+
+  // Status と Message を分ける
+  std::size_t space_pos = status_with_msg.find(" ");
   if (space_pos == std::string::npos) {
-    return;
+    return Error();
   }
-  std::string status_str = status_value.substr(0, space_pos);
+  std::size_t msg_pos = space_pos;
+  while (msg_pos < status_with_msg.length() &&
+         status_with_msg[msg_pos] == ' ') {
+    msg_pos++;
+  }
+  if (msg_pos == status_with_msg.length()) {
+    return Error();
+  }
+
+  std::string status_str = status_with_msg.substr(0, space_pos);
   Result<unsigned long> status = utils::Stoul(status_str);
-  std::string status_msg = status_value.substr(space_pos);
+  std::string status_msg = status_with_msg.substr(msg_pos);
   if (status.IsErr() || !StatusCodes::IsHttpStatus(status.Ok()) ||
       status_msg.empty()) {
-    return;
+    return Error();
   }
   SetStatus(static_cast<HttpStatus>(status.Ok()), status_msg);
+  return Result<void>();
 }
 
 void HttpCgiResponse::SetHeadersFromCgiResponse() {

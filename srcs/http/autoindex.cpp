@@ -50,13 +50,11 @@ std::string AutoIndexFileName(const std::string &file_name) {
   return ss.str();
 }
 
-std::string HttpResponse::MakeAutoIndex(const std::string &abs_path,
-                                        const std::string &relative_path) {
+Result<std::string> HttpResponse::MakeAutoIndex(
+    const std::string &abs_path, const std::string &relative_path) {
   Result<std::vector<utils::File> > result = utils::GetFileList(abs_path);
   if (result.IsErr()) {
-    // resultクラスでエラーを返すか
-    // return MakeErrorResponse();
-    return "AutoIndex Error " + abs_path;
+    return Error();
   }
 
   std::vector<utils::File> file_vec = result.Ok();

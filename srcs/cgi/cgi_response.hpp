@@ -53,7 +53,7 @@ class CgiResponse {
   // Getter and Setter
   ResponseType GetResponseType() const;
   const HeaderVecType &GetHeaders();
-  Result<std::string> GetHeader(const std::string key) const;
+  Result<std::string> GetHeader(std::string key) const;
   utils::ByteVector &GetBody();
 
  private:

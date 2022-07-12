@@ -72,6 +72,8 @@ Result<void> HttpResponse::WriteToSocket(const int fd) {
   ssize_t write_size = write_buffer_.size() < kWriteMaxSize
                            ? write_buffer_.size()
                            : kWriteMaxSize;
+  if (write_size == 0)
+    return Result<void>();
   ssize_t write_res = write(fd, write_buffer_.data(), write_size);
   if (write_res < 0)
     return Error();
@@ -107,7 +109,8 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
       location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
 
-  if (!utils::IsFileExist(abs_file_path)) {
+  if (!utils::IsFileExist(abs_file_path) ||
+      (utils::IsDir(abs_file_path) && !location_->GetAutoIndex())) {
     return MakeErrorResponse(NOT_FOUND);
   }
 
@@ -168,14 +171,16 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeResponse(
 
 HttpResponse::CreateResponsePhase HttpResponse::MakeAutoIndexResponse(
     const std::string &abs, const std::string &relative) {
-  // TODO AutoIndexの作成に失敗した時エラー
-  const std::string body = MakeAutoIndex(abs, relative);
+  Result<std::string> body_res = MakeAutoIndex(abs, relative);
+  if (body_res.IsErr()) {
+    return MakeErrorResponse(SERVER_ERROR);
+  }
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
 
   SetHeader("Content-Type", "text/html");
 
-  return MakeResponse(body);
+  return MakeResponse(body_res.Ok());
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
