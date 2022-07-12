@@ -84,8 +84,8 @@ class HttpRequest {
 
   void ParseRequest(utils::ByteVector &buffer, const config::Config &conf,
                     const config::PortType &port);
-  bool IsErrorRequest();
-  bool IsResponsible();
+  bool IsErrorRequest() const;
+  bool IsResponsible() const;
 
   // ========================================================================
   // Getter and Setter
