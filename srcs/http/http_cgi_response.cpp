@@ -110,6 +110,7 @@ HttpCgiResponse::CreateResponsePhase HttpCgiResponse::MakeDocumentResponse(
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
+  SetHeader("Transfer-Encoding", "chunked");
   return kStatusAndHeader;
 }
 
@@ -141,6 +142,7 @@ HttpCgiResponse::MakeClientRedirectResponse(server::ConnSocket *conn_sock) {
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
+  SetHeader("Transfer-Encoding", "chunked");
   return kStatusAndHeader;
 }
 
