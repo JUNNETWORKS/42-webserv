@@ -322,11 +322,16 @@ HttpStatus HttpRequest::InterpretTransferEncoding(
 
 //========================================================================
 // Is系関数　外部から状態取得
-bool HttpRequest::IsParsed() {
-  return phase_ == kParsed;
+bool HttpRequest::IsResponsible() {
+  return phase_ == kParsed || phase_ == kError;
 }
-bool HttpRequest::IsCorrectStatus() {
-  return parse_status_ == OK;
+bool HttpRequest::IsErrorRequest() {
+  if (phase_ == kError) {
+    assert(parse_status_ >= 400);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 // ========================================================================
@@ -564,10 +569,6 @@ void HttpRequest::PrintRequestInfo() {
     body_.pop_back();
   }
   printf("=====================\n");
-}
-
-bool HttpRequest::IsCorrectRequest() {
-  return phase_ == kParsed && parse_status_ == OK;
 }
 
 }  // namespace http

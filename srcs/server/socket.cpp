@@ -61,7 +61,7 @@ std::deque<http::HttpRequest> &ConnSocket::GetRequests() {
 }
 
 bool ConnSocket::HasParsedRequest() {
-  return !requests_.empty() && requests_.front().IsCorrectRequest();
+  return !requests_.empty() && requests_.front().IsResponsible();
 }
 
 http::HttpResponse *ConnSocket::GetResponse() {
