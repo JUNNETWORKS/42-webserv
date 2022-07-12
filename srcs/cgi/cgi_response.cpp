@@ -92,7 +92,8 @@ const CgiResponse::HeaderVecType &CgiResponse::GetHeaders() {
   return headers_;
 }
 
-Result<std::string> CgiResponse::GetHeader(const std::string key) const {
+Result<std::string> CgiResponse::GetHeader(std::string key) const {
+  std::transform(key.begin(), key.end(), key.begin(), toupper);
   for (HeaderVecType::const_iterator it = headers_.begin();
        it != headers_.end(); ++it) {
     if (it->first == key) {
