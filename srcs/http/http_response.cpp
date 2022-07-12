@@ -155,14 +155,16 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeResponse(
 
 HttpResponse::CreateResponsePhase HttpResponse::MakeAutoIndexResponse(
     const std::string &abs, const std::string &relative) {
-  // TODO AutoIndexの作成に失敗した時エラー
-  const std::string body = MakeAutoIndex(abs, relative);
+  Result<std::string> body_res = MakeAutoIndex(abs, relative);
+  if (body_res.IsErr()) {
+    return MakeErrorResponse(SERVER_ERROR);
+  }
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
 
   SetHeader("Content-Type", "text/html");
 
-  return MakeResponse(body);
+  return MakeResponse(body_res.Ok());
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
