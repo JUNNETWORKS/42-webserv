@@ -43,6 +43,8 @@ CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
 
 CgiRequest::~CgiRequest() {}
 
+// Getter, Setter
+// ========================================================================
 pid_t CgiRequest::GetPid() const {
   return cgi_pid_;
 }
@@ -63,6 +65,8 @@ const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
   return cgi_args_;
 }
 
+// RunCgi
+// ========================================================================
 bool CgiRequest::RunCgi() {
   bool result = false;
   result |= ParseCgiRequest();
@@ -71,7 +75,8 @@ bool CgiRequest::RunCgi() {
   return result;
 }
 
-// 作業中
+// Parse
+// ========================================================================
 bool CgiRequest::ParseCgiRequest() {
   std::string::size_type pos = request_path_.find("?");
   if (pos != std::string::npos) {
@@ -90,6 +95,8 @@ bool CgiRequest::ParseCgiRequest() {
   return true;
 }
 
+// Exec Cgi
+// ========================================================================
 bool CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
   if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockfds) == -1) {
@@ -119,6 +126,20 @@ bool CgiRequest::ForkAndExecuteCgi() {
     close(childsock);
     return true;
   }
+}
+
+void CgiRequest::ExecuteCgi() {
+  UnsetAllEnvironmentVariables();
+  SetMetaVariables();
+  // TODO : stdin
+  // TODO : chdir
+  cgi_args_.insert(cgi_args_.begin(), cgi_path_);
+  char **argv = alloc_dptr(cgi_args_);
+  if (argv == NULL) {
+    return;
+  }
+  execve(cgi_path_.c_str(), argv, environ);
+  free_dptr(argv);
 }
 
 void CgiRequest::UnsetAllEnvironmentVariables() const {
@@ -167,20 +188,6 @@ void CgiRequest::SetMetaVariables() {
        it != cgi_variables_.end(); ++it) {
     setenv(it->first.c_str(), it->second.c_str(), 1);
   }
-}
-
-void CgiRequest::ExecuteCgi() {
-  UnsetAllEnvironmentVariables();
-  SetMetaVariables();
-  // TODO : stdin
-  // TODO : chdir
-  cgi_args_.insert(cgi_args_.begin(), cgi_path_);
-  char **argv = alloc_dptr(cgi_args_);
-  if (argv == NULL) {
-    return;
-  }
-  execve(cgi_path_.c_str(), argv, environ);
-  free_dptr(argv);
 }
 
 char **CgiRequest::alloc_dptr(const std::vector<std::string> &v) const {
