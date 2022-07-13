@@ -121,6 +121,12 @@ bool CgiRequest::ForkAndExecuteCgi() {
   }
 }
 
+void CgiRequest::UnsetAllEnvironmentVariables() const {
+  for (size_t i = 0; environ[i] != NULL; i++) {
+    unsetenv(environ[i]);
+  }
+}
+
 // 各変数の役割は以下のサイトを参照
 // http://bashhp.web.fc2.com/WWW/header.html
 
@@ -164,7 +170,7 @@ void CgiRequest::SetMetaVariables() {
 }
 
 void CgiRequest::ExecuteCgi() {
-  // TODO : 不要な環境変数のunset
+  UnsetAllEnvironmentVariables();
   SetMetaVariables();
   // TODO : stdin
   // TODO : chdir

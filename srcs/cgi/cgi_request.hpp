@@ -54,6 +54,7 @@ class CgiRequest {
   // リクエストからCGIスクリプトに渡す変数を作成する
   void CreateCgiMetaVariablesFromHttpRequest(
       const http::HttpRequest &request, const config::LocationConf &location);
+  void UnsetAllEnvironmentVariables() const;
 
   void SetMetaVariables();
 
