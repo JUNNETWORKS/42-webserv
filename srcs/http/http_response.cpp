@@ -183,7 +183,8 @@ Result<std::string> HttpResponse::GetResponsableIndexPagePath() {
     std::string abs_index_file_path =
         location_->GetAbsolutePath(location_->GetPathPattern() + *it);
     std::cout << "abs_index_file_path: " << abs_index_file_path << std::endl;
-    if (utils::IsFileExist(abs_index_file_path)) {
+    if (utils::IsFileExist(abs_index_file_path) &&
+        utils::IsReadableFile(abs_index_file_path)) {
       return abs_index_file_path;
     }
   }
