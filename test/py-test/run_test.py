@@ -87,20 +87,21 @@ def run_test(
         is_success = False
         print(KO_MSG, log_msg)
 
-    if save_diff or is_success == False:
-        diff_utils.make_diff_html("", f"\n   req : {req_path}   \n")
-        diff_utils.make_diff_html(ft_res_response.body, expect_response.body)
     if test_name == "":
         test_name = inspect_utils.get_caller_func_name()
+    if save_diff or is_success == False:
+        diff_utils.make_diff_html("", f"test_name {test_name}\n{log_msg}\nport {port}")
+        diff_utils.make_diff_html(ft_res_response.body, expect_response.body)
     append_test_result(test_name, is_success, log_msg)
     return is_success
 
 
-def cmp_test(
+def run_cmp_test(
     req_path,
     port=cmd_args.WEBSERV_PORT,
     expect_port=cmd_args.NGINX_PORT,
     save_diff=False,
 ):
+    test_name = inspect_utils.get_caller_func_name()
     expect_response = send_req_utils.send_req(req_path, port=expect_port)
-    run_test(req_path, expect_response, port, save_diff=save_diff)
+    run_test(req_path, expect_response, port, save_diff=save_diff, test_name=test_name)
