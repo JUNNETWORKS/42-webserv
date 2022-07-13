@@ -197,13 +197,15 @@ char **CgiRequest::alloc_dptr(const std::vector<std::string> &v) const {
   if (dptr == NULL) {
     return NULL;
   }
-  for (size_t i = 0; i < v.size(); i++) {
+  size_t i = 0;
+  for (; i < v.size(); i++) {
     dptr[i] = strdup(v[i].c_str());
     if (dptr[i] == NULL) {
       free_dptr(dptr);
       return (NULL);
     }
   }
+  dptr[i] = NULL;
   return (dptr);
 }
 
