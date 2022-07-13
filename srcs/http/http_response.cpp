@@ -196,7 +196,7 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
       RegisterFile(error_pages.at(status)).IsErr()) {
     return MakeResponse(SerializeErrorResponseBody(status));
   } else {
-    return kBody;
+    return kStatusAndHeader;
   }
 }
 
