@@ -77,7 +77,10 @@ def run_test(
     ft_res_response = send_req_utils.send_req(req_path, port)
 
     is_success = None
-    log_msg = f"req_path : {req_path}"
+    log_msg = "\n"
+    log_msg += f"test_name : {test_name}\n"
+    log_msg += f"req_path  : {req_path}\n"
+    log_msg += f"port      : {port}\n"
     if res.is_eq_response(
         ft_res_response, expect_response, ck_code=ck_code, ck_body=ck_body
     ):
@@ -88,7 +91,7 @@ def run_test(
         print(KO_MSG, log_msg)
 
     if save_diff or is_success == False:
-        diff_utils.make_diff_html("", f"\n   req : {req_path}   \n")
+        diff_utils.make_diff_html("", log_msg)
         diff_utils.make_diff_html(ft_res_response.body, expect_response.body)
     if test_name == "":
         test_name = inspect_utils.get_caller_func_name()
