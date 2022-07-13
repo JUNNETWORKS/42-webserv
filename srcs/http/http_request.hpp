@@ -50,6 +50,7 @@ class HttpRequest {
 
   std::string method_;
   std::string path_;
+  std::string query_param_;
   int minor_version_;
   HeaderMap headers_;
   ParsingPhase phase_;
@@ -76,6 +77,7 @@ class HttpRequest {
   const std::string &GetMethod() const;
   // LocalRedirect で使うために SetPath() を定義
   void SetPath(const std::string &path);
+  const std::string &GetQueryParam() const;
   const std::string &GetPath() const;
   const config::VirtualServerConf *GetVirtualServer() const;
   HttpStatus GetParseStatus() const;
@@ -99,6 +101,7 @@ class HttpRequest {
                           const config::PortType &conn_sock);
   ParsingPhase ParseBody(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(const std::string &method);
+  void DivideParamAsPath(const std::string &token);
   HttpStatus InterpretPath(const std::string &path);
   HttpStatus InterpretVersion(const std::string &version);
   HttpStatus InterpretHeaderField(const std::string &str);

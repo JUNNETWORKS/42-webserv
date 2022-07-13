@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "result/result.hpp"
+#include "utils/path.hpp"
 
 namespace http {
 
@@ -42,6 +43,7 @@ const HttpRequest &HttpRequest::operator=(const HttpRequest &rhs) {
   if (this != &rhs) {
     method_ = rhs.method_;
     path_ = rhs.path_;
+    query_param_ = rhs.query_param_;
     minor_version_ = rhs.minor_version_;
     headers_ = rhs.headers_;
     phase_ = rhs.phase_;
@@ -69,6 +71,10 @@ void HttpRequest::SetPath(const std::string &path) {
 
 const std::string &HttpRequest::GetPath() const {
   return path_;
+}
+
+const std::string &HttpRequest::GetQueryParam() const {
+  return query_param_;
 }
 
 void HttpRequest::SetLocalRedirectCount(int local_redirect_count) {
@@ -246,13 +252,32 @@ HttpStatus HttpRequest::InterpretMethod(const std::string &token) {
   }
 }
 
+void HttpRequest::DivideParamAsPath(const std::string &token) {
+  std::string::size_type pos = token.find("?");
+  if (pos != std::string::npos) {
+    path_ = token.substr(0, pos);
+    query_param_ = token.substr(pos + 1);
+  } else {
+    path_ = token;
+    query_param_ = "";
+  }
+}
+
 HttpStatus HttpRequest::InterpretPath(const std::string &token) {
   if (token.size() > kMaxUriLength) {
     return parse_status_ = URI_TOO_LONG;
-  } else {
-    path_ = token;
-    return parse_status_ = OK;
   }
+  DivideParamAsPath(token);
+  Result<std::string> decoded = utils::PercentDecode(path_);
+  if (decoded.IsErr()) {
+    return parse_status_ = BAD_REQUEST;
+  }
+  Result<std::string> normalized = utils::NormalizePath(decoded.Ok());
+  if (normalized.IsErr()) {
+    return parse_status_ = BAD_REQUEST;
+  }
+  path_ = normalized.Ok();
+  return parse_status_ = OK;
 }
 
 HttpStatus HttpRequest::InterpretVersion(const std::string &token) {
