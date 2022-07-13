@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "cgi/cgi_request.hpp"
+#include "http/content_types.hpp"
 #include "http/http_constants.hpp"
 #include "http/http_request.hpp"
 #include "server/epoll.hpp"
@@ -109,7 +110,8 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
   }
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
-  AppendHeader("Content-Type", "text/plain");
+  SetHeader("Content-Type", ContentTypes::GetContentTypeFromExt(
+                                utils::GetExetension(abs_file_path)));
   Result<void> register_res = RegisterFile(abs_file_path);
   if (register_res.IsErr())
     return MakeErrorResponse(SERVER_ERROR);
