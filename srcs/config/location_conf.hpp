@@ -105,6 +105,8 @@ class LocationConf {
   // req      : /cgi-bin/test-cgi;
   // -> /public/cgi-bin/test-cgi
   std::string GetAbsolutePath(std::string path) const;
+
+  std::string GetAfterLocation(std::string path) const;
 };
 
 }  // namespace config
