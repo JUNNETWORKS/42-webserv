@@ -13,11 +13,13 @@
 namespace cgi {
 
 CgiRequest::CgiRequest(const std::string &request_path,
+                       const std::string &query_string,
                        const http::HttpRequest &request,
                        const config::LocationConf &location)
     : cgi_pid_(-1),
       cgi_unisock_(-1),
       request_path_(request_path),
+      query_string_(query_string),
       request_(request),
       location_(location) {}
 

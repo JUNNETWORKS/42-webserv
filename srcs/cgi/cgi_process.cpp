@@ -71,8 +71,8 @@ void CgiProcess::KillCgi() {
 }
 
 cgi::CgiRequest *CgiProcess::AllocateCgiRequest(http::HttpRequest &request) {
-  std::string cgi_path = location_->GetAbsolutePath(request.GetPath());
-  return new cgi::CgiRequest(cgi_path, request, *location_);
+  return new cgi::CgiRequest(request.GetPath(), request.GetQueryParam(),
+                             request, *location_);
 }
 
 bool CgiProcess::IsCgiExecuted() const {

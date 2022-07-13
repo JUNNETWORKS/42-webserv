@@ -15,17 +15,18 @@ class CgiRequest {
   pid_t cgi_pid_;
   int cgi_unisock_;
   std::string request_path_;
+  std::string query_string_;
   // TODO : 必要な情報だけ取るようにして、メンバ変数からは削除予定
   const http::HttpRequest &request_;
   // TODO : 必要な情報だけ取るようにして、メンバ変数からは削除予定
   const config::LocationConf &location_;
   std::string cgi_path_;
-  std::string query_string_;
   std::vector<std::string> cgi_args_;
   std::map<std::string, std::string> cgi_variables_;
 
  public:
-  CgiRequest(const std::string &request_path, const http::HttpRequest &request,
+  CgiRequest(const std::string &request_path, const std::string &query_string,
+             const http::HttpRequest &request,
              const config::LocationConf &location);
   CgiRequest(const CgiRequest &rhs);
   CgiRequest &operator=(const CgiRequest &rhs);
