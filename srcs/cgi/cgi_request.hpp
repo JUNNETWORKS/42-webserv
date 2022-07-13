@@ -7,8 +7,13 @@
 
 #include "config/location_conf.hpp"
 #include "http/http_request.hpp"
+#include "result/result.hpp"
+#include "utils/File.hpp"
+#include "utils/path.hpp"
 
 namespace cgi {
+
+using namespace result;
 
 class CgiRequest {
  private:
@@ -16,11 +21,13 @@ class CgiRequest {
   int cgi_unisock_;
   std::string request_path_;
   std::string query_string_;
+  std::string script_name_;
+  std::string exec_cgi_script_path_;
+  std::string path_info_;
   // TODO : 必要な情報だけ取るようにして、メンバ変数からは削除予定
   const http::HttpRequest &request_;
   // TODO : 必要な情報だけ取るようにして、メンバ変数からは削除予定
   const config::LocationConf &location_;
-  std::string cgi_path_;
   std::vector<std::string> cgi_args_;
   std::map<std::string, std::string> cgi_variables_;
 
@@ -46,6 +53,9 @@ class CgiRequest {
  private:
   CgiRequest();
 
+  bool ParseQueryString();
+  bool SplitIntoCgiPathAndPathInfo();
+
   // 返り値は無名ドメインソケットのfd
   // TODO: 第二引数はhttprequestじゃなくてcgirequestとかのほうがよいかも
   // TODO: cgiのpidをどうやってwaitするかが問題｡
@@ -59,6 +69,7 @@ class CgiRequest {
   void SetMetaVariables();
 
   void ExecuteCgi();
+  bool MoveToExecuteCgiDir(const std::string &exec_cgi_script_path_) const;
 
   // TODO : どこかに移動させる。
   // exec なども移動させたい。

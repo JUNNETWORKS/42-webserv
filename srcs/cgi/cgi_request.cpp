@@ -33,8 +33,10 @@ CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
     cgi_pid_ = rhs.cgi_pid_;
     cgi_unisock_ = rhs.cgi_unisock_;
     request_path_ = rhs.request_path_;
-    cgi_path_ = rhs.cgi_path_;
     query_string_ = rhs.query_string_;
+    script_name_ = rhs.script_name_;
+    exec_cgi_script_path_ = rhs.exec_cgi_script_path_;
+    path_info_ = rhs.path_info_;
     cgi_args_ = rhs.cgi_args_;
     cgi_variables_ = rhs.cgi_variables_;
   }
@@ -54,7 +56,7 @@ int CgiRequest::GetCgiUnisock() const {
 }
 
 const std::string &CgiRequest::GetCgiPath() const {
-  return cgi_path_;
+  return request_path_;
 }
 
 const std::string &CgiRequest::GetQueryString() const {
@@ -78,21 +80,58 @@ bool CgiRequest::RunCgi() {
 // Parse
 // ========================================================================
 bool CgiRequest::ParseCgiRequest() {
-  std::string::size_type pos = request_path_.find("?");
-  if (pos != std::string::npos) {
-    cgi_path_ = request_path_.substr(0, pos);  // decode
-    query_string_ = request_path_.substr(pos + 1);
-    if (query_string_ != "" && query_string_.find('=') == std::string::npos) {
-      // TODO : argv の 最大数でリミットかける必要ある？
-      // TODO : cgi_args は パーセントデコーディングされる
-      // この時 + は split されない
-      cgi_args_ = utils::SplitString(query_string_, "+");
-    }
-  } else {
-    cgi_path_ = request_path_;  // decode
-    query_string_ = "";
+  if (!ParseQueryString()) {
+    return false;
+  }
+  if (!SplitIntoCgiPathAndPathInfo()) {
+    return false;
   }
   return true;
+}
+
+bool CgiRequest::ParseQueryString() {
+  if (query_string_ == "") {
+    return true;
+  }
+  if (query_string_.find('=') != std::string::npos) {
+    return true;
+  }
+  cgi_args_ = utils::SplitString(query_string_, "+");
+  for (std::vector<std::string>::iterator it = cgi_args_.begin();
+       it != cgi_args_.end(); it++) {
+    Result<std::string> res = utils::PercentDecode(*it);
+    if (res.IsErr()) {
+      return false;
+    }
+    *it = res.Ok();
+  }
+  return true;
+}
+
+bool CgiRequest::SplitIntoCgiPathAndPathInfo() {
+  std::vector<std::string> file_vec =
+      utils::SplitString(location_.GetAfterLocation(request_path_), "/");
+
+  std::string exec_cgi_path = location_.GetRootDir();
+  std::string script_name = "";
+  for (std::vector<std::string>::const_iterator it = file_vec.begin();
+       it != file_vec.end(); it++) {
+    if (*it == "") {
+      continue;
+    }
+    script_name = utils::JoinPath(script_name, *it);
+    exec_cgi_path = utils::JoinPath(exec_cgi_path, script_name);
+    utils::File f(exec_cgi_path);
+    // TODO : 実行権限も確認
+    if (f.GetFileType() == utils::File::kFile) {
+      script_name_ = utils::JoinPath(location_.GetPathPattern(), script_name);
+      exec_cgi_script_path_ = exec_cgi_path;
+      path_info_ = request_path_;
+      path_info_ = path_info_.replace(0, script_name_.length(), "");
+      return true;
+    }
+  }
+  return false;
 }
 
 // Exec Cgi
@@ -131,14 +170,15 @@ bool CgiRequest::ForkAndExecuteCgi() {
 void CgiRequest::ExecuteCgi() {
   UnsetAllEnvironmentVariables();
   SetMetaVariables();
-  // TODO : stdin
-  // TODO : chdir
-  cgi_args_.insert(cgi_args_.begin(), cgi_path_);
+  if (!MoveToExecuteCgiDir(exec_cgi_script_path_)) {
+    return;
+  }
+  cgi_args_.insert(cgi_args_.begin(), script_name_);
   char **argv = alloc_dptr(cgi_args_);
   if (argv == NULL) {
     return;
   }
-  execve(cgi_path_.c_str(), argv, environ);
+  execve(exec_cgi_script_path_.c_str(), argv, environ);
   free_dptr(argv);
 }
 
@@ -170,9 +210,9 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
   cgi_variables_["SERVER_PORT"] = "";              // TODO
   cgi_variables_["REQUEST_METHOD"] = request.GetMethod();
   cgi_variables_["HTTP_ACCEPT"] = "";  // TODO;
-  cgi_variables_["PATH_INFO"] = "";
+  cgi_variables_["PATH_INFO"] = path_info_;
   cgi_variables_["PATH_TRANSLATED"] = "";  // unsetenv("PATH_TRANSLATED");
-  cgi_variables_["SCRIPT_NAME"] = "";
+  cgi_variables_["SCRIPT_NAME"] = script_name_;
   cgi_variables_["QUERY_STRING"] = query_string_;
   cgi_variables_["REMOTE_HOST"] = "";
   cgi_variables_["REMOTE_ADDR"] = "";
@@ -188,6 +228,20 @@ void CgiRequest::SetMetaVariables() {
        it != cgi_variables_.end(); ++it) {
     setenv(it->first.c_str(), it->second.c_str(), 1);
   }
+}
+
+bool CgiRequest::MoveToExecuteCgiDir(
+    const std::string &exec_cgi_script_path_) const {
+  Result<std::string> result =
+      utils::NormalizePath(utils::JoinPath(exec_cgi_script_path_, ".."));
+  if (result.IsErr()) {
+    return false;
+  }
+  std::string exec_dir = result.Ok();
+  if (chdir(exec_dir.c_str())) {
+    return false;
+  }
+  return true;
 }
 
 char **CgiRequest::alloc_dptr(const std::vector<std::string> &v) const {
