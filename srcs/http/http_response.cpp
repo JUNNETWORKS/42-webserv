@@ -33,9 +33,10 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
   assert(epoll_ != NULL);
 }
 
-HttpResponse::HttpResponse(const HttpStatus status)
-    : location_(NULL),
-      epoll_(NULL),
+HttpResponse::HttpResponse(const config::LocationConf *location,
+                           server::Epoll *epoll, const HttpStatus status)
+    : location_(location),
+      epoll_(epoll),
       phase_(kLoadRequest),
       http_version_(kDefaultHttpVersion),
       status_(OK),

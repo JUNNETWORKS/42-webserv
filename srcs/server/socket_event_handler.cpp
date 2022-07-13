@@ -170,7 +170,7 @@ http::HttpResponse *AllocateResponseObj(const http::HttpRequest &request,
                                         Epoll *epoll) {
   const config::LocationConf *location = request.GetLocation();
   if (request.IsErrorRequest())
-    return new http::HttpResponse(request.GetParseStatus());
+    return new http::HttpResponse(location, epoll, request.GetParseStatus());
   if (location->GetIsCgi()) {
     return new http::HttpCgiResponse(location, epoll);
   } else {
