@@ -96,11 +96,12 @@ def run_test(
     return is_success
 
 
-def cmp_test(
+def run_cmp_test(
     req_path,
     port=cmd_args.WEBSERV_PORT,
     expect_port=cmd_args.NGINX_PORT,
     save_diff=False,
 ):
+    test_name = inspect_utils.get_caller_func_name()
     expect_response = send_req_utils.send_req(req_path, port=expect_port)
-    run_test(req_path, expect_response, port, save_diff=save_diff)
+    run_test(req_path, expect_response, port, save_diff=save_diff, test_name=test_name)
