@@ -177,15 +177,18 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
 
   headers_.clear();
   SetHeader("Connection", "close");
-  SetHeader("Content-Type", "text/html");
 
   const std::map<http::HttpStatus, std::string> &error_pages =
       location_->GetErrorPages();
-  if (error_pages.find(status) == error_pages.end() ||
-      RegisterFile(error_pages.at(status)).IsErr()) {
-    return MakeResponse(SerializeErrorResponseBody(status));
-  } else {
+  if (error_pages.find(status) != error_pages.end() &&
+      RegisterFile(error_pages.at(status)).IsOk()) {
+    SetHeader("Content-Type",
+              ContentTypes::GetContentTypeFromExt(
+                  utils::GetExetension(error_pages.at(status))));
     return kBody;
+  } else {
+    SetHeader("Content-Type", "text/html");
+    return MakeResponse(SerializeErrorResponseBody(status));
   }
 }
 
