@@ -93,8 +93,7 @@ bool CgiRequest::ParseCgiRequest() {
 bool CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
   if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockfds) == -1) {
-    // Error
-    exit(EXIT_FAILURE);  // TODO :
+    return false;
   }
   // TODO: UnixDomainSocketを O_NONBLOCK に設定
 
@@ -102,21 +101,23 @@ bool CgiRequest::ForkAndExecuteCgi() {
   int childsock = sockfds[1];
 
   cgi_pid_ = fork();
+  if (cgi_pid_ < -1) {
+    close(parentsock);
+    close(childsock);
+    return false;
+  }
   if (cgi_pid_ == 0) {
     // Child
     close(parentsock);
     dup2(childsock, STDOUT_FILENO);
     close(childsock);
     ExecuteCgi();
-    exit(EXIT_FAILURE);  // TODO :
-  } else if (cgi_pid_ > 0) {
+    exit(EXIT_FAILURE);
+  } else {
     // Parent
     cgi_unisock_ = parentsock;
     close(childsock);
     return true;
-  } else {
-    // Error
-    exit(EXIT_FAILURE);  // TODO :
   }
 }
 
