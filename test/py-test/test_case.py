@@ -74,12 +74,10 @@ def cmp_test():
     run_cmp_test("/sample.html", expect_port=cmd_args.NGINX_PORT, save_diff=True)
 
 
-def cmp_test():
-    run_cmp_test("/sample.html", expect_port=cmd_args.NGINX_PORT, save_diff=True)
-
-
 def cgi_simple_test():
-    run_cmp_test("/cgi-bin/simple-cgi", expect_port=cmd_args.APACHE_PORT, save_diff=True)
+    run_cmp_test(
+        "/cgi-bin/simple-cgi", expect_port=cmd_args.APACHE_PORT, save_diff=True
+    )
 
 
 def cgi_query_string_test():
@@ -117,14 +115,14 @@ def cgi_query_string_test():
 
 
 def cgi_path_info_test():
-    # req_path = "/cgi-bin/parse-test-cgi/hoge"
-    # run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    req_path = "/cgi-bin/parse-test-cgi/hoge"
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
     req_path = "/cgi-bin/parse-test-cgi/"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
-    # req_path = "/cgi-bin/parse-test-cgi/%41%42%43"
-    # run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    req_path = "/cgi-bin/parse-test-cgi/%41%42%43"
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
 
 #   path_info デコードで無効な文字が含まれていた場合、エラー
@@ -156,4 +154,7 @@ def run_all_test() -> bool:
     is_all_test_ok &= exec_test(autoindex_test)
     is_all_test_ok &= exec_test(path_normaliz_test)
     is_all_test_ok &= exec_test(cmp_test, must_all_test_ok=False)
+    is_all_test_ok &= exec_test(cgi_simple_test, must_all_test_ok=False)
+    is_all_test_ok &= exec_test(cgi_query_string_test, must_all_test_ok=False)
+    is_all_test_ok &= exec_test(cgi_path_info_test, must_all_test_ok=False)
     return is_all_test_ok
