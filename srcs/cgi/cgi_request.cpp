@@ -167,16 +167,37 @@ void CgiRequest::ExecuteCgi() {
   SetMetaVariables();
   // TODO : stdin
   // TODO : chdir
-  // cgi_args_ に argv[0] の分が含まれてないので、+ 1
-  char **argv = new char *[cgi_args_.size() + 1 + 1];
-  argv[0] = strdup(cgi_path_.c_str());  // TODO : req の pathにする必要あり
-  size_t i = 0;
-  for (; i < cgi_args_.size(); i++) {
-    argv[i + 1] = strdup(cgi_args_[i].c_str());
+  cgi_args_.insert(cgi_args_.begin(), cgi_path_);
+  char **argv = alloc_dptr(cgi_args_);
+  if (argv == NULL) {
+    return;
   }
-  argv[i + 1] = NULL;
   execve(cgi_path_.c_str(), argv, environ);
-  // TODO : 失敗時のdelete処理
+  free_dptr(argv);
+}
+
+char **CgiRequest::alloc_dptr(const std::vector<std::string> &v) const {
+  char **dptr;
+
+  dptr = (char **)malloc(sizeof(char *) * (v.size() + 1));
+  if (dptr == NULL) {
+    return NULL;
+  }
+  for (size_t i = 0; i < v.size(); i++) {
+    dptr[i] = strdup(v[i].c_str());
+    if (dptr[i] == NULL) {
+      free_dptr(dptr);
+      return (NULL);
+    }
+  }
+  return (dptr);
+}
+
+void CgiRequest::free_dptr(char **dptr) const {
+  for (size_t i = 0; dptr[i]; i++) {
+    free(dptr[i]);
+  }
+  free(dptr);
 }
 
 }  // namespace cgi

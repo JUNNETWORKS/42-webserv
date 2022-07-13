@@ -58,6 +58,11 @@ class CgiRequest {
   void SetMetaVariables();
 
   void ExecuteCgi();
+
+  // TODO : どこかに移動させる。
+  // exec なども移動させたい。
+  char **alloc_dptr(const std::vector<std::string> &v) const;
+  void free_dptr(char **dptr) const;
 };
 
 }  // namespace cgi
