@@ -55,12 +55,13 @@ bool IsValidPath(const std::string &path) {
   return NormalizePath(path).IsOk();
 }
 
-// TODO : 最後のスラッシュ消さないようにするべきか？
-// TODO : 消さない場合 /hoge/../ -> /hoge/
-//                   /hoge/..  -> /hoge or /hoge/   ...?
 Result<std::string> NormalizePath(const std::string &path) {
+  if (path.empty()) {
+    return std::string("");
+  }
   std::vector<std::string> vec = SplitPath(path);
   std::vector<std::string> normalize;
+
   for (std::vector<std::string>::const_iterator it = vec.begin();
        it != vec.end(); it++) {
     if (*it == "" || *it == ".") {
@@ -74,6 +75,10 @@ Result<std::string> NormalizePath(const std::string &path) {
     } else {
       normalize.push_back(*it);
     }
+  }
+  if (vec.size() != 0 &&
+      (vec.back() == "" || vec.back() == "." || vec.back() == "..")) {
+    normalize.push_back("");
   }
   return (JoinPath(normalize));
 }
