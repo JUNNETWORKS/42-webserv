@@ -1,5 +1,7 @@
 from . import response_class as res
+from . import cmd_args
 from .run_test import run_test
+from .run_test import run_cmp_test
 from .run_test import is_test_success
 
 # TEST CASE
@@ -41,6 +43,10 @@ def path_normaliz_test():
     run_test("/NotExist/../sample.html", expect_response)
 
 
+def cmp_test():
+    run_cmp_test("/sample.html", expect_port=cmd_args.NGINX_PORT, save_diff=True)
+
+
 # Exec Test
 # ========================================================================
 def exec_test(f, must_all_test_ok=True):
@@ -60,4 +66,5 @@ def run_all_test() -> bool:
     is_all_test_ok &= exec_test(not_found_test)
     is_all_test_ok &= exec_test(autoindex_test)
     is_all_test_ok &= exec_test(path_normaliz_test, must_all_test_ok=False)
+    is_all_test_ok &= exec_test(cmp_test, must_all_test_ok=False)
     return is_all_test_ok

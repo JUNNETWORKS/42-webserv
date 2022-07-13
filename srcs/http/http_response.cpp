@@ -91,6 +91,10 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
     SetHeader("Connection", "close");
   }
 
+  if (!location_->GetRedirectUrl().empty()) {
+    return MakeRedirectResponse();
+  }
+
   std::string abs_file_path = location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
 
@@ -159,6 +163,15 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeResponse(
     SetHeader("Content-Length", utils::ConvertToStr(body.size()));
   write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
   write_buffer_.AppendDataToBuffer(body);
+  return kComplete;
+}
+
+HttpResponse::CreateResponsePhase HttpResponse::MakeRedirectResponse() {
+  write_buffer_.clear();
+  SetStatus(FOUND);
+  SetHeader("Content-Length", "0");
+  SetHeader("Location", location_->GetRedirectUrl());
+  write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
   return kComplete;
 }
 
