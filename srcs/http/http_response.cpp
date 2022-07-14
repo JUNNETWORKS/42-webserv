@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "cgi/cgi_request.hpp"
+#include "http/content_types.hpp"
 #include "http/http_constants.hpp"
 #include "http/http_request.hpp"
 #include "server/epoll.hpp"
@@ -113,7 +114,8 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
   }
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
-  AppendHeader("Content-Type", "text/plain");
+  SetHeader("Content-Type", ContentTypes::GetContentTypeFromExt(
+                                utils::GetExetension(abs_file_path)));
   Result<void> register_res = RegisterFile(abs_file_path);
   if (register_res.IsErr())
     return MakeErrorResponse(SERVER_ERROR);
@@ -188,15 +190,18 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
 
   headers_.clear();
   SetHeader("Connection", "close");
-  SetHeader("Content-Type", "text/html");
 
   const std::map<http::HttpStatus, std::string> &error_pages =
       location_->GetErrorPages();
-  if (error_pages.find(status) == error_pages.end() ||
-      RegisterFile(error_pages.at(status)).IsErr()) {
-    return MakeResponse(SerializeErrorResponseBody(status));
-  } else {
+  if (error_pages.find(status) != error_pages.end() &&
+      RegisterFile(error_pages.at(status)).IsOk()) {
+    SetHeader("Content-Type",
+              ContentTypes::GetContentTypeFromExt(
+                  utils::GetExetension(error_pages.at(status))));
     return kBody;
+  } else {
+    SetHeader("Content-Type", "text/html");
+    return MakeResponse(SerializeErrorResponseBody(status));
   }
 }
 
