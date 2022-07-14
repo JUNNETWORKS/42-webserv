@@ -96,9 +96,16 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
     return MakeRedirectResponse();
   }
 
-  const std::string &abs_file_path =
-      location_->GetAbsolutePath(request.GetPath());
+  std::string abs_file_path = location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
+
+  if (utils::IsDir(abs_file_path)) {
+    Result<std::string> responsable_index_result =
+        GetResponsableIndexPagePath();
+    if (responsable_index_result.IsOk()) {
+      abs_file_path = responsable_index_result.Ok();
+    }
+  }
 
   if (!utils::IsFileExist(abs_file_path) ||
       (utils::IsDir(abs_file_path) && !location_->GetAutoIndex())) {
@@ -182,6 +189,21 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeAutoIndexResponse(
   SetHeader("Content-Type", "text/html");
 
   return MakeResponse(body_res.Ok());
+}
+
+Result<std::string> HttpResponse::GetResponsableIndexPagePath() {
+  const std::vector<std::string> &index_pages = location_->GetIndexPages();
+  for (std::vector<std::string>::const_iterator it = index_pages.begin();
+       it != index_pages.end(); ++it) {
+    std::string abs_index_file_path =
+        location_->GetAbsolutePath(location_->GetPathPattern() + *it);
+    std::cout << "abs_index_file_path: " << abs_index_file_path << std::endl;
+    if (utils::IsFileExist(abs_index_file_path) &&
+        utils::IsReadableFile(abs_index_file_path)) {
+      return abs_index_file_path;
+    }
+  }
+  return Error();
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(

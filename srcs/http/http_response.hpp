@@ -107,6 +107,7 @@ class HttpResponse {
 
   CreateResponsePhase MakeAutoIndexResponse(const std::string &abs,
                                             const std::string &relative);
+  Result<std::string> GetResponsableIndexPagePath();
 
   static Result<std::string> MakeAutoIndex(const std::string &root_path,
                                            const std::string &relative_path);
