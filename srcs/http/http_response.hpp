@@ -57,6 +57,8 @@ class HttpResponse {
 
  public:
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
+  HttpResponse(const config::LocationConf *location, server::Epoll *epoll,
+               const HttpStatus status);
   virtual ~HttpResponse();
 
   //レスポンスの内容を作る関数。
@@ -107,6 +109,7 @@ class HttpResponse {
 
   CreateResponsePhase MakeAutoIndexResponse(const std::string &abs,
                                             const std::string &relative);
+  Result<std::string> GetResponsableIndexPagePath();
 
   static Result<std::string> MakeAutoIndex(const std::string &root_path,
                                            const std::string &relative_path);

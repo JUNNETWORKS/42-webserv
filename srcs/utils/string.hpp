@@ -65,6 +65,8 @@ std::string TrimString(std::string &str, const std::string &charset);
 
 bool ReadFile(const std::string &path, std::string &dest);
 
+std::string GetExetension(const std::string &file_path);
+
 }  // namespace utils
 
 #endif

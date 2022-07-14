@@ -24,10 +24,20 @@ def simple_test():
 
 
 def not_found_test():
-    expect_response = res.response(404)
-    run_test("/NotExist", expect_response, ck_body=False)
-    run_test("/NotExist/NotExist", expect_response, ck_body=False)
-    run_test("/hoge/NotExist", expect_response, ck_body=False)
+    expect_response = res.response(404, file_path="public/error_pages/404.html")
+    run_test("/NotExist", expect_response)
+    run_test("/NotExist/NotExist", expect_response)
+    run_test("/hoge/NotExist", expect_response)
+
+
+def index_test():
+    expect_response = res.response(200, file_path="public/index-test-dir/index.html")
+    run_test("/index-test-dir/", expect_response=expect_response)
+    run_test("/index-test-dir/index.html", expect_response=expect_response)
+    expect_response = res.response(
+        200, file_path="public/index-test-dir/not_index.html"
+    )
+    run_test("/index-test-dir/not_index.html", expect_response=expect_response)
 
 
 def autoindex_test():
@@ -70,6 +80,20 @@ def path_normaliz_test():
     # run_test("/..", expect_response=expect_response, ck_body=False)
 
 
+
+# TODO : content_type を 見るようにする。
+def content_type_test():
+    expect_response = res.response(
+        200, file_path="public/extension/file.not_exist_extension"
+    )
+    run_test("/extension/file.not_exist_extension", expect_response=expect_response)
+
+    expect_response = res.response(200, file_path="public/extension/file.")
+    run_test("/extension/file.", expect_response=expect_response)
+    expect_response = res.response(200, file_path="public/extension/file..")
+    run_test("/extension/file..", expect_response=expect_response)
+
+
 def cmp_test():
     run_cmp_test("/sample.html", expect_port=cmd_args.NGINX_PORT, save_diff=True)
 
@@ -91,7 +115,9 @@ def run_all_test() -> bool:
     is_all_test_ok = True
     is_all_test_ok &= exec_test(simple_test)
     is_all_test_ok &= exec_test(not_found_test)
+    is_all_test_ok &= exec_test(index_test)
     is_all_test_ok &= exec_test(autoindex_test)
     is_all_test_ok &= exec_test(path_normaliz_test)
+    is_all_test_ok &= exec_test(content_type_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cmp_test, must_all_test_ok=False)
     return is_all_test_ok

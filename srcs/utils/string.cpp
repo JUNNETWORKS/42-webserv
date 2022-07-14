@@ -175,4 +175,13 @@ bool ReadFile(const std::string &path, std::string &dest) {
   return true;
 }
 
+std::string GetExetension(const std::string &file_path) {
+  std::string::size_type dot_pos = file_path.rfind('.');
+  if (dot_pos == std::string::npos) {
+    return "";
+  }
+  std::string ext = file_path.substr(dot_pos + 1);
+  return ext;
+}
+
 }  // namespace utils
