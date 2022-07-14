@@ -102,10 +102,12 @@ class HttpResponse {
   utils::ByteVector SerializeHeaders() const;
   CreateResponsePhase MakeResponse(const std::string &body);
 
+  CreateResponsePhase MakeRedirectResponse();
   std::string SerializeErrorResponseBody(HttpStatus status);
 
   CreateResponsePhase MakeAutoIndexResponse(const std::string &abs,
                                             const std::string &relative);
+  Result<std::string> GetResponsableIndexPagePath();
 
   static Result<std::string> MakeAutoIndex(const std::string &root_path,
                                            const std::string &relative_path);

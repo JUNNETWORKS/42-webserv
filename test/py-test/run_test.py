@@ -53,11 +53,13 @@ def all_test_stat() -> bool:
     for test_name in test_dict:
         success_count = get_success_count(test_name)
         fail_count = get_fail_count(test_name)
-        print(f"{test_name.upper():<20} SUCCESS {success_count}, FAIL {fail_count}")
+        print(
+            f"{test_name.upper():<30} {OK_MSG} {success_count}, {KO_MSG} {fail_count}"
+        )
         all_success_count += success_count
         all_fail_count += fail_count
     print()
-    print(f"TOTAL : SUCCESS {all_success_count}, FAIL {all_fail_count}")
+    print(f"TOTAL : {OK_MSG} {all_success_count}, {KO_MSG} {all_fail_count}")
     return all_fail_count == 0
 
 
@@ -69,9 +71,10 @@ def run_test(
     port=cmd_args.WEBSERV_PORT,
     ck_code=True,
     ck_body=True,
+    save_diff=False,
+    test_name="",
 ) -> bool:
-    code, body = send_req_utils.send_req(req_path, port)
-    ft_res_response = res.response(code=code, body=body)
+    ft_res_response = send_req_utils.send_req(req_path, port)
 
     is_success = None
     log_msg = f"req_path : {req_path}"
@@ -83,7 +86,22 @@ def run_test(
     else:
         is_success = False
         print(KO_MSG, log_msg)
-        # append_ko_lst(inspect_utils.get_caller_func_name(), [log_msg])
+
+    if test_name == "":
+        test_name = inspect_utils.get_caller_func_name()
+    if save_diff or is_success == False:
+        diff_utils.make_diff_html("", f"test_name {test_name}\n{log_msg}\nport {port}")
         diff_utils.make_diff_html(ft_res_response.body, expect_response.body)
-    append_test_result(inspect_utils.get_caller_func_name(), is_success, log_msg)
+    append_test_result(test_name, is_success, log_msg)
     return is_success
+
+
+def run_cmp_test(
+    req_path,
+    port=cmd_args.WEBSERV_PORT,
+    expect_port=cmd_args.NGINX_PORT,
+    save_diff=False,
+):
+    test_name = inspect_utils.get_caller_func_name()
+    expect_response = send_req_utils.send_req(req_path, port=expect_port)
+    run_test(req_path, expect_response, port, save_diff=save_diff, test_name=test_name)

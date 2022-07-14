@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "cgi/cgi_request.hpp"
+#include "http/content_types.hpp"
 #include "http/http_constants.hpp"
 #include "http/http_request.hpp"
 #include "server/epoll.hpp"
@@ -91,9 +92,20 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
     SetHeader("Connection", "close");
   }
 
-  const std::string &abs_file_path =
-      location_->GetAbsolutePath(request.GetPath());
+  if (!location_->GetRedirectUrl().empty()) {
+    return MakeRedirectResponse();
+  }
+
+  std::string abs_file_path = location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
+
+  if (utils::IsDir(abs_file_path)) {
+    Result<std::string> responsable_index_result =
+        GetResponsableIndexPagePath();
+    if (responsable_index_result.IsOk()) {
+      abs_file_path = responsable_index_result.Ok();
+    }
+  }
 
   if (!utils::IsFileExist(abs_file_path) ||
       (utils::IsDir(abs_file_path) && !location_->GetAutoIndex())) {
@@ -109,7 +121,8 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
   }
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
-  AppendHeader("Content-Type", "text/plain");
+  SetHeader("Content-Type", ContentTypes::GetContentTypeFromExt(
+                                utils::GetExetension(abs_file_path)));
   Result<void> register_res = RegisterFile(abs_file_path);
   if (register_res.IsErr())
     return MakeErrorResponse(SERVER_ERROR);
@@ -155,6 +168,15 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeResponse(
   return kComplete;
 }
 
+HttpResponse::CreateResponsePhase HttpResponse::MakeRedirectResponse() {
+  write_buffer_.clear();
+  SetStatus(FOUND);
+  SetHeader("Content-Length", "0");
+  SetHeader("Location", location_->GetRedirectUrl());
+  write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
+  return kComplete;
+}
+
 HttpResponse::CreateResponsePhase HttpResponse::MakeAutoIndexResponse(
     const std::string &abs, const std::string &relative) {
   Result<std::string> body_res = MakeAutoIndex(abs, relative);
@@ -169,21 +191,39 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeAutoIndexResponse(
   return MakeResponse(body_res.Ok());
 }
 
+Result<std::string> HttpResponse::GetResponsableIndexPagePath() {
+  const std::vector<std::string> &index_pages = location_->GetIndexPages();
+  for (std::vector<std::string>::const_iterator it = index_pages.begin();
+       it != index_pages.end(); ++it) {
+    std::string abs_index_file_path =
+        location_->GetAbsolutePath(location_->GetPathPattern() + *it);
+    std::cout << "abs_index_file_path: " << abs_index_file_path << std::endl;
+    if (utils::IsFileExist(abs_index_file_path) &&
+        utils::IsReadableFile(abs_index_file_path)) {
+      return abs_index_file_path;
+    }
+  }
+  return Error();
+}
+
 HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
     const HttpStatus status) {
   SetStatus(status, StatusCodes::GetMessage(status));
 
   headers_.clear();
   SetHeader("Connection", "close");
-  SetHeader("Content-Type", "text/html");
 
   const std::map<http::HttpStatus, std::string> &error_pages =
       location_->GetErrorPages();
-  if (error_pages.find(status) == error_pages.end() ||
-      RegisterFile(error_pages.at(status)).IsErr()) {
-    return MakeResponse(SerializeErrorResponseBody(status));
-  } else {
+  if (error_pages.find(status) != error_pages.end() &&
+      RegisterFile(error_pages.at(status)).IsOk()) {
+    SetHeader("Content-Type",
+              ContentTypes::GetContentTypeFromExt(
+                  utils::GetExetension(error_pages.at(status))));
     return kBody;
+  } else {
+    SetHeader("Content-Type", "text/html");
+    return MakeResponse(SerializeErrorResponseBody(status));
   }
 }
 
