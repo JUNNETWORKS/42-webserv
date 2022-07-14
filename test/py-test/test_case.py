@@ -30,6 +30,16 @@ def not_found_test():
     run_test("/hoge/NotExist", expect_response, ck_body=False)
 
 
+def index_test():
+    expect_response = res.response(200, file_path="public/index-test-dir/index.html")
+    run_test("/index-test-dir/", expect_response=expect_response)
+    run_test("/index-test-dir/index.html", expect_response=expect_response)
+    expect_response = res.response(
+        200, file_path="public/index-test-dir/not_index.html"
+    )
+    run_test("/index-test-dir/not_index.html", expect_response=expect_response)
+
+
 def autoindex_test():
     req_path = "/"
     expect_response = res.response(200)
@@ -64,6 +74,7 @@ def run_all_test() -> bool:
     is_all_test_ok = True
     is_all_test_ok &= exec_test(simple_test)
     is_all_test_ok &= exec_test(not_found_test)
+    is_all_test_ok &= exec_test(index_test)
     is_all_test_ok &= exec_test(autoindex_test)
     is_all_test_ok &= exec_test(path_normaliz_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cmp_test, must_all_test_ok=False)
