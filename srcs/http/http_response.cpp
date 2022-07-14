@@ -34,6 +34,22 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
   assert(epoll_ != NULL);
 }
 
+HttpResponse::HttpResponse(const config::LocationConf *location,
+                           server::Epoll *epoll, const HttpStatus status)
+    : location_(location),
+      epoll_(epoll),
+      phase_(kLoadRequest),
+      http_version_(kDefaultHttpVersion),
+      status_(OK),
+      status_message_(StatusCodes::GetMessage(OK)),
+      headers_(),
+      write_buffer_(),
+      file_fd_(-1) {
+  assert(status >= 400);
+  phase_ = MakeErrorResponse(status);
+  assert(phase_ == kComplete);
+}
+
 HttpResponse::~HttpResponse() {
   if (file_fd_ >= 0) {
     close(file_fd_);
@@ -43,6 +59,9 @@ HttpResponse::~HttpResponse() {
 Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
   if (!utils::IsRegularFile(file_path) || !utils::IsReadableFile(file_path)) {
     return Error();
+  }
+  if (file_fd_ >= 0) {
+    close(file_fd_);
   }
   if ((file_fd_ = open(file_path.c_str(), O_RDONLY)) < 0) {
     return Error();
@@ -213,17 +232,19 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
   headers_.clear();
   SetHeader("Connection", "close");
 
+  if (location_ == NULL)
+    return MakeResponse(SerializeErrorResponseBody(status));
+
   const std::map<http::HttpStatus, std::string> &error_pages =
       location_->GetErrorPages();
-  if (error_pages.find(status) != error_pages.end() &&
-      RegisterFile(error_pages.at(status)).IsOk()) {
+  if (error_pages.find(status) == error_pages.end() ||
+      RegisterFile(error_pages.at(status)).IsErr()) {
+    return MakeResponse(SerializeErrorResponseBody(status));
+  } else {
     SetHeader("Content-Type",
               ContentTypes::GetContentTypeFromExt(
                   utils::GetExetension(error_pages.at(status))));
-    return kBody;
-  } else {
-    SetHeader("Content-Type", "text/html");
-    return MakeResponse(SerializeErrorResponseBody(status));
+    return kStatusAndHeader;
   }
 }
 
