@@ -38,13 +38,13 @@ FdEventEvent CalculateFdEventEvent(FdEvent *fde, epoll_event epev) {
   }
   if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
     if (epev.events & EPOLLERR) {
-      printf("CalculateFdEventEvent: EPOLLERR\n");
+      printf("CalculateFdEventEvent(%d): EPOLLERR\n", fde->fd);
     }
     if (epev.events & EPOLLHUP) {
-      printf("CalculateFdEventEvent: EPOLLHUP\n");
+      printf("CalculateFdEventEvent(%d): EPOLLHUP\n", fde->fd);
     }
     if (epev.events & EPOLLRDHUP) {
-      printf("CalculateFdEventEvent: EPOLLRDHUP\n");
+      printf("CalculateFdEventEvent(%d): EPOLLRDHUP\n", fde->fd);
     }
     // EPOLLRDHUP は TCP FIN を受信した場合にフラグが立つが､
     // ネットワークの回線の都合で先に送ったデータよりも後に送った TCP FIN
@@ -98,7 +98,10 @@ void Epoll::Register(FdEvent *fde) {
 }
 
 void Epoll::Unregister(FdEvent *fde) {
-  assert(registered_fd_events_.find(fde->fd) != registered_fd_events_.end());
+  if (registered_fd_events_.find(fde->fd) == registered_fd_events_.end()) {
+    return;
+  }
+
   if (epoll_ctl(epfd_, EPOLL_CTL_DEL, fde->fd, NULL) < 0) {
     utils::ErrExit("Epoll::Unregister epoll_ctl");
   }

@@ -113,6 +113,7 @@ void DeleteCgiProcess(Epoll *epoll, FdEvent *fde) {
   CgiProcess *cgi_process = reinterpret_cast<CgiProcess *>(fde->data);
 
   if (cgi_process->IsRemovable()) {
+    epoll->Unregister(fde);
     delete cgi_process;
   } else {
     epoll->Unregister(fde);
@@ -131,6 +132,11 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
 
   CgiRequest *cgi_request = cgi_process->cgi_request_;
   CgiResponse *cgi_response = cgi_process->cgi_response_;
+
+  if (cgi_process->IsRemovable()) {
+    DeleteCgiProcess(epoll, fde);
+    return;
+  }
 
   if (events & kFdeTimeout) {
     printf("Timeout CGI\n");

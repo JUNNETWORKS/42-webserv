@@ -85,8 +85,8 @@ int HttpRequest::GetLocalRedirectCount() const {
   return local_redirect_count_;
 }
 
-const config::VirtualServerConf *HttpRequest::GetVirtualServer() const {
-  return vserver_;
+const config::LocationConf *HttpRequest::GetLocation() const {
+  return location_;
 }
 
 //========================================================================
@@ -347,10 +347,10 @@ HttpStatus HttpRequest::InterpretTransferEncoding(
 
 //========================================================================
 // Is系関数　外部から状態取得
-bool HttpRequest::IsResponsible() {
+bool HttpRequest::IsResponsible() const {
   return phase_ == kParsed || phase_ == kError;
 }
-bool HttpRequest::IsErrorRequest() {
+bool HttpRequest::IsErrorRequest() const {
   if (phase_ == kError) {
     assert(parse_status_ >= 400);
     return true;
