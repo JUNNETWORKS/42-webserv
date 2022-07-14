@@ -44,6 +44,9 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
   if (!utils::IsRegularFile(file_path) || !utils::IsReadableFile(file_path)) {
     return Error();
   }
+  if (file_fd_ >= 0) {
+    close(file_fd_);
+  }
   if ((file_fd_ = open(file_path.c_str(), O_RDONLY)) < 0) {
     return Error();
   }
@@ -215,15 +218,14 @@ HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
 
   const std::map<http::HttpStatus, std::string> &error_pages =
       location_->GetErrorPages();
-  if (error_pages.find(status) != error_pages.end() &&
-      RegisterFile(error_pages.at(status)).IsOk()) {
+  if (error_pages.find(status) == error_pages.end() ||
+      RegisterFile(error_pages.at(status)).IsErr()) {
+    return MakeResponse(SerializeErrorResponseBody(status));
+  } else {
     SetHeader("Content-Type",
               ContentTypes::GetContentTypeFromExt(
                   utils::GetExetension(error_pages.at(status))));
-    return kBody;
-  } else {
-    SetHeader("Content-Type", "text/html");
-    return MakeResponse(SerializeErrorResponseBody(status));
+    return kStatusAndHeader;
   }
 }
 

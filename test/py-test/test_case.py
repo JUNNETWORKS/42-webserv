@@ -24,10 +24,10 @@ def simple_test():
 
 
 def not_found_test():
-    expect_response = res.response(404)
-    run_test("/NotExist", expect_response, ck_body=False)
-    run_test("/NotExist/NotExist", expect_response, ck_body=False)
-    run_test("/hoge/NotExist", expect_response, ck_body=False)
+    expect_response = res.response(404, file_path="public/error_pages/404.html")
+    run_test("/NotExist", expect_response)
+    run_test("/NotExist/NotExist", expect_response)
+    run_test("/hoge/NotExist", expect_response)
 
 
 def index_test():
