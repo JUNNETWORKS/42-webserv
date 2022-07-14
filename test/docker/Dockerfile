@@ -22,6 +22,7 @@ RUN			set -eux; \
 				valgrind \
 				vim \
 				wget \
+				sqlite3 \
 			&& apt-get clean
 
 RUN			mkdir -p /root/workdir
