@@ -193,14 +193,6 @@ http::HttpResponse *AllocateResponseObj(
   } else {
     return new http::HttpResponse(location, epoll);
   }
-  // TODO: 以下のコードが実行できるようにする
-  //  if (location->GetIsCgi()) {
-  //    return new http::HttpCgiResponse(location, epoll);
-  //  } else if (location->GetRedirectUrl()) {
-  //    return new http::HttpRedirectResponse(location, epoll);
-  //  } else {
-  //    return new http::HttpResponse(location, epoll);
-  //  }
 }
 
 }  // namespace
