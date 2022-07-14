@@ -44,6 +44,9 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
   if (!utils::IsRegularFile(file_path) || !utils::IsReadableFile(file_path)) {
     return Error();
   }
+  if (file_fd_ >= 0) {
+    close(file_fd_);
+  }
   if ((file_fd_ = open(file_path.c_str(), O_RDONLY)) < 0) {
     return Error();
   }
