@@ -29,7 +29,6 @@ struct CgiMetaVariables {
   std::string content_length;  // chunked request の時は空に設定する
 };
 
-// TODO: 何を受け取るか考える
 CgiMetaVariables CreateCgiMetaVariables(const server::ConnSocket *conn_sock,
                                         const http::HttpRequest &request);
 
@@ -76,8 +75,6 @@ class CgiRequest {
   bool SplitIntoCgiPathAndPathInfo();
 
   // 返り値は無名ドメインソケットのfd
-  // TODO: 第二引数はhttprequestじゃなくてcgirequestとかのほうがよいかも
-  // TODO: cgiのpidをどうやってwaitするかが問題｡
   bool ForkAndExecuteCgi();
 
   // リクエストからCGIスクリプトに渡す変数を作成する
