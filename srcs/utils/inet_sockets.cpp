@@ -13,9 +13,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <string>
+
 namespace utils {
 
-int InetConnect(const char *host, const char *service, int type) {
+int InetConnect(const std::string &host, const std::string &service, int type) {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
   int sfd, s;
@@ -27,7 +29,7 @@ int InetConnect(const char *host, const char *service, int type) {
   hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
   hints.ai_socktype = type;
 
-  s = getaddrinfo(host, service, &hints, &result);
+  s = getaddrinfo(host.c_str(), service.c_str(), &hints, &result);
   if (s != 0) {
     errno = ENOSYS;
     return -1;
@@ -51,8 +53,8 @@ int InetConnect(const char *host, const char *service, int type) {
 }
 
 /* Public interfaces: InetBind() and InetListen() */
-static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
-                             bool doListen, int backlog) {
+static int InetPassiveSocket(const std::string &service, int type,
+                             socklen_t *addrlen, bool doListen, int backlog) {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
   int sfd, optval, s;
@@ -65,7 +67,7 @@ static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
   hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
   hints.ai_flags = AI_PASSIVE; /* Use wildcadrd IP address */
 
-  s = getaddrinfo(NULL, service, &hints, &result);
+  s = getaddrinfo(NULL, service.c_str(), &hints, &result);
   if (s != 0)
     return -1;
 
@@ -106,12 +108,42 @@ static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
 }
 
 // TODO: Result を返すようにする
-int InetListen(const char *service, int backlog, socklen_t *addrlen) {
+int InetListen(const std::string &service, int backlog, socklen_t *addrlen) {
   return InetPassiveSocket(service, SOCK_STREAM, addrlen, true, backlog);
 }
 
-int InetBind(const char *service, int type, socklen_t *addrlen) {
+int InetBind(const std::string &service, int type, socklen_t *addrlen) {
   return InetPassiveSocket(service, type, addrlen, false, 0);
+}
+
+std::string GetSockaddrPort(const struct sockaddr_storage &addr) {
+  socklen_t addrlen = sizeof(struct sockaddr_storage);
+  char service[NI_MAXSERV];
+  if (getnameinfo((const struct sockaddr *)&addr, addrlen, NULL, 0, service,
+                  NI_MAXSERV, NI_NUMERICSERV) != 0) {
+    return "";
+  }
+  return service;
+}
+
+std::string GetSockaddrIp(const struct sockaddr_storage &addr) {
+  socklen_t addrlen = sizeof(struct sockaddr_storage);
+  char host[NI_MAXHOST];
+  if (getnameinfo((const struct sockaddr *)&addr, addrlen, host, NI_MAXHOST,
+                  NULL, 0, NI_NUMERICHOST) != 0) {
+    return "";
+  }
+  return host;
+}
+
+std::string GetSockaddrName(const struct sockaddr_storage &addr) {
+  socklen_t addrlen = sizeof(struct sockaddr_storage);
+  char host[NI_MAXHOST];
+  if (getnameinfo((const struct sockaddr *)&addr, addrlen, host, NI_MAXHOST,
+                  NULL, 0, NI_NAMEREQD) != 0) {
+    return "";
+  }
+  return host;
 }
 
 char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,

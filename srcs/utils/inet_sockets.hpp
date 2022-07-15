@@ -4,6 +4,8 @@
 #include <netdb.h>
 #include <sys/socket.h>
 
+#include <string>
+
 // インターネットドメインソケットライブラリ
 
 namespace utils {
@@ -20,7 +22,7 @@ namespace utils {
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-int InetConnect(const char *host, const char *service, int type);
+int InetConnect(const std::string &host, const std::string &service, int type);
 
 /* ストリームソケットを作成し､serviceに指定されたTCPポートのワイルドカードアドレスへバインドし,リスニングソケットとする｡
  * TCPサーバ用の関数｡
@@ -34,7 +36,7 @@ int InetConnect(const char *host, const char *service, int type);
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-int InetListen(const char *service, int backlog, socklen_t *addrlen);
+int InetListen(const std::string &service, int backlog, socklen_t *addrlen);
 
 /* typeに指定されたソケットを作成し、service､typeに指定されたポートのワイルドカードアドレスへバインドする｡
  * この関数はソケットを特定のアドレスへバインドするUDPサーバ､UDPクライアント用です｡
@@ -48,7 +50,7 @@ int InetListen(const char *service, int backlog, socklen_t *addrlen);
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-int InetBind(const char *service, int type, socklen_t *addrlen);
+int InetBind(const std::string &service, int type, socklen_t *addrlen);
 
 /* インターネットソケットアドレスを可読形式に変換します｡
  * addrStrに"(hostname, port-number)"の形式の文字列を格納する｡
@@ -73,6 +75,12 @@ char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
 /* client_addrを元に "Connection from (<address>, <port>)\n"
  * のメッセージを標準出力に出力する｡ */
 void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr);
+
+std::string GetSockaddrPort(const struct sockaddr_storage &addr);
+
+std::string GetSockaddrIp(const struct sockaddr_storage &addr);
+
+std::string GetSockaddrName(const struct sockaddr_storage &addr);
 
 /* InetAddressStr() に指定する文字列のサイズ.
   (NI_MAXHOST + NI_MAXSERV + 4) よりも大きくなくてはならない. */
