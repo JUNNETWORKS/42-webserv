@@ -76,12 +76,6 @@ char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
  * のメッセージを標準出力に出力する｡ */
 void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr);
 
-std::string GetSockaddrPort(const struct sockaddr_storage &addr);
-
-std::string GetSockaddrIp(const struct sockaddr_storage &addr);
-
-std::string GetSockaddrName(const struct sockaddr_storage &addr);
-
 /* InetAddressStr() に指定する文字列のサイズ.
   (NI_MAXHOST + NI_MAXSERV + 4) よりも大きくなくてはならない. */
 const int IS_ADDR_STR_LEN = 4096;

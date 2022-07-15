@@ -116,36 +116,6 @@ int InetBind(const std::string &service, int type, socklen_t *addrlen) {
   return InetPassiveSocket(service, type, addrlen, false, 0);
 }
 
-std::string GetSockaddrPort(const struct sockaddr_storage &addr) {
-  socklen_t addrlen = sizeof(struct sockaddr_storage);
-  char service[NI_MAXSERV];
-  if (getnameinfo((const struct sockaddr *)&addr, addrlen, NULL, 0, service,
-                  NI_MAXSERV, NI_NUMERICSERV) != 0) {
-    return "";
-  }
-  return service;
-}
-
-std::string GetSockaddrIp(const struct sockaddr_storage &addr) {
-  socklen_t addrlen = sizeof(struct sockaddr_storage);
-  char host[NI_MAXHOST];
-  if (getnameinfo((const struct sockaddr *)&addr, addrlen, host, NI_MAXHOST,
-                  NULL, 0, NI_NUMERICHOST) != 0) {
-    return "";
-  }
-  return host;
-}
-
-std::string GetSockaddrName(const struct sockaddr_storage &addr) {
-  socklen_t addrlen = sizeof(struct sockaddr_storage);
-  char host[NI_MAXHOST];
-  if (getnameinfo((const struct sockaddr *)&addr, addrlen, host, NI_MAXHOST,
-                  NULL, 0, NI_NAMEREQD) != 0) {
-    return "";
-  }
-  return host;
-}
-
 char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
                      char *addrStr, int addrStrLen) {
   char host[NI_MAXHOST], service[NI_MAXSERV];
