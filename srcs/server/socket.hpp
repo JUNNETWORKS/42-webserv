@@ -22,13 +22,8 @@ using namespace result;
 // CGI でリクエスト元IPなど色々情報が必要になってくるので,
 // それらの情報をもたせるようにしたい｡
 class Socket {
- public:
-  enum ESockType { ListenSock, ConnSock };
-
  protected:
   int fd_;
-
-  ESockType socktype_;
 
   // port_ は socktype_ によって意味が変わる｡
   // ListenSock の場合は Listen しているポート番号
@@ -38,8 +33,7 @@ class Socket {
   const config::Config &config_;
 
  public:
-  Socket(int fd, ESockType socktype, const std::string &port,
-         const config::Config &config);
+  Socket(int fd, const std::string &port, const config::Config &config);
   Socket(const Socket &rhs);
   // close(fd_) はデストラクタで行われる
   virtual ~Socket() = 0;
@@ -49,8 +43,6 @@ class Socket {
   const std::string &GetPort() const;
 
   const config::Config &GetConfig() const;
-
-  ESockType GetSockType() const;
 
  private:
   Socket();
