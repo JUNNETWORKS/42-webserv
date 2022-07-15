@@ -73,11 +73,21 @@ def path_normaliz_test():
     )
 
     # bad req
-    # TODO :
-    # expect_response = res.response(400)
-    # run_cmp_test("/..",port=cmd_args.NGINX_PORT,save_diff=True)
-    # run_cmp_test("/../")
-    # run_test("/..", expect_response=expect_response, ck_body=False)
+    expect_response = res.response(400)
+    run_test("/..", expect_response=expect_response, ck_body=False)
+    run_test("/../", expect_response=expect_response, ck_body=False)
+    run_test("/NotExist/../..", expect_response=expect_response, ck_body=False)
+    run_test("/NotExist/../../..", expect_response=expect_response, ck_body=False)
+    run_test("///../../..", expect_response=expect_response, ck_body=False)
+
+    # long req
+    expect_response = res.response(414)
+    s = "/" * 10000
+    run_test(s, expect_response=expect_response, ck_body=False)
+    s = "/" + "a" * 10000
+    run_test(s, expect_response=expect_response, ck_body=False)
+
+
 
 
 
