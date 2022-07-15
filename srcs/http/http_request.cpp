@@ -373,6 +373,10 @@ Result<const std::vector<std::string> &> HttpRequest::GetHeader(
   return Error();
 }
 
+const HeaderMap &HttpRequest::GetHeaders() const {
+  return headers_;
+}
+
 HttpStatus HttpRequest::GetParseStatus() const {
   return parse_status_;
 }

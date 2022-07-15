@@ -261,7 +261,21 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
   cgi_variables_["CONTENT_TYPE"] = cgi_meta_variables_.content_type;
   cgi_variables_["CONTENT_LENGTH"] = cgi_meta_variables_.content_length;
 
-  // TODO: HTTPヘッダーは "HTTP_" prefix を付けて環境変数にセット
+  // HTTPヘッダーは "HTTP_" prefix を付けて環境変数にセット
+  const http::HeaderMap &http_headers = request.GetHeaders();
+  for (http::HeaderMap::const_iterator it = http_headers.begin();
+       it != http_headers.end(); ++it) {
+    std::string header_key = "HTTP_" + it->first;
+    std::string header_value;
+    for (std::vector<std::string>::const_iterator vit = it->second.begin();
+         vit != it->second.end(); ++vit) {
+      header_value += *vit + ",";
+    }
+    if (!header_value.empty()) {
+      header_value.erase(header_value.size() - 1);  // 最後の ',' を削除
+      cgi_variables_[header_key] = header_value;
+    }
+  }
 }
 
 void CgiRequest::SetMetaVariables() {
