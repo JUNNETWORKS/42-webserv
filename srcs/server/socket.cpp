@@ -28,11 +28,11 @@ int Socket::GetFd() const {
   return fd_;
 }
 
-const std::string &Socket::GetServerIp() const {
+std::string Socket::GetServerIp() const {
   return server_addr_.GetIp();
 }
 
-const std::string &Socket::GetServerPort() const {
+std::string Socket::GetServerPort() const {
   return server_addr_.GetPort();
 }
 
@@ -60,11 +60,11 @@ std::deque<http::HttpRequest> &ConnSocket::GetRequests() {
   return requests_;
 }
 
-const std::string &ConnSocket::GetRemoteIp() const {
+std::string ConnSocket::GetRemoteIp() const {
   return client_addr_.GetIp();
 }
 
-const std::string &ConnSocket::GetRemoteName() const {
+std::string ConnSocket::GetRemoteName() const {
   return client_addr_.GetName();
 }
 

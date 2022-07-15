@@ -1,3 +1,6 @@
+#ifndef SERVER_SOCKET_ADDRESS_HPP_
+#define SERVER_SOCKET_ADDRESS_HPP_
+
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -24,9 +27,11 @@ class SocketAddress {
   const struct sockaddr *GetSockaddr() const;
   socklen_t GetSockaddrLen() const;
 
-  const std::string &GetIp() const;
-  const std::string &GetName() const;
-  const std::string &GetPort() const;
+  std::string GetIp() const;
+  std::string GetName() const;
+  std::string GetPort() const;
 };
 
 }  // namespace server
+
+#endif

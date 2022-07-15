@@ -42,8 +42,8 @@ class Socket {
 
   int GetFd() const;
 
-  const std::string &GetServerIp() const;
-  const std::string &GetServerPort() const;
+  std::string GetServerIp() const;
+  std::string GetServerPort() const;
 
   const config::Config &GetConfig() const;
 
@@ -71,8 +71,8 @@ class ConnSocket : public Socket {
              const SocketAddress &client_addr, const config::Config &config);
   virtual ~ConnSocket();
 
-  const std::string &GetRemoteIp() const;
-  const std::string &GetRemoteName() const;
+  std::string GetRemoteIp() const;
+  std::string GetRemoteName() const;
 
   std::deque<http::HttpRequest> &GetRequests();
 

@@ -49,7 +49,7 @@ socklen_t SocketAddress::GetSockaddrLen() const {
   return sockaddr_len_;
 }
 
-const std::string &SocketAddress::GetIp() const {
+std::string SocketAddress::GetIp() const {
   char host[NI_MAXHOST];
   if (getnameinfo(sockaddr_, sockaddr_len_, host, NI_MAXHOST, NULL, 0,
                   NI_NUMERICHOST) != 0) {
@@ -58,7 +58,7 @@ const std::string &SocketAddress::GetIp() const {
   return host;
 }
 
-const std::string &SocketAddress::GetName() const {
+std::string SocketAddress::GetName() const {
   char host[NI_MAXHOST];
   if (getnameinfo(sockaddr_, sockaddr_len_, host, NI_MAXHOST, NULL, 0,
                   NI_NAMEREQD) != 0) {
@@ -67,7 +67,7 @@ const std::string &SocketAddress::GetName() const {
   return host;
 }
 
-const std::string &SocketAddress::GetPort() const {
+std::string SocketAddress::GetPort() const {
   char service[NI_MAXSERV];
   if (getnameinfo(sockaddr_, sockaddr_len_, NULL, 0, service, NI_MAXSERV,
                   NI_NUMERICSERV) != 0) {
