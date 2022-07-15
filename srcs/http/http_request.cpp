@@ -73,6 +73,10 @@ const std::string &HttpRequest::GetPath() const {
   return path_;
 }
 
+void HttpRequest::SetQueryParam(const std::string &param) {
+  query_param_ = param;
+}
+
 const std::string &HttpRequest::GetQueryParam() const {
   return query_param_;
 }
