@@ -15,6 +15,8 @@
 
 #include <string>
 
+#include "server/socket_address.hpp"
+
 namespace utils {
 
 int InetConnect(const std::string &host, const std::string &service, int type) {
@@ -54,7 +56,8 @@ int InetConnect(const std::string &host, const std::string &service, int type) {
 
 /* Public interfaces: InetBind() and InetListen() */
 static int InetPassiveSocket(const std::string &service, int type,
-                             socklen_t *addrlen, bool doListen, int backlog) {
+                             server::SocketAddress *sockaddr, bool doListen,
+                             int backlog) {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
   int sfd, optval, s;
@@ -101,19 +104,22 @@ static int InetPassiveSocket(const std::string &service, int type,
       return -1;
     }
   }
-  if (rp != NULL && addrlen != NULL)
-    *addrlen = rp->ai_addrlen; /* Return address structure size */
+  if (rp != NULL && sockaddr != NULL) {
+    sockaddr->SetSockaddr(rp->ai_addr, rp->ai_addrlen);
+  }
   freeaddrinfo(result);
   return (rp == NULL) ? -1 : sfd;
 }
 
 // TODO: Result を返すようにする
-int InetListen(const std::string &service, int backlog, socklen_t *addrlen) {
-  return InetPassiveSocket(service, SOCK_STREAM, addrlen, true, backlog);
+int InetListen(const std::string &service, int backlog,
+               server::SocketAddress *sockaddr) {
+  return InetPassiveSocket(service, SOCK_STREAM, sockaddr, true, backlog);
 }
 
-int InetBind(const std::string &service, int type, socklen_t *addrlen) {
-  return InetPassiveSocket(service, type, addrlen, false, 0);
+int InetBind(const std::string &service, int type,
+             server::SocketAddress *sockaddr) {
+  return InetPassiveSocket(service, type, sockaddr, false, 0);
 }
 
 char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
