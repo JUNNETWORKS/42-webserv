@@ -11,6 +11,8 @@
 namespace server {
 using namespace result;
 
+Result<void> RegisterListenSockets(Epoll &epoll, const config::Config &config);
+
 // config内のバーチャルサーバの情報を元に必要なソケットをオープンし､リッスン状態にする｡
 // 返り値は map[<listen_fd>] = <port> の形のmap
 Result<ListenFdPortMap> OpenLilstenFds(const config::Config &config);
@@ -19,7 +21,7 @@ Result<ListenFdPortMap> OpenLilstenFds(const config::Config &config);
 void CloseAllFds(const ListenFdPortMap &listen_fd_port_map);
 
 // listen_fd_port_map を Epoll で監視するようにする
-void AddListenFds2Epoll(Epoll &epoll, config::Config &config,
+void AddListenFds2Epoll(Epoll &epoll, const config::Config &config,
                         const ListenFdPortMap &listen_fd_port_map);
 
 }  // namespace server

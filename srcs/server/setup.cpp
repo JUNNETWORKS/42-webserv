@@ -15,6 +15,15 @@
 
 namespace server {
 
+Result<void> RegisterListenSockets(Epoll &epoll, const config::Config &config) {
+  Result<server::ListenFdPortMap> result = OpenLilstenFds(config);
+  if (result.IsErr()) {
+    return Error();
+  }
+  AddListenFds2Epoll(epoll, config, result.Ok());
+  return Result<void>();
+}
+
 Result<ListenFdPortMap> OpenLilstenFds(const config::Config &config) {
   ListenFdPortMap listen_fd_port_map;
   std::set<config::PortType> used_ports;
@@ -46,13 +55,14 @@ void CloseAllFds(const ListenFdPortMap &listen_fd_port_map) {
   }
 }
 
-void AddListenFds2Epoll(Epoll &epoll, config::Config &config,
+void AddListenFds2Epoll(Epoll &epoll, const config::Config &config,
                         const ListenFdPortMap &listen_fd_port_map) {
   for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
        it != listen_fd_port_map.end(); ++it) {
     int listen_fd = it->first;
     std::string port = it->second;
-    ListenSocket *listen_sock = new ListenSocket(listen_fd, port, config);
+    // TODO: sockaddr_storage を渡せるようにする
+    ListenSocket *listen_sock = new ListenSocket(listen_fd, config);
     FdEvent *fde =
         CreateFdEvent(listen_fd, HandleListenSocketEvent, listen_sock);
     epoll.Register(fde);
