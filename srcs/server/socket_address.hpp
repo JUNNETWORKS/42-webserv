@@ -21,9 +21,9 @@ class SocketAddress {
   const struct sockaddr *GetSockaddr() const;
   int GetSockaddrLen() const;
 
-  const std::string &GetIp();
-  const std::string &GetName();
-  const std::string &GetPort();
+  const std::string &GetIp() const;
+  const std::string &GetName() const;
+  const std::string &GetPort() const;
 };
 
 }  // namespace server
