@@ -13,13 +13,16 @@ class SocketAddress {
   int sockaddr_len_;
 
  public:
-  SocketAddress(const struct sockaddr *sockaddr, const int sockaddr_len);
+  SocketAddress();
+  SocketAddress(const struct sockaddr *sockaddr, const socklen_t sockaddr_len);
   SocketAddress(const SocketAddress &rhs);
   SocketAddress &operator=(const SocketAddress &rhs);
   ~SocketAddress();
 
+  void SetSockaddr(const struct sockaddr *sockaddr,
+                   const socklen_t sockaddr_len);
   const struct sockaddr *GetSockaddr() const;
-  int GetSockaddrLen() const;
+  socklen_t GetSockaddrLen() const;
 
   const std::string &GetIp() const;
   const std::string &GetName() const;
