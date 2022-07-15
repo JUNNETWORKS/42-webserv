@@ -54,12 +54,12 @@ def all_test_stat() -> bool:
         success_count = get_success_count(test_name)
         fail_count = get_fail_count(test_name)
         print(
-            f"{test_name.upper():<30} {OK_MSG} {success_count}, {KO_MSG} {fail_count}"
+            f"{test_name.upper():<30} {OK_MSG} {success_count:>3},   {KO_MSG} {fail_count:>3}"
         )
         all_success_count += success_count
         all_fail_count += fail_count
     print()
-    print(f"TOTAL : {OK_MSG} {all_success_count}, {KO_MSG} {all_fail_count}")
+    print(f"TOTAL : {OK_MSG} {all_success_count:>3}, {KO_MSG} {all_fail_count:>3}")
     return all_fail_count == 0
 
 
