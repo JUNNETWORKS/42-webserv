@@ -38,10 +38,11 @@ CgiProcess::~CgiProcess() {
   delete cgi_response_;
 }
 
-Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
+Result<void> CgiProcess::RunCgi(server::ConnSocket *conn_sock,
+                                http::HttpRequest &request) {
   SetIsExecuted(true);
 
-  cgi_request_ = AllocateCgiRequest(request);
+  cgi_request_ = new cgi::CgiRequest(conn_sock, request, *location_);
   cgi_response_ = new CgiResponse();
   // TODO: fork した後 execve に失敗した時のエラー検知と処理
   if (!cgi_request_->RunCgi() || cgi_request_->GetCgiUnisock() < 0) {
@@ -68,11 +69,6 @@ Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
 
 void CgiProcess::KillCgi() {
   kill(cgi_request_->GetPid(), SIGKILL);
-}
-
-cgi::CgiRequest *CgiProcess::AllocateCgiRequest(http::HttpRequest &request) {
-  return new cgi::CgiRequest(request.GetPath(), request.GetQueryParam(),
-                             request, *location_);
 }
 
 bool CgiProcess::IsCgiExecuted() const {

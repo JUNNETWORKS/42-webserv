@@ -1,5 +1,6 @@
 #include "cgi/cgi_request.hpp"
 
+#include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -12,16 +13,58 @@
 
 namespace cgi {
 
-CgiRequest::CgiRequest(const std::string &request_path,
-                       const std::string &query_string,
+CgiMetaVariables CreateCgiMetaVariables(const server::ConnSocket *conn_sock,
+                                        const http::HttpRequest &request) {
+  CgiMetaVariables variables;
+
+  // SERVER_NAME
+  Result<const std::vector<std::string> &> host_res = request.GetHeader("Host");
+  if (host_res.IsOk() && !host_res.Ok().empty()) {
+    variables.server_name = host_res.Ok()[0];
+  } else {
+    variables.server_name = conn_sock->GetServerIp();
+  }
+
+  // SERVER_PORT
+  variables.server_port = conn_sock->GetServerPort();
+
+  // REMOTE_HOST
+  if (!conn_sock->GetRemoteName().empty()) {
+    variables.remote_host = conn_sock->GetRemoteName();
+  } else {
+    variables.remote_host = conn_sock->GetRemoteIp();
+  }
+
+  // REMOTE_ADDR
+  variables.remote_addr = conn_sock->GetRemoteIp();
+
+  // CONTENT_TYPE
+  Result<const std::vector<std::string> &> content_type_res =
+      request.GetHeader("Content-Type");
+  if (content_type_res.IsOk() && !content_type_res.Ok().empty()) {
+    variables.content_type = content_type_res.Ok()[0];
+  }
+
+  // CONTENT_LENGTH
+  Result<const std::vector<std::string> &> content_length_res =
+      request.GetHeader("Content-Length");
+  if (content_length_res.IsOk() && !content_length_res.Ok().empty()) {
+    variables.content_length = content_length_res.Ok()[0];
+  }
+
+  return variables;
+}
+
+CgiRequest::CgiRequest(const server::ConnSocket *conn_sock,
                        const http::HttpRequest &request,
                        const config::LocationConf &location)
     : cgi_pid_(-1),
       cgi_unisock_(-1),
-      request_path_(request_path),
-      query_string_(query_string),
+      request_path_(request.GetPath()),
+      query_string_(request.GetQueryParam()),
       request_(request),
-      location_(location) {}
+      location_(location),
+      cgi_meta_variables_(CreateCgiMetaVariables(conn_sock, request)) {}
 
 CgiRequest::CgiRequest(const CgiRequest &rhs)
     : request_(rhs.request_), location_(rhs.location_) {
@@ -201,25 +244,24 @@ void CgiRequest::UnsetAllEnvironmentVariables() const {
 void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
     const http::HttpRequest &request, const config::LocationConf &location) {
   (void)location;
-  (void)request;
-  // TODO
   cgi_variables_["SERVER_SOFTWARE"] = "webserv/1.0";
-  cgi_variables_["SERVER_NAME"] = "";  // apache : 127.0.0.1
+  cgi_variables_["SERVER_NAME"] = cgi_meta_variables_.server_name;
   cgi_variables_["GATEWAY_INTERFACE"] = "CGI/1.1";
-  cgi_variables_["SERVER_PROTOCOL"] = "HTTP/1.1";  // TODO
-  cgi_variables_["SERVER_PORT"] = "";              // TODO
+  cgi_variables_["SERVER_PROTOCOL"] = "HTTP/1.1";
+  cgi_variables_["SERVER_PORT"] = cgi_meta_variables_.server_port;
   cgi_variables_["REQUEST_METHOD"] = request.GetMethod();
-  cgi_variables_["HTTP_ACCEPT"] = "";  // TODO;
+  cgi_variables_["HTTP_ACCEPT"] = "*/*";
   cgi_variables_["PATH_INFO"] = path_info_;
   cgi_variables_["PATH_TRANSLATED"] = "";  // unsetenv("PATH_TRANSLATED");
   cgi_variables_["SCRIPT_NAME"] = script_name_;
   cgi_variables_["QUERY_STRING"] = query_string_;
-  cgi_variables_["REMOTE_HOST"] = "";
-  cgi_variables_["REMOTE_ADDR"] = "";
-  cgi_variables_["REMOTE_USER"] = "";
+  cgi_variables_["REMOTE_HOST"] = cgi_meta_variables_.remote_host;
+  cgi_variables_["REMOTE_ADDR"] = cgi_meta_variables_.remote_addr;
   cgi_variables_["AUTH_TYPE"] = "";
-  cgi_variables_["CONTENT_TYPE"] = "";
-  cgi_variables_["CONTENT_LENGTH"] = "";
+  cgi_variables_["CONTENT_TYPE"] = cgi_meta_variables_.content_type;
+  cgi_variables_["CONTENT_LENGTH"] = cgi_meta_variables_.content_length;
+
+  // TODO: HTTPヘッダーは "HTTP_" prefix を付けて環境変数にセット
 }
 
 void CgiRequest::SetMetaVariables() {

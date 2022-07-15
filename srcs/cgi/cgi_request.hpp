@@ -1,6 +1,10 @@
 #ifndef CGI_CGI_REQUEST_HPP_
 #define CGI_CGI_REQUEST_HPP_
 
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
 #include <map>
 #include <set>
 #include <vector>
@@ -8,12 +12,26 @@
 #include "config/location_conf.hpp"
 #include "http/http_request.hpp"
 #include "result/result.hpp"
+#include "server/socket.hpp"
 #include "utils/File.hpp"
 #include "utils/path.hpp"
 
 namespace cgi {
 
 using namespace result;
+
+struct CgiMetaVariables {
+  std::string server_name;  // ホストのIP
+  std::string server_port;  // listenポート
+  std::string remote_host;  // クライアントのホスト名
+  std::string remote_addr;  // クライアントのIPアドレス
+  std::string content_type;
+  std::string content_length;  // chunked request の時は空に設定する
+};
+
+// TODO: 何を受け取るか考える
+CgiMetaVariables CreateCgiMetaVariables(const server::ConnSocket *conn_sock,
+                                        const http::HttpRequest &request);
 
 class CgiRequest {
  private:
@@ -24,6 +42,7 @@ class CgiRequest {
   std::string script_name_;
   std::string exec_cgi_script_path_;
   std::string path_info_;
+  CgiMetaVariables cgi_meta_variables_;
   // TODO : 必要な情報だけ取るようにして、メンバ変数からは削除予定
   const http::HttpRequest &request_;
   // TODO : 必要な情報だけ取るようにして、メンバ変数からは削除予定
@@ -32,7 +51,7 @@ class CgiRequest {
   std::map<std::string, std::string> cgi_variables_;
 
  public:
-  CgiRequest(const std::string &request_path, const std::string &query_string,
+  CgiRequest(const server::ConnSocket *conn_sock,
              const http::HttpRequest &request,
              const config::LocationConf &location);
   CgiRequest(const CgiRequest &rhs);
