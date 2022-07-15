@@ -233,14 +233,6 @@ void CgiRequest::UnsetAllEnvironmentVariables() const {
 
 // 各変数の役割は以下のサイトを参照
 // http://bashhp.web.fc2.com/WWW/header.html
-
-// TODO: HTTP固有のメタ変数
-// HTTP_ACCEPT
-// HTTP_COOKIE
-// HTTP_REFERER
-// HTTP_USER_AGENT
-// unsetenv("REMOTE_IDENT"); // IDENTプロトコル関係｡ サポートしない｡
-// unsetenv("REMOTE_USER");  // IDENTプロトコル関係｡ サポートしない｡
 void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
     const http::HttpRequest &request, const config::LocationConf &location) {
   (void)location;
@@ -252,7 +244,11 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
   cgi_variables_["REQUEST_METHOD"] = request.GetMethod();
   cgi_variables_["HTTP_ACCEPT"] = "*/*";
   cgi_variables_["PATH_INFO"] = path_info_;
-  cgi_variables_["PATH_TRANSLATED"] = "";  // unsetenv("PATH_TRANSLATED");
+  if (!path_info_.empty()) {
+    // ここはApacheと結果が異なる｡
+    cgi_variables_["PATH_TRANSLATED"] =
+        location.GetAbsolutePath(location.GetPathPattern() + path_info_);
+  }
   cgi_variables_["SCRIPT_NAME"] = script_name_;
   cgi_variables_["QUERY_STRING"] = query_string_;
   cgi_variables_["REMOTE_HOST"] = cgi_meta_variables_.remote_host;
