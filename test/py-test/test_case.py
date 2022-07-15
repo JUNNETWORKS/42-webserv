@@ -88,7 +88,24 @@ def path_normaliz_test():
     run_test(s, expect_response=expect_response, ck_body=False)
 
 
+def has_q_prm_test():
+    # 200 /
+    expect_response = res.response(200)
+    run_test("/?", expect_response=expect_response, ck_body=False)
+    run_test("/.?", expect_response=expect_response, ck_body=False)
+    run_test("/.?", expect_response=expect_response, ck_body=False)
+    run_test("/./?", expect_response=expect_response, ck_body=False)
+    run_test("/sample.html/..?", expect_response=expect_response, ck_body=False)
+    run_test("/sample.html/../?", expect_response=expect_response, ck_body=False)
 
+    # 404
+    expect_response = res.response(404)
+    run_test("/sample.html/.", expect_response=expect_response, ck_body=False)
+    run_test("/sample.html/NotExist/.", expect_response=expect_response, ck_body=False)
+    run_test("/sample.html/NotExist/..", expect_response=expect_response, ck_body=False)
+    run_test(
+        "/sample.html/NotExist/../", expect_response=expect_response, ck_body=False
+    )
 
 
 # TODO : content_type を 見るようにする。
@@ -128,6 +145,7 @@ def run_all_test() -> bool:
     is_all_test_ok &= exec_test(index_test)
     is_all_test_ok &= exec_test(autoindex_test)
     is_all_test_ok &= exec_test(path_normaliz_test)
+    is_all_test_ok &= exec_test(has_q_prm_test)
     is_all_test_ok &= exec_test(content_type_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cmp_test, must_all_test_ok=False)
     return is_all_test_ok
