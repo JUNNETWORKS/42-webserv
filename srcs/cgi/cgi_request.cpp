@@ -62,9 +62,9 @@ CgiRequest::CgiRequest(const server::ConnSocket *conn_sock,
       cgi_unisock_(-1),
       request_path_(request.GetPath()),
       query_string_(request.GetQueryParam()),
+      cgi_meta_variables_(CreateCgiMetaVariables(conn_sock, request)),
       request_(request),
-      location_(location),
-      cgi_meta_variables_(CreateCgiMetaVariables(conn_sock, request)) {}
+      location_(location) {}
 
 CgiRequest::CgiRequest(const CgiRequest &rhs)
     : request_(rhs.request_), location_(rhs.location_) {
