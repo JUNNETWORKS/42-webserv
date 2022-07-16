@@ -254,14 +254,17 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
   cgi_variables_["REMOTE_HOST"] = cgi_meta_variables_.remote_host;
   cgi_variables_["REMOTE_ADDR"] = cgi_meta_variables_.remote_addr;
   cgi_variables_["AUTH_TYPE"] = "";
-  cgi_variables_["CONTENT_TYPE"] = cgi_meta_variables_.content_type;
-  cgi_variables_["CONTENT_LENGTH"] = cgi_meta_variables_.content_length;
+  // HTTPヘッダーのメタ変数を作成
+  CreateCgiHttpVariables(request);
 
+void CgiRequest::CreateCgiHttpVariables(const http::HttpRequest &request) {
   // HTTPヘッダーは "HTTP_" prefix を付けて環境変数にセット
   const http::HeaderMap &http_headers = request.GetHeaders();
   for (http::HeaderMap::const_iterator it = http_headers.begin();
        it != http_headers.end(); ++it) {
-    std::string header_key = "HTTP_" + it->first;
+    std::string tmp = it->first;
+    std::replace(tmp.begin(), tmp.end(), '-', '_');
+    std::string header_key = "HTTP_" + tmp;
     std::string header_value;
     for (std::vector<std::string>::const_iterator vit = it->second.begin();
          vit != it->second.end(); ++vit) {
