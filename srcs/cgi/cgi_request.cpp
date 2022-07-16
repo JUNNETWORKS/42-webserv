@@ -54,10 +54,10 @@ const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
 bool CgiRequest::RunCgi(const server::ConnSocket *conn_sock,
                         const http::HttpRequest &request,
                         const config::LocationConf &location) {
-  bool result = false;
-  result |= ParseCgiRequest(request, location);
+  bool result = true;
+  result &= ParseCgiRequest(request, location);
   CreateCgiMetaVariablesFromHttpRequest(conn_sock, request, location);
-  result |= ForkAndExecuteCgi();
+  result &= ForkAndExecuteCgi();
   return result;
 }
 
