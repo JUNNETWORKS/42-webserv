@@ -294,14 +294,15 @@ void Parser::ParseAutoindexDirective(LocationConf &location) {
   if (GetC() != ';') {
     throw ParserException("Can't find semicolon after autoindex directive.");
   }
+
+  if (location.GetIsCgi() && location.GetAutoIndex()) {
+    throw ParserException("'is_cgi on' and 'autoindex on' conflicts.");
+  }
 }
 
 void Parser::ParseIscgiDirective(LocationConf &location) {
   if (IsDirectiveSetInLocation("is_cgi")) {
     throw ParserException("is_cgi has already set.");
-  }
-  if (location.GetAutoIndex()) {
-    throw ParserException("is_cgi and 'autoindex on' conflicts.");
   }
   if (IsDirectiveSetInLocation("return")) {
     throw ParserException("is_cgi and return conflicts.");
@@ -314,6 +315,10 @@ void Parser::ParseIscgiDirective(LocationConf &location) {
   SkipSpaces();
   if (GetC() != ';') {
     throw ParserException("Can't find semicolon after is_cgi directive.");
+  }
+
+  if (location.GetIsCgi() && location.GetAutoIndex()) {
+    throw ParserException("'is_cgi on' and 'autoindex on' conflicts.");
   }
 }
 
