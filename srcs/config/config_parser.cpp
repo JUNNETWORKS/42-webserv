@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#include <cstdarg>
 #include <cstring>
 #include <fstream>
 #include <sstream>
@@ -13,6 +14,7 @@
 #include "config/location_conf.hpp"
 #include "config/virtual_server_conf.hpp"
 #include "http/http_request.hpp"
+#include "http/http_status.hpp"
 #include "utils/string.hpp"
 
 namespace config {
@@ -91,7 +93,7 @@ void Parser::ParseServerBlock(Config &config) {
 
 void Parser::ParseListenDirective(VirtualServerConf &vserver) {
   if (!vserver.GetListenPort().empty()) {
-    throw ParserException("Port is empty.");
+    throw ParserException("Port has already set.");
   }
   SkipSpaces();
   std::string port = GetWord();
@@ -117,6 +119,7 @@ void Parser::ParseServerNameDirective(VirtualServerConf &vserver) {
 
 void Parser::ParseLocationBlock(VirtualServerConf &vserver,
                                 bool is_location_back) {
+  location_set_directives_.clear();
   LocationConf location;
   location.SetIsBackwardSearch(is_location_back);
   SkipSpaces();
@@ -154,6 +157,7 @@ void Parser::ParseLocationBlock(VirtualServerConf &vserver,
       throw ParserException("Unknown directive in Location block.");
     }
     SkipSpaces();
+    location_set_directives_.insert(directive);
   }
 
   vserver.AppendLocation(location);
@@ -173,6 +177,10 @@ void Parser::ParseAllowMethodDirective(LocationConf &location) {
 }
 
 void Parser::ParseClientMaxBodySizeDirective(LocationConf &location) {
+  if (IsDirectiveSetInLocation("client_max_body_size")) {
+    throw ParserException("client_max_body_size has already set.");
+  }
+
   SkipSpaces();
   std::string body_size_str = GetWord();
   Result<unsigned long> result = utils::Stoul(body_size_str);
@@ -189,6 +197,13 @@ void Parser::ParseClientMaxBodySizeDirective(LocationConf &location) {
 }
 
 void Parser::ParseRootDirective(LocationConf &location) {
+  if (IsDirectiveSetInLocation("root")) {
+    throw ParserException("root has already set.");
+  }
+  if (IsDirectiveSetInLocation("return")) {
+    throw ParserException("root and return conflicts.");
+  }
+
   SkipSpaces();
   std::string root = GetWord();
   location.SetRootDir(root);
@@ -199,6 +214,13 @@ void Parser::ParseRootDirective(LocationConf &location) {
 }
 
 void Parser::ParseIndexDirective(LocationConf &location) {
+  if (IsDirectiveSetInLocation("index")) {
+    throw ParserException("index has already set.");
+  }
+  if (IsDirectiveSetInLocation("return")) {
+    throw ParserException("index and return conflicts.");
+  }
+
   SkipSpaces();
   while (!IsEofReached() && GetC() != ';') {
     UngetC();
@@ -209,6 +231,9 @@ void Parser::ParseIndexDirective(LocationConf &location) {
 }
 
 void Parser::ParseErrorPageDirective(LocationConf &location) {
+  if (IsDirectiveSetInLocation("return")) {
+    throw ParserException("error_page and return conflicts.");
+  }
   SkipSpaces();
   // 最後のargがエラーページのfilepathになってる｡
   std::vector<std::string> args;
@@ -247,6 +272,13 @@ void Parser::ParseErrorPageDirective(LocationConf &location) {
 }
 
 void Parser::ParseAutoindexDirective(LocationConf &location) {
+  if (IsDirectiveSetInLocation("autoindex")) {
+    throw ParserException("autoindex has already set.");
+  }
+  if (IsDirectiveSetInLocation("return")) {
+    throw ParserException("autoindex and return conflicts.");
+  }
+
   SkipSpaces();
   std::string on_or_off = GetWord();
   bool is_autoindex_enabled = ParseOnOff(on_or_off);
@@ -258,6 +290,16 @@ void Parser::ParseAutoindexDirective(LocationConf &location) {
 }
 
 void Parser::ParseIscgiDirective(LocationConf &location) {
+  if (IsDirectiveSetInLocation("is_cgi")) {
+    throw ParserException("is_cgi has already set.");
+  }
+  if (location.GetAutoIndex()) {
+    throw ParserException("is_cgi and 'autoindex on' conflicts.");
+  }
+  if (IsDirectiveSetInLocation("return")) {
+    throw ParserException("is_cgi and return conflicts.");
+  }
+
   SkipSpaces();
   std::string on_or_off = GetWord();
   bool is_cgi = ParseOnOff(on_or_off);
@@ -269,6 +311,16 @@ void Parser::ParseIscgiDirective(LocationConf &location) {
 }
 
 void Parser::ParseReturnDirective(LocationConf &location) {
+  if (IsDirectiveSetInLocation("return")) {
+    throw ParserException("return has already set.");
+  }
+  if (IsDirectiveSetInLocation("is_cgi") ||
+      IsDirectiveSetInLocation("autoindex") ||
+      IsDirectiveSetInLocation("error_page") ||
+      IsDirectiveSetInLocation("index") || IsDirectiveSetInLocation("root")) {
+    throw ParserException(
+        "return can't belong to location with other directives");
+  }
   SkipSpaces();
   std::string url = GetWord();
   location.SetRedirectUrl(url);
@@ -408,8 +460,18 @@ bool Parser::IsEofReached() {
   return buf_idx_ >= file_content_.length();
 }
 
-Parser::ParserException::ParserException(const char *errmsg)
-    : errmsg_(errmsg) {}
+bool Parser::IsDirectiveSetInLocation(const std::string &directive) {
+  return location_set_directives_.find(directive) !=
+         location_set_directives_.end();
+}
+
+Parser::ParserException::ParserException(const char *errfmt, ...) {
+  va_list args;
+  va_start(args, errfmt);
+
+  vsnprintf(errmsg_, MAX_ERROR_LEN, errfmt, args);
+  va_end(args);
+}
 
 const char *Parser::ParserException::what() const throw() {
   return errmsg_;
