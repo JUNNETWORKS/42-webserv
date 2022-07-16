@@ -13,61 +13,9 @@
 
 namespace cgi {
 
-CgiMetaVariables CreateCgiMetaVariables(const server::ConnSocket *conn_sock,
-                                        const http::HttpRequest &request) {
-  CgiMetaVariables variables;
+CgiRequest::CgiRequest() : cgi_pid_(-1), cgi_unisock_(-1) {}
 
-  // SERVER_NAME
-  Result<const std::vector<std::string> &> host_res = request.GetHeader("Host");
-  if (host_res.IsOk() && !host_res.Ok().empty()) {
-    variables.server_name = host_res.Ok()[0];
-  } else {
-    variables.server_name = conn_sock->GetServerIp();
-  }
-
-  // SERVER_PORT
-  variables.server_port = conn_sock->GetServerPort();
-
-  // REMOTE_HOST
-  if (!conn_sock->GetRemoteName().empty()) {
-    variables.remote_host = conn_sock->GetRemoteName();
-  } else {
-    variables.remote_host = conn_sock->GetRemoteIp();
-  }
-
-  // REMOTE_ADDR
-  variables.remote_addr = conn_sock->GetRemoteIp();
-
-  // CONTENT_TYPE
-  Result<const std::vector<std::string> &> content_type_res =
-      request.GetHeader("Content-Type");
-  if (content_type_res.IsOk() && !content_type_res.Ok().empty()) {
-    variables.content_type = content_type_res.Ok()[0];
-  }
-
-  // CONTENT_LENGTH
-  Result<const std::vector<std::string> &> content_length_res =
-      request.GetHeader("Content-Length");
-  if (content_length_res.IsOk() && !content_length_res.Ok().empty()) {
-    variables.content_length = content_length_res.Ok()[0];
-  }
-
-  return variables;
-}
-
-CgiRequest::CgiRequest(const server::ConnSocket *conn_sock,
-                       const http::HttpRequest &request,
-                       const config::LocationConf &location)
-    : cgi_pid_(-1),
-      cgi_unisock_(-1),
-      request_path_(request.GetPath()),
-      query_string_(request.GetQueryParam()),
-      cgi_meta_variables_(CreateCgiMetaVariables(conn_sock, request)),
-      request_(request),
-      location_(location) {}
-
-CgiRequest::CgiRequest(const CgiRequest &rhs)
-    : request_(rhs.request_), location_(rhs.location_) {
+CgiRequest::CgiRequest(const CgiRequest &rhs) {
   *this = rhs;
 }
 
@@ -75,8 +23,6 @@ CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
   if (this != &rhs) {
     cgi_pid_ = rhs.cgi_pid_;
     cgi_unisock_ = rhs.cgi_unisock_;
-    request_path_ = rhs.request_path_;
-    query_string_ = rhs.query_string_;
     script_name_ = rhs.script_name_;
     exec_cgi_script_path_ = rhs.exec_cgi_script_path_;
     path_info_ = rhs.path_info_;
@@ -98,48 +44,44 @@ int CgiRequest::GetCgiUnisock() const {
   return cgi_unisock_;
 }
 
-const std::string &CgiRequest::GetCgiPath() const {
-  return request_path_;
-}
-
-const std::string &CgiRequest::GetQueryString() const {
-  return query_string_;
-}
-
 const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
   return cgi_args_;
 }
 
 // RunCgi
 // ========================================================================
-bool CgiRequest::RunCgi() {
+bool CgiRequest::RunCgi(const server::ConnSocket *conn_sock,
+                        const http::HttpRequest &request,
+                        const config::LocationConf &location) {
   bool result = false;
-  result |= ParseCgiRequest();
-  CreateCgiMetaVariablesFromHttpRequest(request_, location_);
+  result |= ParseCgiRequest(request, location);
+  CreateCgiMetaVariablesFromHttpRequest(conn_sock, request, location);
   result |= ForkAndExecuteCgi();
   return result;
 }
 
 // Parse
 // ========================================================================
-bool CgiRequest::ParseCgiRequest() {
-  if (!ParseQueryString()) {
+bool CgiRequest::ParseCgiRequest(const http::HttpRequest &request,
+                                 const config::LocationConf &location) {
+  if (!ParseQueryString(request)) {
     return false;
   }
-  if (!SplitIntoCgiPathAndPathInfo()) {
+  if (!SplitIntoCgiPathAndPathInfo(request, location)) {
     return false;
   }
   return true;
 }
 
-bool CgiRequest::ParseQueryString() {
-  if (query_string_ == "") {
+bool CgiRequest::ParseQueryString(const http::HttpRequest &request) {
+  std::string query_string = request.GetQueryParam();
+  if (query_string == "") {
     return true;
   }
-  if (query_string_.find('=') != std::string::npos) {
+  if (query_string.find('=') != std::string::npos) {
     return true;
   }
-  cgi_args_ = utils::SplitString(query_string_, "+");
+  cgi_args_ = utils::SplitString(query_string, "+");
   for (std::vector<std::string>::iterator it = cgi_args_.begin();
        it != cgi_args_.end(); it++) {
     Result<std::string> res = utils::PercentDecode(*it);
@@ -151,11 +93,13 @@ bool CgiRequest::ParseQueryString() {
   return true;
 }
 
-bool CgiRequest::SplitIntoCgiPathAndPathInfo() {
+bool CgiRequest::SplitIntoCgiPathAndPathInfo(
+    const http::HttpRequest &request, const config::LocationConf &location) {
+  std::string request_path = request.GetPath();
   std::vector<std::string> file_vec =
-      utils::SplitString(location_.GetAfterLocation(request_path_), "/");
+      utils::SplitString(location.GetAfterLocation(request_path), "/");
 
-  std::string exec_cgi_path = location_.GetRootDir();
+  std::string exec_cgi_path = location.GetRootDir();
   std::string script_name = "";
   for (std::vector<std::string>::const_iterator it = file_vec.begin();
        it != file_vec.end(); it++) {
@@ -167,9 +111,9 @@ bool CgiRequest::SplitIntoCgiPathAndPathInfo() {
     utils::File f(exec_cgi_path);
     // TODO : 実行権限も確認
     if (f.GetFileType() == utils::File::kFile) {
-      script_name_ = utils::JoinPath(location_.GetPathPattern(), script_name);
+      script_name_ = utils::JoinPath(location.GetPathPattern(), script_name);
       exec_cgi_script_path_ = exec_cgi_path;
-      path_info_ = request_path_;
+      path_info_ = request_path;
       path_info_ = path_info_.replace(0, script_name_.length(), "");
       return true;
     }
@@ -234,13 +178,25 @@ void CgiRequest::UnsetAllEnvironmentVariables() const {
 // 各変数の役割は以下のサイトを参照
 // http://bashhp.web.fc2.com/WWW/header.html
 void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
-    const http::HttpRequest &request, const config::LocationConf &location) {
-  (void)location;
+    const server::ConnSocket *conn_sock, const http::HttpRequest &request,
+    const config::LocationConf &location) {
+  // CONTENT_TYPE
+  Result<const std::vector<std::string> &> content_type_res =
+      request.GetHeader("Content-Type");
+  if (content_type_res.IsOk() && !content_type_res.Ok().empty()) {
+    cgi_variables_["CONTENT_TYPE"] = content_type_res.Ok()[0];
+  }
+
+  // CONTENT_LENGTH
+  Result<const std::vector<std::string> &> content_length_res =
+      request.GetHeader("Content-Length");
+  if (content_length_res.IsOk() && !content_length_res.Ok().empty()) {
+    cgi_variables_["CONTENT_LENGTH"] = content_length_res.Ok()[0];
+  }
+
   cgi_variables_["SERVER_SOFTWARE"] = "webserv/1.0";
-  cgi_variables_["SERVER_NAME"] = cgi_meta_variables_.server_name;
   cgi_variables_["GATEWAY_INTERFACE"] = "CGI/1.1";
   cgi_variables_["SERVER_PROTOCOL"] = "HTTP/1.1";
-  cgi_variables_["SERVER_PORT"] = cgi_meta_variables_.server_port;
   cgi_variables_["REQUEST_METHOD"] = request.GetMethod();
   cgi_variables_["HTTP_ACCEPT"] = "*/*";
   cgi_variables_["PATH_INFO"] = path_info_;
@@ -250,12 +206,13 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
         location.GetAbsolutePath(location.GetPathPattern() + path_info_);
   }
   cgi_variables_["SCRIPT_NAME"] = script_name_;
-  cgi_variables_["QUERY_STRING"] = query_string_;
-  cgi_variables_["REMOTE_HOST"] = cgi_meta_variables_.remote_host;
-  cgi_variables_["REMOTE_ADDR"] = cgi_meta_variables_.remote_addr;
+  cgi_variables_["QUERY_STRING"] = request.GetQueryParam();
   cgi_variables_["AUTH_TYPE"] = "";
+
+  CreateCgiNetworkVariables(conn_sock, request);
   // HTTPヘッダーのメタ変数を作成
   CreateCgiHttpVariables(request);
+}
 
 void CgiRequest::CreateCgiHttpVariables(const http::HttpRequest &request) {
   // HTTPヘッダーは "HTTP_" prefix を付けて環境変数にセット
@@ -275,6 +232,30 @@ void CgiRequest::CreateCgiHttpVariables(const http::HttpRequest &request) {
       cgi_variables_[header_key] = header_value;
     }
   }
+}
+
+void CgiRequest::CreateCgiNetworkVariables(const server::ConnSocket *conn_sock,
+                                           const http::HttpRequest &request) {
+  // SERVER_NAME
+  Result<const std::vector<std::string> &> host_res = request.GetHeader("Host");
+  if (host_res.IsOk() && !host_res.Ok().empty()) {
+    cgi_variables_["SERVER_NAME"] = host_res.Ok()[0];
+  } else {
+    cgi_variables_["SERVER_NAME"] = conn_sock->GetServerIp();
+  }
+
+  // SERVER_PORT
+  cgi_variables_["SERVER_PORT"] = conn_sock->GetServerPort();
+
+  // REMOTE_HOST
+  if (!conn_sock->GetRemoteName().empty()) {
+    cgi_variables_["REMOTE_HOST"] = conn_sock->GetRemoteName();
+  } else {
+    cgi_variables_["REMOTE_HOST"] = conn_sock->GetRemoteIp();
+  }
+
+  // REMOTE_ADDR
+  cgi_variables_["REMOTE_ADDR"] = conn_sock->GetRemoteIp();
 }
 
 void CgiRequest::SetMetaVariables() {

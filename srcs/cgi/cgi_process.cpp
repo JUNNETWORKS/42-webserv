@@ -42,10 +42,11 @@ Result<void> CgiProcess::RunCgi(server::ConnSocket *conn_sock,
                                 http::HttpRequest &request) {
   SetIsExecuted(true);
 
-  cgi_request_ = new cgi::CgiRequest(conn_sock, request, *location_);
+  cgi_request_ = new cgi::CgiRequest();
   cgi_response_ = new CgiResponse();
   // TODO: fork した後 execve に失敗した時のエラー検知と処理
-  if (!cgi_request_->RunCgi() || cgi_request_->GetCgiUnisock() < 0) {
+  if (!cgi_request_->RunCgi(conn_sock, request, *location_) ||
+      cgi_request_->GetCgiUnisock() < 0) {
     delete cgi_request_;
     delete cgi_response_;
     cgi_request_ = NULL;
