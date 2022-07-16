@@ -1,6 +1,6 @@
 from . import response_class as res
 from . import cmd_args
-from . import str_utils
+from .str_utils import to_hex_str
 from .run_test import run_test
 from .run_test import run_cmp_test
 from .run_test import is_test_success
@@ -117,9 +117,29 @@ def has_q_prm_test():
         "/sample.html/NotExist/../?", expect_response=expect_response, ck_body=False
     )
     run_test(
-        "/sample.html" + str_utils.to_hex_str("?"),
+        "/sample.html" + to_hex_str("?"),
         expect_response=expect_response,
         ck_body=False,
+    )
+
+
+def decode_test():
+    expect_response = res.response(200, file_path="public/sample.html")
+    run_test("/" + to_hex_str("sample.html"), expect_response=expect_response)
+
+    expect_response = res.response(200, file_path="public/sample.html")
+    run_test("/sample" + to_hex_str(".html"), expect_response=expect_response)
+    run_test("/" + to_hex_str("sample") + ".html", expect_response=expect_response)
+
+    # 400 bad req
+    expect_response = res.response(400)
+    run_test("/%", expect_response=expect_response, ck_body=False)
+    run_test("/%hoge", expect_response=expect_response, ck_body=False)
+    run_test("/%%fuga", expect_response=expect_response, ck_body=False)
+
+    # TODO : 途中で %00 で ヌル文字等があった場合デコードエラーにする処理を追加する。
+    run_test(
+        "/" + to_hex_str("sample.html") + "%00/fuga", expect_response=expect_response
     )
 
 
@@ -161,6 +181,7 @@ def run_all_test() -> bool:
     is_all_test_ok &= exec_test(autoindex_test)
     is_all_test_ok &= exec_test(path_normaliz_test)
     is_all_test_ok &= exec_test(has_q_prm_test)
+    is_all_test_ok &= exec_test(decode_test)
     is_all_test_ok &= exec_test(content_type_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cmp_test, must_all_test_ok=False)
     return is_all_test_ok
