@@ -16,6 +16,7 @@
 #include "config/virtual_server_conf.hpp"
 #include "http/http_request.hpp"
 #include "http/http_status.hpp"
+#include "utils/path.hpp"
 #include "utils/string.hpp"
 
 namespace config {
@@ -207,6 +208,9 @@ void Parser::ParseRootDirective(LocationConf &location) {
 
   SkipSpaces();
   std::string root = GetWord();
+  if (!IsAbsolutePath(root)) {
+    throw ParserException("root %s is invalid.", root.c_str());
+  }
   location.SetRootDir(root);
   SkipSpaces();
   if (GetC() != ';') {
@@ -226,7 +230,7 @@ void Parser::ParseIndexDirective(LocationConf &location) {
     if (std::find(location.GetIndexPages().begin(),
                   location.GetIndexPages().end(),
                   filepath) != location.GetIndexPages().end()) {
-      throw ParserException("index %s has already set.", filepath);
+      throw ParserException("index %s has already set.", filepath.c_str());
     }
     location.AppendIndexPages(filepath);
     SkipSpaces();
@@ -258,7 +262,7 @@ void Parser::ParseErrorPageDirective(LocationConf &location) {
     http::HttpStatus status =
         static_cast<http::HttpStatus>(atoi(args[i].c_str()));
     if (!http::StatusCodes::IsHttpStatus(status)) {
-      throw ParserException("error_page directive arg %lu isn't valid number.",
+      throw ParserException("error_page directive arg %d isn't valid number.",
                             status);
     }
     if (location.GetErrorPages().find(status) !=
@@ -448,6 +452,10 @@ bool Parser::IsValidHttpStatusCode(const std::string &code) {
 bool Parser::IsValidPort(const std::string &port) {
   Result<unsigned long> result = utils::Stoul(port);
   return result.IsOk() && result.Ok() <= kMaxPortNumber;
+}
+
+bool Parser::IsAbsolutePath(const std::string &path) {
+  return !path.empty() && path[0] == '/' && utils::IsValidPath(path);
 }
 
 bool Parser::ParseOnOff(const std::string &on_or_off) {

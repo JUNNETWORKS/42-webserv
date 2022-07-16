@@ -677,6 +677,10 @@ const std::vector<std::string> ParserLocationKoVec = {
                 "  is_cgi on;                               "
                 "  autoindex on;                            "
                 "}                                          "),
+    // root が絶対パスじゃない
+    std::string("location / {                               "
+                "  root hoge/fuga;                          "
+                "}                                          "),
 };
 
 INSTANTIATE_TEST_SUITE_P(ParserKo, ParserLocationTestKo,

@@ -134,6 +134,9 @@ class Parser {
   // portが符号なし整数であり､ポート番号の範囲に収まっているかチェックする
   bool IsValidPort(const std::string &port);
 
+  // 絶対パスかどうか
+  bool IsAbsolutePath(const std::string &path);
+
   // "on" なら true, "off" なら false を返す｡
   bool ParseOnOff(const std::string &on_or_off);
 
