@@ -182,7 +182,7 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
     const config::LocationConf &location) {
   cgi_variables_["SERVER_SOFTWARE"] = "webserv/1.0";
   cgi_variables_["GATEWAY_INTERFACE"] = "CGI/1.1";
-  cgi_variables_["SERVER_PROTOCOL"] = "HTTP/1.1";
+  cgi_variables_["SERVER_PROTOCOL"] = request.GetHttpVersion();
   cgi_variables_["REQUEST_METHOD"] = request.GetMethod();
   cgi_variables_["PATH_INFO"] = path_info_;
   if (!path_info_.empty()) {
