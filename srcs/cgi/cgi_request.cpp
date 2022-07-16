@@ -10,6 +10,7 @@
 
 #include "config/location_conf.hpp"
 #include "http/http_request.hpp"
+#include "utils/io.hpp"
 
 namespace cgi {
 
@@ -108,9 +109,7 @@ bool CgiRequest::SplitIntoCgiPathAndPathInfo(
     }
     script_name = utils::JoinPath(script_name, *it);
     exec_cgi_path = utils::JoinPath(exec_cgi_path, script_name);
-    utils::File f(exec_cgi_path);
-    // TODO : 実行権限も確認
-    if (f.GetFileType() == utils::File::kFile) {
+    if (utils::IsExecutableFile(exec_cgi_path)) {
       script_name_ = utils::JoinPath(location.GetPathPattern(), script_name);
       exec_cgi_script_path_ = exec_cgi_path;
       path_info_ = request_path;
