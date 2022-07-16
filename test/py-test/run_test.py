@@ -77,7 +77,10 @@ def run_test(
     ft_res_response = send_req_utils.send_req(req_path, port)
 
     is_success = None
-    log_msg = f"req_path : {req_path}"
+    if len(req_path) >= 50:
+        log_msg = f"req_path : {req_path[:50]} ..."
+    else:
+        log_msg = f"req_path : {req_path}"
     if res.is_eq_response(
         ft_res_response, expect_response, ck_code=ck_code, ck_body=ck_body
     ):
