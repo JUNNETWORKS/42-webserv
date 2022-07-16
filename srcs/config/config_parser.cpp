@@ -227,16 +227,17 @@ void Parser::ParseErrorPageDirective(LocationConf &location) {
 
   std::string &error_page = args.back();
   for (size_t i = 0; i < args.size() - 1; ++i) {
-    if (!IsValidHttpStatusCode(args[i])) {
-      // TODO: HTTPステータスコードの範囲内かチェックするメソッドで検査する｡
-      throw ParserException("error_page directive arg isn't valid number.");
-    }
     http::HttpStatus status =
         static_cast<http::HttpStatus>(atoi(args[i].c_str()));
-    if (location.GetErrorPages().find(status) ==
-        location.GetErrorPages().end()) {
-      location.AppendErrorPages(status, error_page);
+    if (!http::StatusCodes::IsHttpStatus(status)) {
+      throw ParserException("error_page directive arg %lu isn't valid number.",
+                            status);
     }
+    if (location.GetErrorPages().find(status) !=
+        location.GetErrorPages().end()) {
+      throw ParserException("error_page %d has already set.", status);
+    }
+    location.AppendErrorPages(status, error_page);
   }
 
   SkipSpaces();
