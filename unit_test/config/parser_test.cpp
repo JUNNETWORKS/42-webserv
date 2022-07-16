@@ -557,6 +557,129 @@ TEST(ParserTest, ValidIpv4AddrInServername) {
   EXPECT_TRUE(config.GetVirtualServerConf("8080", "198.0.255.1") != NULL);
 }
 
+// TODO: root や error_page の引数が絶対パスじゃなければエラーのテスト
 
+//========================
+// 重複やディレクティブ関係のエラーパターン
+
+TEST(ParserTest, ListenDuplication) {
+  // listen が既に設定済み
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  listen 9090;                               "
+      "  server_name localhost;                     "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+class ParserLocationTestKo : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(ParserLocationTestKo, Ng) {
+  std::string param = GetParam();
+  std::string head =
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost;                     ";
+  std::string tail = "}";
+  Parser parser;
+  parser.LoadData(head + param + tail);
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+const std::vector<std::string> ParserLocationKoVec = {
+    // rootが重複
+    std::string("location / {                               "
+                "  root /var/www/html;                      "
+                "  root /var/www/html2;                     "
+                "}                                          "),
+    // client_max_body_size が重複
+    std::string("location / {                               "
+                "  client_max_body_size 1024;               "
+                "  client_max_body_size 2048;               "
+                "}                                          "),
+    // autoindex が重複
+    std::string("location / {                               "
+                "  autoindex on;                            "
+                "  autoindex on;                            "
+                "}                                          "),
+    // is_cgi が重複
+    std::string("location / {                               "
+                "  is_cgi on;                               "
+                "  is_cgi on;                               "
+                "}                                          "),
+    // error_page で既に登録済みのエラーコード
+    std::string("location / {                               "
+                "  error_page 404 405 error.html;           "
+                "  error_page 404 error.html;               "
+                "}                                          "),
+    // return が重複
+    std::string("location / {                               "
+                "  return https://google.com/;              "
+                "  return https://yahoo.co.jp/;             "
+                "}                                          "),
+    // return と is_cgi が同じlocationで設定されている
+    std::string("location / {                               "
+                "  return https://google.com/;              "
+                "  is_cgi on;                               "
+                "}                                          "),
+    std::string("location / {                               "
+                "  is_cgi on;                               "
+                "  return https://google.com/;              "
+                "}                                          "),
+    // return と autoindex が同じlocationで設定されている
+    std::string("location / {                               "
+                "  return https://google.com/;              "
+                "  autoindex on;                            "
+                "}                                          "),
+    std::string("location / {                               "
+                "  autoindex on;                            "
+                "  return https://google.com/;              "
+                "}                                          "),
+    // return と error_page が同じlocationで設定されている
+    std::string("location / {                               "
+                "  return https://google.com/;              "
+                "  error_page 404 404.html;                 "
+                "}                                          "),
+    std::string("location / {                               "
+                "  error_page 404 404.html;                 "
+                "  return https://google.com/;              "
+                "}                                          "),
+    // return と index が同じlocationで設定されている
+    std::string("location / {                               "
+                "  return https://google.com/;              "
+                "  index index.html;                        "
+                "}                                          "),
+    std::string("location / {                               "
+                "  index index.html;                        "
+                "  return https://google.com/;              "
+                "}                                          "),
+    // return と root が同じlocationで設定されている
+    std::string("location / {                               "
+                "  return https://google.com/;              "
+                "  root /var/www/html;                      "
+                "}                                          "),
+    std::string("location / {                               "
+                "  root /var/www/html;                      "
+                "  return https://google.com/;              "
+                "}                                          "),
+    // autoindex on; と is_cgi on; が同じlocationで設定されている
+    std::string("location / {                               "
+                "  autoindex on;                            "
+                "  is_cgi on;                               "
+                "}                                          "),
+    std::string("location / {                               "
+                "  is_cgi on;                               "
+                "  autoindex on;                            "
+                "}                                          "),
+};
+
+INSTANTIATE_TEST_SUITE_P(ParserKo, ParserLocationTestKo,
+                         ::testing::ValuesIn(ParserLocationKoVec));
 
 }  // namespace config
