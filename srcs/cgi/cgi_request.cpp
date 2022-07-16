@@ -88,7 +88,7 @@ bool CgiRequest::DetermineExecutionCgiPath(
     const http::HttpRequest &request, const config::LocationConf &location) {
   std::string request_path = request.GetPath();
   std::vector<std::string> file_vec =
-      utils::SplitString(location.GetAfterLocation(request_path), "/");
+      utils::SplitString(location.RemovePathPatternFromPath(request_path), "/");
 
   std::string exec_cgi_path = location.GetRootDir();
   std::string script_name = "";

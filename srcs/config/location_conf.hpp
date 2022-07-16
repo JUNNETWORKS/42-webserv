@@ -106,7 +106,10 @@ class LocationConf {
   // -> /public/cgi-bin/test-cgi
   std::string GetAbsolutePath(std::string path) const;
 
-  std::string GetAfterLocation(std::string path) const;
+  // path     : /cgi-bin/test-cgi/hoge/fuga
+  // location : /cgi-bin
+  // -> /test-cgi/hoge/fuga
+  std::string RemovePathPatternFromPath(std::string path) const;
 };
 
 }  // namespace config
