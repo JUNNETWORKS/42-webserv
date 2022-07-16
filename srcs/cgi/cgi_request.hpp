@@ -44,11 +44,9 @@ class CgiRequest {
               const http::HttpRequest &request,
               const config::LocationConf &location);
 
-  // 現在はテストしたので、public
+ private:
   bool ParseCgiRequest(const http::HttpRequest &request,
                        const config::LocationConf &location);
-
- private:
   bool ParseQueryString(const http::HttpRequest &request);
   bool SplitIntoCgiPathAndPathInfo(const http::HttpRequest &request,
                                    const config::LocationConf &location);
