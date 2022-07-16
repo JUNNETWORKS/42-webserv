@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#include <algorithm>
 #include <cstdarg>
 #include <cstring>
 #include <fstream>
@@ -214,9 +215,6 @@ void Parser::ParseRootDirective(LocationConf &location) {
 }
 
 void Parser::ParseIndexDirective(LocationConf &location) {
-  if (IsDirectiveSetInLocation("index")) {
-    throw ParserException("index has already set.");
-  }
   if (IsDirectiveSetInLocation("return")) {
     throw ParserException("index and return conflicts.");
   }
@@ -225,6 +223,11 @@ void Parser::ParseIndexDirective(LocationConf &location) {
   while (!IsEofReached() && GetC() != ';') {
     UngetC();
     std::string filepath = GetWord();
+    if (std::find(location.GetIndexPages().begin(),
+                  location.GetIndexPages().end(),
+                  filepath) != location.GetIndexPages().end()) {
+      throw ParserException("index %s has already set.", filepath);
+    }
     location.AppendIndexPages(filepath);
     SkipSpaces();
   }
