@@ -117,6 +117,22 @@ bool CgiRequest::SplitIntoCgiPathAndPathInfo(
       return true;
     }
   }
+
+  // index が設定されている場合は実行できるか確認する
+  if (!location.GetIndexPages().empty()) {
+    const std::vector<std::string> &index_pages = location.GetIndexPages();
+    for (std::vector<std::string>::const_iterator it = index_pages.begin();
+         it != index_pages.end(); ++it) {
+      exec_cgi_path = utils::JoinPath(location.GetRootDir(), *it);
+      if (utils::IsExecutableFile(exec_cgi_path)) {
+        script_name_ = utils::JoinPath(location.GetPathPattern(), *it);
+        exec_cgi_script_path_ = exec_cgi_path;
+        path_info_ = request_path;
+        path_info_ = path_info_.replace(0, script_name_.length(), "");
+        return true;
+      }
+    }
+  }
   return false;
 }
 
