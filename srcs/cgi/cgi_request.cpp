@@ -180,6 +180,27 @@ void CgiRequest::UnsetAllEnvironmentVariables() const {
 void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
     const server::ConnSocket *conn_sock, const http::HttpRequest &request,
     const config::LocationConf &location) {
+  cgi_variables_["SERVER_SOFTWARE"] = "webserv/1.0";
+  cgi_variables_["GATEWAY_INTERFACE"] = "CGI/1.1";
+  cgi_variables_["SERVER_PROTOCOL"] = "HTTP/1.1";
+  cgi_variables_["REQUEST_METHOD"] = request.GetMethod();
+  cgi_variables_["PATH_INFO"] = path_info_;
+  if (!path_info_.empty()) {
+    // ここはApacheと結果が異なる｡
+    cgi_variables_["PATH_TRANSLATED"] =
+        location.GetAbsolutePath(location.GetPathPattern() + path_info_);
+  }
+  cgi_variables_["SCRIPT_NAME"] = script_name_;
+  cgi_variables_["QUERY_STRING"] = request.GetQueryParam();
+  cgi_variables_["AUTH_TYPE"] = "";
+
+  CreateCgiNetworkVariables(conn_sock, request);
+  CreateCgiContentVariables(request);
+  // HTTPヘッダーのメタ変数を作成
+  CreateCgiHttpVariables(request);
+}
+
+void CgiRequest::CreateCgiContentVariables(const http::HttpRequest &request) {
   // CONTENT_TYPE
   Result<const std::vector<std::string> &> content_type_res =
       request.GetHeader("Content-Type");
@@ -193,25 +214,6 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
   if (content_length_res.IsOk() && !content_length_res.Ok().empty()) {
     cgi_variables_["CONTENT_LENGTH"] = content_length_res.Ok()[0];
   }
-
-  cgi_variables_["SERVER_SOFTWARE"] = "webserv/1.0";
-  cgi_variables_["GATEWAY_INTERFACE"] = "CGI/1.1";
-  cgi_variables_["SERVER_PROTOCOL"] = "HTTP/1.1";
-  cgi_variables_["REQUEST_METHOD"] = request.GetMethod();
-  cgi_variables_["HTTP_ACCEPT"] = "*/*";
-  cgi_variables_["PATH_INFO"] = path_info_;
-  if (!path_info_.empty()) {
-    // ここはApacheと結果が異なる｡
-    cgi_variables_["PATH_TRANSLATED"] =
-        location.GetAbsolutePath(location.GetPathPattern() + path_info_);
-  }
-  cgi_variables_["SCRIPT_NAME"] = script_name_;
-  cgi_variables_["QUERY_STRING"] = request.GetQueryParam();
-  cgi_variables_["AUTH_TYPE"] = "";
-
-  CreateCgiNetworkVariables(conn_sock, request);
-  // HTTPヘッダーのメタ変数を作成
-  CreateCgiHttpVariables(request);
 }
 
 void CgiRequest::CreateCgiHttpVariables(const http::HttpRequest &request) {

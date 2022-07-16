@@ -58,6 +58,7 @@ class CgiRequest {
   void CreateCgiMetaVariablesFromHttpRequest(
       const server::ConnSocket *conn_sock, const http::HttpRequest &request,
       const config::LocationConf &location);
+  void CreateCgiContentVariables(const http::HttpRequest &request);
   void CreateCgiNetworkVariables(const server::ConnSocket *conn_sock,
                                  const http::HttpRequest &request);
   void CreateCgiHttpVariables(const http::HttpRequest &request);
