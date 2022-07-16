@@ -1,5 +1,6 @@
 from . import response_class as res
 from . import cmd_args
+from . import str_utils
 from .run_test import run_test
 from .run_test import run_cmp_test
 from .run_test import is_test_success
@@ -92,19 +93,33 @@ def has_q_prm_test():
     # 200 /
     expect_response = res.response(200)
     run_test("/?", expect_response=expect_response, ck_body=False)
-    run_test("/.?", expect_response=expect_response, ck_body=False)
+    run_test("/???", expect_response=expect_response, ck_body=False)
     run_test("/.?", expect_response=expect_response, ck_body=False)
     run_test("/./?", expect_response=expect_response, ck_body=False)
     run_test("/sample.html/..?", expect_response=expect_response, ck_body=False)
     run_test("/sample.html/../?", expect_response=expect_response, ck_body=False)
 
+    expect_response = res.response(200, file_path="public/sample.html")
+    run_test("/sample.html?", expect_response)
+    run_test("/sample.html???", expect_response)
+    run_test("/sample.html?hoge", expect_response)
+    run_test("/sample.html?../hoge", expect_response)
+    run_test("/sample.html?../hoge", expect_response)
+
     # 404
     expect_response = res.response(404)
-    run_test("/sample.html/.", expect_response=expect_response, ck_body=False)
-    run_test("/sample.html/NotExist/.", expect_response=expect_response, ck_body=False)
-    run_test("/sample.html/NotExist/..", expect_response=expect_response, ck_body=False)
+    run_test("/sample.html/.?", expect_response=expect_response, ck_body=False)
+    run_test("/sample.html/NotExist/.?", expect_response=expect_response, ck_body=False)
     run_test(
-        "/sample.html/NotExist/../", expect_response=expect_response, ck_body=False
+        "/sample.html/NotExist/..?", expect_response=expect_response, ck_body=False
+    )
+    run_test(
+        "/sample.html/NotExist/../?", expect_response=expect_response, ck_body=False
+    )
+    run_test(
+        "/sample.html" + str_utils.to_hex_str("?"),
+        expect_response=expect_response,
+        ck_body=False,
     )
 
 
