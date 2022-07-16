@@ -88,7 +88,8 @@ Result<ConnSocket *> ListenSocket::AcceptNewConnection() {
 
   struct sockaddr_storage client_addr;
   socklen_t addrlen = sizeof(struct sockaddr_storage);
-  int conn_fd = accept(fd_, (struct sockaddr *)&client_addr, &addrlen);
+  int conn_fd =
+      accept4(fd_, (struct sockaddr *)&client_addr, &addrlen, SOCK_CLOEXEC);
   if (conn_fd < 0) {
     return Error("accept");
   }
