@@ -537,6 +537,23 @@ TEST(ParserTest, HttpStatusInErrorPagesAreInvalid) {
         "}                                            ");
     EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
   }
+
+  {
+    // ステータスコードがオーバーフロー
+    Parser parser;
+    parser.LoadData(
+        "server {                                     "
+        "  listen 8080;                               "
+        "                                             "
+        "  location / {                               "
+        "    allow_method GET;                        "
+        "    root /var/www/html;                      "
+        "    index index.html;                        "
+        "    error_page 4294967700 NotFound.html;     "
+        "  }                                          "
+        "}                                            ");
+    EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+  }
 }
 
 TEST(ParserTest, ValidIpv4AddrInServername) {
