@@ -248,6 +248,9 @@ void Parser::ParseErrorPageDirective(LocationConf &location) {
     UngetC();
     SkipSpaces();
     std::string arg = GetWord();
+    if (arg.empty()) {
+      throw ParserException("error_page can't find end semicolon;");
+    }
     args.push_back(arg);
   }
   UngetC();
