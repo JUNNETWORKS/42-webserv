@@ -262,6 +262,9 @@ void Parser::ParseErrorPageDirective(LocationConf &location) {
 
   std::string &error_page = args.back();
   for (size_t i = 0; i < args.size() - 1; ++i) {
+    if (!IsValidHttpStatusCode(args[i])) {
+      throw ParserException("error_page directive arg isn't valid number.");
+    }
     http::HttpStatus status =
         static_cast<http::HttpStatus>(atoi(args[i].c_str()));
     if (!http::StatusCodes::IsHttpStatus(status)) {
