@@ -22,6 +22,9 @@ std::string JoinPath(const std::string &s1, const std::string &s2);
 bool IsValidPath(const std::string &path);
 Result<std::string> NormalizePath(const std::string &path);
 
+// 絶対パスかどうか
+bool IsAbsolutePath(const std::string &path);
+
 }  // namespace utils
 
 #endif

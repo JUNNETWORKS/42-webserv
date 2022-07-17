@@ -208,7 +208,7 @@ void Parser::ParseRootDirective(LocationConf &location) {
 
   SkipSpaces();
   std::string root = GetWord();
-  if (!IsAbsolutePath(root)) {
+  if (!utils::IsAbsolutePath(root)) {
     throw ParserException("root %s is invalid.", root.c_str());
   }
   location.SetRootDir(root);
@@ -463,10 +463,6 @@ bool Parser::IsValidHttpStatusCode(const std::string &code) {
 bool Parser::IsValidPort(const std::string &port) {
   Result<unsigned long> result = utils::Stoul(port);
   return result.IsOk() && result.Ok() <= kMaxPortNumber;
-}
-
-bool Parser::IsAbsolutePath(const std::string &path) {
-  return !path.empty() && path[0] == '/' && utils::IsValidPath(path);
 }
 
 bool Parser::ParseOnOff(const std::string &on_or_off) {
