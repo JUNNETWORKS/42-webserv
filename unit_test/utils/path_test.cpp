@@ -54,16 +54,30 @@ TEST_P(PathNormalizationTestOk, Ok) {
 
 const std::vector<std::pair<std::string, std::string>> PathNormalizationOkVec =
     {
+        {"", ""},
+        {"hoge", "hoge"},
+        {"/", "/"},
+        {"/.", "/"},
+        {"/./", "/"},
+        {"/sample.html", "/sample.html"},
+        {"/sample.html.", "/sample.html."},
+        {"/sample.html./", "/sample.html./"},
+        {"/sample.html..", "/sample.html.."},
+        {"/sample.html../", "/sample.html../"},
+        {"/sample.html/.", "/sample.html/"},
+        {"/sample.html/..", "/"},
+        {"/sample.html/../", "/"},
+
         {"/hoge/fuga", "/hoge/fuga"},
         {"/hoge///fuga", "/hoge/fuga"},
-        {"/hoge/./././", "/hoge"},
+        {"/hoge/./././", "/hoge/"},
         {"/hoge/..", "/"},
         {"/hoge/../", "/"},
-        {"/hoge/fuga/..", "/hoge"},
-        {"/hoge/fuga/../", "/hoge"},
-        {"/hoge/abc/../xyz/..", "/hoge"},
-        {"/hoge/fuga/./././", "/hoge/fuga"},
-        {"/hoge/fuga/./.././", "/hoge"},
+        {"/hoge/fuga/..", "/hoge/"},
+        {"/hoge/fuga/../", "/hoge/"},
+        {"/hoge/abc/../xyz/..", "/hoge/"},
+        {"/hoge/fuga/./././", "/hoge/fuga/"},
+        {"/hoge/fuga/./.././", "/hoge/"},
 };
 
 INSTANTIATE_TEST_SUITE_P(NormalizePath, PathNormalizationTestOk,
