@@ -156,26 +156,27 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteGetRequest(
 
 HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
     const http::HttpRequest &request) {
-  std::string abs_file_path = location_->GetAbsolutePath(request.GetPath());
-  printf("abs_path: %s\n", abs_file_path.c_str());
+  std::string request_path = location_->GetAbsolutePath(request.GetPath());
 
-  std::string path = utils::IsDir(abs_file_path)
-                         ? utils::JoinPath(abs_file_path, GetTimeStamp())
-                         : abs_file_path;
+  std::string target = utils::IsDir(request_path)
+                           ? utils::JoinPath(request_path, GetTimeStamp())
+                           : request_path;
 
-  HttpStatus response_status = utils::IsFileExist(path) ? OK : CREATED;
+  printf("post_path: %s\n", target.c_str());
 
-  if (AppendBytesToFile(path, request.GetBody()) == false) {
+  HttpStatus response_status = utils::IsFileExist(target) ? OK : CREATED;
+
+  if (AppendBytesToFile(target, request.GetBody()) == false) {
     return MakeErrorResponse(SERVER_ERROR);
   }
 
   SetStatus(response_status, StatusCodes::GetMessage(response_status));
 
   if (response_status == CREATED) {
-    SetHeader("Location", path);
-    SetHeader("Content-Type",
-              ContentTypes::GetContentTypeFromExt(utils::GetExetension(path)));
-    if (RegisterFile(path).IsErr())
+    SetHeader("Location", target);
+    SetHeader("Content-Type", ContentTypes::GetContentTypeFromExt(
+                                  utils::GetExetension(target)));
+    if (RegisterFile(target).IsErr())
       return MakeErrorResponse(SERVER_ERROR);
     else
       return kStatusAndHeader;
