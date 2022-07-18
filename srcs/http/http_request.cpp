@@ -377,7 +377,7 @@ HttpStatus HttpRequest::GetParseStatus() const {
   return parse_status_;
 }
 
-const utils::ByteVector &HttpRequest::GetBody() {
+const utils::ByteVector &HttpRequest::GetBody() const {
   return body_;
 }
 

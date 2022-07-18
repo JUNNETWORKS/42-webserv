@@ -23,7 +23,8 @@ namespace http {
 
 namespace {
 std::string GetTimeStamp();
-}
+bool AppendBytesToFile(const std::string &path, const utils::ByteVector &bytes);
+}  // namespace
 const std::string HttpResponse::kDefaultHttpVersion = "HTTP/1.1";
 
 HttpResponse::HttpResponse(const config::LocationConf *location,
@@ -161,6 +162,12 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
   std::string path = utils::IsDir(abs_file_path)
                          ? utils::JoinPath(abs_file_path, GetTimeStamp())
                          : abs_file_path;
+
+  if (AppendBytesToFile(path, request.GetBody()) == false) {
+    return MakeErrorResponse(SERVER_ERROR);
+  }
+
+  return kStatusAndHeader;
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
@@ -391,6 +398,23 @@ std::string GetTimeStamp() {
 
   ss << msecs_time;
   return ss.str();
+}
+
+bool AppendBytesToFile(const std::string &path,
+                       const utils::ByteVector &bytes) {
+  int fd = open(path.c_str(), O_WRONLY, O_CREAT | O_APPEND);
+  if (fd < 0)
+    return false;
+
+  if (bytes.empty() == false) {
+    ssize_t write_res =
+        write(fd, bytes.SubstrBeforePos(bytes.size()).c_str(), bytes.size());
+    if (write_res < 0)
+      return false;
+  }
+  if (close(fd) < 0)
+    return false;
+  return true;
 }
 }  // namespace
 
