@@ -163,11 +163,16 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
                          ? utils::JoinPath(abs_file_path, GetTimeStamp())
                          : abs_file_path;
 
+  HttpStatus response_status = utils::IsFileExist(path) ? OK : CREATED;
+
   if (AppendBytesToFile(path, request.GetBody()) == false) {
     return MakeErrorResponse(SERVER_ERROR);
   }
 
-  return kStatusAndHeader;
+  SetStatus(response_status, StatusCodes::GetMessage(response_status));
+  SetHeader("Location", path);
+
+  return MakeResponse("");
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
