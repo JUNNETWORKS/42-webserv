@@ -16,6 +16,7 @@ re: fclean all
 .PHONY: req-test
 req-test: WEBSERV_PORT := 49200
 req-test:
+	$(MAKE) -C public/files
 	python3 -u -m py-test --WEBSERV_PORT=$(WEBSERV_PORT)
 
 .PHONY: g-test
