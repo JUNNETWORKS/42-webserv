@@ -77,7 +77,7 @@ void InvokeFdEvent(FdEvent *fde, unsigned int events, Epoll *epoll) {
   fde->func(fde, events, fde->data, epoll);
 }
 
-Epoll::Epoll() : epfd_(epoll_create(1)) {
+Epoll::Epoll() : epfd_(epoll_create1(EPOLL_CLOEXEC)) {
   if (epfd_ < 0) {
     utils::ErrExit("Epoll constructor");
   }
