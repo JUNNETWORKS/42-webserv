@@ -24,7 +24,12 @@ using namespace result;
 class HttpResponse {
  protected:
   // レスポンスの作成状況
-  enum CreateResponsePhase { kLoadRequest, kStatusAndHeader, kBody, kComplete };
+  enum CreateResponsePhase {
+    kExecuteRequest,
+    kStatusAndHeader,
+    kBody,
+    kComplete
+  };
 
   // 1回のreadで何バイト読み取るか
   static const unsigned long kBytesPerRead = 1024;  // 1KB

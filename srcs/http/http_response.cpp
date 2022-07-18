@@ -24,7 +24,7 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
                            server::Epoll *epoll)
     : location_(location),
       epoll_(epoll),
-      phase_(kLoadRequest),
+      phase_(kExecuteRequest),
       http_version_(kDefaultHttpVersion),
       status_(OK),
       status_message_(StatusCodes::GetMessage(OK)),
@@ -38,7 +38,7 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
                            server::Epoll *epoll, const HttpStatus status)
     : location_(location),
       epoll_(epoll),
-      phase_(kLoadRequest),
+      phase_(kExecuteRequest),
       http_version_(kDefaultHttpVersion),
       status_(OK),
       status_message_(StatusCodes::GetMessage(OK)),
@@ -161,7 +161,7 @@ Result<HttpResponse::CreateResponsePhase> HttpResponse::MakeResponseBody() {
 }
 
 Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
-  if (phase_ == kLoadRequest) {
+  if (phase_ == kExecuteRequest) {
     phase_ = ExecuteRequest(conn_sock);
   }
   if (phase_ == kStatusAndHeader) {
