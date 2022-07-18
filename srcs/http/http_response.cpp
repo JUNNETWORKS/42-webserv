@@ -407,7 +407,7 @@ std::string GetTimeStamp() {
 
 bool AppendBytesToFile(const std::string &path,
                        const utils::ByteVector &bytes) {
-  int fd = open(path.c_str(), O_WRONLY, O_CREAT | O_APPEND);
+  int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
   if (fd < 0)
     return false;
 
