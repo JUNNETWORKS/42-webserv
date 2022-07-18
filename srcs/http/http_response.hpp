@@ -92,7 +92,7 @@ class HttpResponse {
   void SetHeader(const std::string &header, const std::string &value);
   void AppendHeader(const std::string &header, const std::string &value);
 
-  static bool IsRequestHasConnectionClose(HttpRequest &request);
+  static bool IsRequestHasConnectionClose(const HttpRequest &request);
 
  private:
   HttpResponse();
@@ -102,6 +102,8 @@ class HttpResponse {
   // CGIとFILEで処理が異なる部分
   virtual CreateResponsePhase ExecuteRequest(server::ConnSocket *conn_sock);
   virtual Result<CreateResponsePhase> MakeResponseBody();
+
+  CreateResponsePhase ExecuteGetRequest(const http::HttpRequest &request);
 
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;

@@ -103,10 +103,8 @@ Result<bool> HttpResponse::ReadFile() {
 //========================================================================
 // Reponse Maker
 
-HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
-    server::ConnSocket *conn_sock) {
-  http::HttpRequest &request = conn_sock->GetRequests().front();
-
+HttpResponse::CreateResponsePhase HttpResponse::ExecuteGetRequest(
+    const http::HttpRequest &request) {
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
@@ -147,6 +145,13 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
     return MakeErrorResponse(SERVER_ERROR);
   else
     return kStatusAndHeader;
+}
+
+HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
+    server::ConnSocket *conn_sock) {
+  http::HttpRequest &request = conn_sock->GetRequests().front();
+
+  return ExecuteGetRequest(request);
 }
 
 Result<HttpResponse::CreateResponsePhase> HttpResponse::MakeResponseBody() {
@@ -345,7 +350,7 @@ const std::vector<std::string> &HttpResponse::GetHeader(
   return headers_[header];
 }
 
-bool HttpResponse::IsRequestHasConnectionClose(HttpRequest &request) {
+bool HttpResponse::IsRequestHasConnectionClose(const HttpRequest &request) {
   Result<const http::HeaderMap::mapped_type &> header_res =
       request.GetHeader("Connection");
   if (header_res.IsErr())
