@@ -170,7 +170,9 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
   }
 
   SetStatus(response_status, StatusCodes::GetMessage(response_status));
-  SetHeader("Location", path);
+
+  if (response_status == CREATED)
+    SetHeader("Location", path);
 
   return MakeResponse("");
 }
