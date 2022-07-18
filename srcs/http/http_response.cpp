@@ -178,11 +178,9 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
                                   utils::GetExetension(target)));
     if (RegisterFile(target).IsErr())
       return MakeErrorResponse(SERVER_ERROR);
-    else
-      return kStatusAndHeader;
   }
 
-  return MakeResponse("");
+  return kStatusAndHeader;
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::ExecuteDeleteRequest(
@@ -199,7 +197,7 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteDeleteRequest(
     return MakeErrorResponse(SERVER_ERROR);
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
-  return MakeResponse("");
+  return kStatusAndHeader;
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
