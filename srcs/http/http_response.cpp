@@ -2,10 +2,12 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <ctime>
 #include <vector>
 
 #include "cgi/cgi_request.hpp"
@@ -14,10 +16,14 @@
 #include "http/http_request.hpp"
 #include "server/epoll.hpp"
 #include "utils/io.hpp"
+#include "utils/path.hpp"
 #include "utils/string.hpp"
 
 namespace http {
 
+namespace {
+std::string GetTimeStamp();
+}
 const std::string HttpResponse::kDefaultHttpVersion = "HTTP/1.1";
 
 HttpResponse::HttpResponse(const config::LocationConf *location,
@@ -148,7 +154,14 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteGetRequest(
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
-    const http::HttpRequest &request) {}
+    const http::HttpRequest &request) {
+  std::string abs_file_path = location_->GetAbsolutePath(request.GetPath());
+  printf("abs_path: %s\n", abs_file_path.c_str());
+
+  std::string path = utils::IsDir(abs_file_path)
+                         ? utils::JoinPath(abs_file_path, GetTimeStamp())
+                         : abs_file_path;
+}
 
 HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
     server::ConnSocket *conn_sock) {
@@ -368,5 +381,17 @@ bool HttpResponse::IsRequestHasConnectionClose(const HttpRequest &request) {
 
   return std::find(header.begin(), header.end(), "close") != header.end();
 }
+
+namespace {
+std::string GetTimeStamp() {
+  std::stringstream ss;
+  struct timeval time_now {};
+  gettimeofday(&time_now, nullptr);
+  time_t msecs_time = (time_now.tv_sec * 1000000 + time_now.tv_usec);
+
+  ss << msecs_time;
+  return ss.str();
+}
+}  // namespace
 
 }  // namespace http
