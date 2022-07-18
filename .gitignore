@@ -46,3 +46,4 @@ __pycache__/
 /test/py-test/diff.html
 /test/cppcheck-err-list
 /test/webserv_configurations/sample.conf.sed
+/test/public/files/
