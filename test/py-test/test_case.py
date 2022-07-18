@@ -22,6 +22,25 @@ def simple_test():
         run_test(req_path, expect_res)
 
 
+#
+def various_type_file_test():
+    # TODO : ./rand-file
+    req_path_lst = [
+        "/files/empty-file",
+        "/files/n-line-file",
+        "/files/symbolic-link-file",
+    ]
+    for req_path in req_path_lst:
+        expect_res = res.response(200, file_path=TEST_FILE_ROOT + "/" + req_path)
+        run_test(req_path, expect_res)
+
+    # TODO : permissionがないファイルは500でいいか？
+    req_path_lst = ["/files/fifo-file", "/files/no-read-permission-file"]
+    for req_path in req_path_lst:
+        expect_res = res.response(500)
+        run_test(req_path, expect_res, ck_body=False)
+
+
 def not_found_test():
     expect_res = res.response(404, file_path="public/error_pages/404.html")
     req_path_lst = ["/NotExist", "/NotExist/NotExist", "/hoge/NotExist"]
@@ -176,6 +195,7 @@ def exec_test(f, must_all_test_ok=True):
 def run_all_test() -> bool:
     is_all_test_ok = True
     is_all_test_ok &= exec_test(simple_test)
+    is_all_test_ok &= exec_test(various_type_file_test)
     is_all_test_ok &= exec_test(not_found_test)
     is_all_test_ok &= exec_test(index_test)
     is_all_test_ok &= exec_test(autoindex_test)
