@@ -185,6 +185,23 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
   return MakeResponse("");
 }
 
+HttpResponse::CreateResponsePhase HttpResponse::ExecuteDeleteRequest(
+    const http::HttpRequest &request) {
+  std::string path = location_->GetAbsolutePath(request.GetPath());
+
+  if (utils::IsDir(path))
+    return MakeErrorResponse(BAD_REQUEST);
+
+  if (utils::IsFileExist(path) == false)
+    return MakeErrorResponse(NOT_FOUND);
+
+  if (remove(path.c_str()) < 0)
+    return MakeErrorResponse(SERVER_ERROR);
+
+  SetStatus(OK, StatusCodes::GetMessage(OK));
+  return MakeResponse("");
+}
+
 HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
     server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
@@ -194,6 +211,8 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
     return ExecuteGetRequest(request);
   else if (method == method_strs::kPost)
     return ExecutePostRequest(request);
+  else if (method == method_strs::kDelete)
+    return ExecuteDeleteRequest(request);
   else
     assert(false);
 }
