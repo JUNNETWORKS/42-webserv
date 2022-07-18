@@ -5,44 +5,54 @@ from .run_test import run_test
 from .run_test import run_cmp_test
 from .run_test import is_test_success
 
+TEST_FILE_ROOT = "public"
+
 # TEST CASE
 # ========================================================================
 def simple_test():
-    req_path = "/sample.html"
-    file_path = "public" + req_path
-    expect_res = res.response(200, file_path=file_path)
-    run_test(req_path, expect_res)
-
-    req_path = "/hoge/hoge.html"
-    file_path = "public" + req_path
-    expect_res = res.response(200, file_path=file_path)
-    run_test(req_path, expect_res)
-
-    req_path = "/fuga/fuga.html"
-    file_path = "public" + req_path
-    expect_res = res.response(200, file_path=file_path)
-    run_test(req_path, expect_res)
+    req_path_lst = [
+        "/sample.html",
+        "/hoge/hoge.html",
+        "/hoge/hogehogehoge.txt",
+        "/fuga/fuga.html",
+        "/fuga/fugafugafuga.txt",
+    ]
+    for req_path in req_path_lst:
+        expect_res = res.response(200, file_path=TEST_FILE_ROOT + "/" + req_path)
+        run_test(req_path, expect_res)
 
 
 def not_found_test():
     expect_res = res.response(404, file_path="public/error_pages/404.html")
-    run_test("/NotExist", expect_res)
-    run_test("/NotExist/NotExist", expect_res)
-    run_test("/hoge/NotExist", expect_res)
+    req_path_lst = ["/NotExist", "/NotExist/NotExist", "/hoge/NotExist"]
+    for req_path in req_path_lst:
+        run_test(req_path, expect_res)
 
 
 def index_test():
+    req_path_lst = [
+        "/index-test-dir/",
+        "/hoge/../index-test-dir",
+        "/index-test-dir/index.html",
+        "/index-test-dir/index.html/..",
+        "/index-test-dir/not_index.html/..",
+    ]
     expect_res = res.response(200, file_path="public/index-test-dir/index.html")
-    run_test("/index-test-dir/", expect_res=expect_res)
-    run_test("/index-test-dir/index.html", expect_res=expect_res)
+    for req_path in req_path_lst:
+        run_test(req_path, expect_res)
+
     expect_res = res.response(200, file_path="public/index-test-dir/not_index.html")
     run_test("/index-test-dir/not_index.html", expect_res=expect_res)
 
+    expect_res = res.response(404)
+    run_test("/index-test-dir/NotExixtFile", expect_res=expect_res, ck_body=False)
+
 
 def autoindex_test():
-    req_path = "/"
+    req_path_lst = ["/", "/.", "///"]
     expect_res = res.response(200)
-    run_test(req_path, expect_res, ck_body=False)
+    for req_path in req_path_lst:
+        run_test(req_path, expect_res, ck_body=False)
 
 
 def path_normaliz_test():
