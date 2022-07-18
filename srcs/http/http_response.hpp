@@ -105,6 +105,8 @@ class HttpResponse {
 
   CreateResponsePhase ExecuteGetRequest(const http::HttpRequest &request);
 
+  CreateResponsePhase ExecutePostRequest(const http::HttpRequest &request);
+
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;
   utils::ByteVector SerializeStatusLine() const;

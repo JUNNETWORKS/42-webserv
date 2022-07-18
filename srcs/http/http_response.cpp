@@ -147,11 +147,20 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteGetRequest(
     return kStatusAndHeader;
 }
 
+HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
+    const http::HttpRequest &request) {}
+
 HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
     server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
+  const std::string method = request.GetMethod();
 
-  return ExecuteGetRequest(request);
+  if (method == "GET")
+    return ExecuteGetRequest(request);
+  else if (method == "POST")
+    return ExecutePostRequest(request);
+  else
+    assert(false);
 }
 
 Result<HttpResponse::CreateResponsePhase> HttpResponse::MakeResponseBody() {
