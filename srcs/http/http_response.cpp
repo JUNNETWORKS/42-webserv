@@ -385,8 +385,8 @@ bool HttpResponse::IsRequestHasConnectionClose(const HttpRequest &request) {
 namespace {
 std::string GetTimeStamp() {
   std::stringstream ss;
-  struct timeval time_now {};
-  gettimeofday(&time_now, nullptr);
+  struct timeval time_now;
+  gettimeofday(&time_now, NULL);
   time_t msecs_time = (time_now.tv_sec * 1000000 + time_now.tv_usec);
 
   ss << msecs_time;
