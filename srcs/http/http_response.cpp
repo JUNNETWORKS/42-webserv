@@ -103,7 +103,7 @@ Result<bool> HttpResponse::ReadFile() {
 //========================================================================
 // Reponse Maker
 
-HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
+HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
     server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
 
@@ -162,7 +162,7 @@ Result<HttpResponse::CreateResponsePhase> HttpResponse::MakeResponseBody() {
 
 Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
   if (phase_ == kLoadRequest) {
-    phase_ = LoadRequest(conn_sock);
+    phase_ = ExecuteRequest(conn_sock);
   }
   if (phase_ == kStatusAndHeader) {
     write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
