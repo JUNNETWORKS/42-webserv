@@ -190,9 +190,9 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
   http::HttpRequest &request = conn_sock->GetRequests().front();
   const std::string method = request.GetMethod();
 
-  if (method == "GET")
+  if (method == method_strs::kGet)
     return ExecuteGetRequest(request);
-  else if (method == "POST")
+  else if (method == method_strs::kPost)
     return ExecutePostRequest(request);
   else
     assert(false);
