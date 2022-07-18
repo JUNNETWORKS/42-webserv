@@ -172,14 +172,14 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
 
   SetStatus(response_status, StatusCodes::GetMessage(response_status));
 
-  if (response_status == CREATED) {
+  if (response_status == CREATED)
     SetHeader("Location", target);
-    SetHeader("Content-Type", ContentTypes::GetContentTypeFromExt(
-                                  utils::GetExetension(target)));
-    if (RegisterFile(target).IsErr())
-      return MakeErrorResponse(SERVER_ERROR);
-  }
 
+  SetHeader("Content-Type",
+            ContentTypes::GetContentTypeFromExt(utils::GetExetension(target)));
+
+  if (RegisterFile(target).IsErr())
+    return MakeErrorResponse(SERVER_ERROR);
   return kStatusAndHeader;
 }
 
