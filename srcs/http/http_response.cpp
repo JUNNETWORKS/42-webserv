@@ -434,19 +434,26 @@ std::string GetTimeStamp() {
 
 bool AppendBytesToFile(const std::string &path,
                        const utils::ByteVector &bytes) {
+  bool file_exist = utils::IsFileExist(path);
   int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
-  if (fd < 0)
-    return false;
 
-  if (bytes.empty() == false) {
-    ssize_t write_res =
-        write(fd, bytes.SubstrBeforePos(bytes.size()).c_str(), bytes.size());
-    if (write_res < 0)
-      return false;
-  }
-  if (close(fd) < 0)
+  try {
+    if (fd < 0)
+      throw std::exception();
+    if (bytes.empty() == false) {
+      ssize_t write_res =
+          write(fd, bytes.SubstrBeforePos(bytes.size()).c_str(), bytes.size());
+      if (write_res < static_cast<ssize_t>(bytes.size()))
+        throw std::exception();
+    }
+    close(fd);
+    return true;
+  } catch (const std::exception &e) {
+    close(fd);
+    if (file_exist == false)
+      remove(path.c_str());
     return false;
-  return true;
+  }
 }
 }  // namespace
 
