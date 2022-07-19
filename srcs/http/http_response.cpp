@@ -178,8 +178,11 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
   SetHeader("Content-Type",
             ContentTypes::GetContentTypeFromExt(utils::GetExetension(target)));
 
-  if (RegisterFile(target).IsErr())
+  if (RegisterFile(target).IsErr()) {
+    if (response_status == CREATED)
+      remove(target.c_str());
     return MakeErrorResponse(SERVER_ERROR);
+  }
   return kStatusAndHeader;
 }
 
