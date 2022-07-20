@@ -16,7 +16,7 @@ using namespace result;
 
 bool IsFileExist(const std::string& path);
 
-bool IsDir(const std::string& path);
+Result<bool> IsDir(const std::string& path);
 
 Result<bool> IsRegularFile(const std::string& file_path);
 
