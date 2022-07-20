@@ -48,7 +48,8 @@ ConnSocket::ConnSocket(int fd, const SocketAddress &server_addr,
                        const config::Config &config)
     : Socket(fd, server_addr, config),
       client_addr_(client_addr),
-      response_(NULL) {}
+      response_(NULL),
+      is_shutdown_(false) {}
 
 ConnSocket::~ConnSocket() {
   if (response_ != NULL) {
@@ -72,6 +73,14 @@ bool ConnSocket::HasParsedRequest() {
   return !requests_.empty() && requests_.front().IsResponsible();
 }
 
+void ConnSocket::ShutDown() {
+  timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  std::cout << "Shutdown at " << ts.tv_sec << ":" << ts.tv_nsec << std::endl;
+  shutdown(fd_, SHUT_RDWR);
+  SetIsShutdown(true);
+}
+
 http::HttpResponse *ConnSocket::GetResponse() {
   return response_;
 }
@@ -82,6 +91,15 @@ void ConnSocket::SetResponse(http::HttpResponse *response) {
 
 utils::ByteVector &ConnSocket::GetBuffer() {
   return buffer_;
+}
+
+bool ConnSocket::IsShutdown() {
+  return is_shutdown_;
+}
+
+void ConnSocket::SetIsShutdown(bool is_shutdown) {
+  std::cout << "Set shutdown " << std::boolalpha << is_shutdown << std::endl;
+  is_shutdown_ = is_shutdown;
 }
 
 // ========================================================================
