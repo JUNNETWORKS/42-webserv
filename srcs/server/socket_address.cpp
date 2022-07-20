@@ -23,6 +23,7 @@ SocketAddress::SocketAddress(const SocketAddress &rhs) {
 
 SocketAddress &SocketAddress::operator=(const SocketAddress &rhs) {
   if (this != &rhs) {
+    delete[] sockaddr_;
     sockaddr_len_ = rhs.sockaddr_len_;
     sockaddr_ = (struct sockaddr *)new char[sockaddr_len_];
     memcpy(sockaddr_, rhs.sockaddr_, sockaddr_len_);
