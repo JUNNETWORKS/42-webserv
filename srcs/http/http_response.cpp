@@ -57,7 +57,11 @@ HttpResponse::~HttpResponse() {
 }
 
 Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
-  if (!utils::IsRegularFile(file_path) || !utils::IsReadableFile(file_path)) {
+  Result<bool> is_regular_file = utils::IsReadableFile(file_path);
+  if (is_regular_file.IsErr() || is_regular_file.Ok() == false) {
+    return Error();
+  }
+  if (!utils::IsReadableFile(file_path)) {
     return Error();
   }
   if (file_fd_ >= 0) {

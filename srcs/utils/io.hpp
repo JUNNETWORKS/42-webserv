@@ -18,7 +18,7 @@ bool IsFileExist(const std::string& path);
 
 bool IsDir(const std::string& path);
 
-bool IsRegularFile(const std::string& file_path);
+Result<bool> IsRegularFile(const std::string& file_path);
 
 unsigned long GetFileSize(const std::string& file_path);
 
