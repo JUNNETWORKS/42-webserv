@@ -31,6 +31,10 @@ int main(int argc, char const *argv[]) {
   } else {
     config = config::CreateSampleConfig();
   }
+  if (!config.IsValid()) {
+    std::cerr << "Config is invalid!!" << std::endl;
+    exit(EXIT_FAILURE);
+  }
   config.Print();
 
   // epoll インスタンス作成

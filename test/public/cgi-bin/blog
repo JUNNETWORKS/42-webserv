@@ -26,7 +26,7 @@ class BlogDB:
 
     def read(self, id) -> List[Tuple[int, str, str]]:
         cur = self.conn.cursor()
-        posts = cur.execute("SELECT * FROM Posts WHERE id = ?", str(id))
+        posts = cur.execute(f"SELECT * FROM Posts WHERE id = {id}")
         return posts
 
     def read_all(self) -> List[Tuple[int, str, str]]:
@@ -36,7 +36,7 @@ class BlogDB:
 
     def delete(self, id) -> None:
         cur = self.conn.cursor()
-        cur.execute("DELETE FROM Posts WHERE id = ?", str(id))
+        cur.execute(f"DELETE FROM Posts WHERE id = {id}")
         self.conn.commit()
 
     def create_table(self):

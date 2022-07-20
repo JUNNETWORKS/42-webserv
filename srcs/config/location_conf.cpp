@@ -181,7 +181,7 @@ std::string LocationConf::GetAbsolutePath(std::string path) const {
   return abs_path;
 }
 
-std::string LocationConf::GetAfterLocation(std::string path) const {
+std::string LocationConf::RemovePathPatternFromPath(std::string path) const {
   return path.replace(0, GetPathPattern().length(), "");
 }
 

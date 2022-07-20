@@ -94,14 +94,10 @@ ListenSocket::ListenSocket(int fd, const SocketAddress &server_addr,
 Result<ConnSocket *> ListenSocket::AcceptNewConnection() {
   struct sockaddr_storage client_addr;
   socklen_t addrlen = sizeof(struct sockaddr_storage);
-  int conn_fd = accept(fd_, (struct sockaddr *)&client_addr, &addrlen);
+  int conn_fd = accept4(fd_, (struct sockaddr *)&client_addr, &addrlen,
+                        SOCK_NONBLOCK | SOCK_CLOEXEC);
   if (conn_fd < 0) {
     return Error("accept");
-  }
-  int flags;
-  if ((flags = fcntl(conn_fd, F_GETFL, 0)) < 0 ||
-      fcntl(conn_fd, F_SETFL, flags | O_NONBLOCK) < 0) {
-    return Error("fcntl");
   }
 
   utils::LogConnectionInfoToStdout(client_addr);

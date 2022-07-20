@@ -45,11 +45,9 @@ class CgiRequest {
               const config::LocationConf &location);
 
  private:
-  bool ParseCgiRequest(const http::HttpRequest &request,
-                       const config::LocationConf &location);
   bool ParseQueryString(const http::HttpRequest &request);
-  bool SplitIntoCgiPathAndPathInfo(const http::HttpRequest &request,
-                                   const config::LocationConf &location);
+  bool DetermineExecutionCgiPath(const http::HttpRequest &request,
+                                 const config::LocationConf &location);
 
   // 返り値は無名ドメインソケットのfd
   bool ForkAndExecuteCgi();
@@ -67,12 +65,12 @@ class CgiRequest {
   void SetMetaVariables();
 
   void ExecuteCgi();
-  bool MoveToExecuteCgiDir(const std::string &exec_cgi_script_path_) const;
+  bool MoveToCgiExecutionDir(const std::string &exec_cgi_script_path_) const;
 
   // TODO : どこかに移動させる。
   // exec なども移動させたい。
-  char **alloc_dptr(const std::vector<std::string> &v) const;
-  void free_dptr(char **dptr) const;
+  char **AllocCharPtrsFromVectorString(const std::vector<std::string> &v) const;
+  void FreePtrArray(char **dptr) const;
 };
 
 }  // namespace cgi

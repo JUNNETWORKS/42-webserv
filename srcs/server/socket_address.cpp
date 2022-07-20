@@ -17,12 +17,14 @@ SocketAddress::SocketAddress(const struct sockaddr *sockaddr,
   memcpy(sockaddr_, sockaddr, sockaddr_len);
 }
 
-SocketAddress::SocketAddress(const SocketAddress &rhs) {
+SocketAddress::SocketAddress(const SocketAddress &rhs)
+    : sockaddr_(NULL), sockaddr_len_(0) {
   *this = rhs;
 }
 
 SocketAddress &SocketAddress::operator=(const SocketAddress &rhs) {
   if (this != &rhs) {
+    delete[] sockaddr_;
     sockaddr_len_ = rhs.sockaddr_len_;
     sockaddr_ = (struct sockaddr *)new char[sockaddr_len_];
     memcpy(sockaddr_, rhs.sockaddr_, sockaddr_len_);

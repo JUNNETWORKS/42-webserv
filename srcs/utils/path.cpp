@@ -83,4 +83,8 @@ Result<std::string> NormalizePath(const std::string &path) {
   return (JoinPath(normalize));
 }
 
+bool IsAbsolutePath(const std::string &path) {
+  return !path.empty() && path[0] == '/' && utils::IsValidPath(path);
+}
+
 }  // namespace utils

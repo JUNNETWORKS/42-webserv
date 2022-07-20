@@ -54,26 +54,16 @@ const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
 bool CgiRequest::RunCgi(const server::ConnSocket *conn_sock,
                         const http::HttpRequest &request,
                         const config::LocationConf &location) {
-  bool result = false;
-  result |= ParseCgiRequest(request, location);
+  bool result = true;
+  result &= ParseQueryString(request);
+  result &= DetermineExecutionCgiPath(request, location);
   CreateCgiMetaVariablesFromHttpRequest(conn_sock, request, location);
-  result |= ForkAndExecuteCgi();
+  result &= ForkAndExecuteCgi();
   return result;
 }
 
 // Parse
 // ========================================================================
-bool CgiRequest::ParseCgiRequest(const http::HttpRequest &request,
-                                 const config::LocationConf &location) {
-  if (!ParseQueryString(request)) {
-    return false;
-  }
-  if (!SplitIntoCgiPathAndPathInfo(request, location)) {
-    return false;
-  }
-  return true;
-}
-
 bool CgiRequest::ParseQueryString(const http::HttpRequest &request) {
   std::string query_string = request.GetQueryParam();
   if (query_string == "") {
@@ -94,11 +84,11 @@ bool CgiRequest::ParseQueryString(const http::HttpRequest &request) {
   return true;
 }
 
-bool CgiRequest::SplitIntoCgiPathAndPathInfo(
+bool CgiRequest::DetermineExecutionCgiPath(
     const http::HttpRequest &request, const config::LocationConf &location) {
   std::string request_path = request.GetPath();
   std::vector<std::string> file_vec =
-      utils::SplitString(location.GetAfterLocation(request_path), "/");
+      utils::SplitString(location.RemovePathPatternFromPath(request_path), "/");
 
   std::string exec_cgi_path = location.GetRootDir();
   std::string script_name = "";
@@ -140,10 +130,9 @@ bool CgiRequest::SplitIntoCgiPathAndPathInfo(
 // ========================================================================
 bool CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
-  if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockfds) == -1) {
+  if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sockfds) == -1) {
     return false;
   }
-  // TODO: UnixDomainSocketを O_NONBLOCK に設定
 
   int parentsock = sockfds[0];
   int childsock = sockfds[1];
@@ -172,16 +161,16 @@ bool CgiRequest::ForkAndExecuteCgi() {
 void CgiRequest::ExecuteCgi() {
   UnsetAllEnvironmentVariables();
   SetMetaVariables();
-  if (!MoveToExecuteCgiDir(exec_cgi_script_path_)) {
+  if (!MoveToCgiExecutionDir(exec_cgi_script_path_)) {
     return;
   }
   cgi_args_.insert(cgi_args_.begin(), script_name_);
-  char **argv = alloc_dptr(cgi_args_);
+  char **argv = AllocCharPtrsFromVectorString(cgi_args_);
   if (argv == NULL) {
     return;
   }
   execve(exec_cgi_script_path_.c_str(), argv, environ);
-  free_dptr(argv);
+  FreePtrArray(argv);
 }
 
 void CgiRequest::UnsetAllEnvironmentVariables() const {
@@ -283,7 +272,7 @@ void CgiRequest::SetMetaVariables() {
   }
 }
 
-bool CgiRequest::MoveToExecuteCgiDir(
+bool CgiRequest::MoveToCgiExecutionDir(
     const std::string &exec_cgi_script_path_) const {
   Result<std::string> result =
       utils::NormalizePath(utils::JoinPath(exec_cgi_script_path_, ".."));
@@ -297,7 +286,8 @@ bool CgiRequest::MoveToExecuteCgiDir(
   return true;
 }
 
-char **CgiRequest::alloc_dptr(const std::vector<std::string> &v) const {
+char **CgiRequest::AllocCharPtrsFromVectorString(
+    const std::vector<std::string> &v) const {
   char **dptr;
 
   dptr = (char **)malloc(sizeof(char *) * (v.size() + 1));
@@ -308,7 +298,7 @@ char **CgiRequest::alloc_dptr(const std::vector<std::string> &v) const {
   for (; i < v.size(); i++) {
     dptr[i] = strdup(v[i].c_str());
     if (dptr[i] == NULL) {
-      free_dptr(dptr);
+      FreePtrArray(dptr);
       return (NULL);
     }
   }
@@ -316,7 +306,7 @@ char **CgiRequest::alloc_dptr(const std::vector<std::string> &v) const {
   return (dptr);
 }
 
-void CgiRequest::free_dptr(char **dptr) const {
+void CgiRequest::FreePtrArray(char **dptr) const {
   for (size_t i = 0; dptr[i]; i++) {
     free(dptr[i]);
   }
