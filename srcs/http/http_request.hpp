@@ -79,7 +79,6 @@ class HttpRequest {
   void SetPath(const std::string &path);
   const std::string &GetQueryParam() const;
   const std::string &GetPath() const;
-  void SetQueryParam(const std::string &param);
   const config::LocationConf *GetLocation() const;
   HttpStatus GetParseStatus() const;
   void SetLocalRedirectCount(int local_redirect_count);
