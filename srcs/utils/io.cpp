@@ -13,13 +13,6 @@
 
 namespace utils {
 
-// TODO :
-// 使い方が合っているか確認、ファイルが存在していてもパーミッションがないとfalseが帰る？
-bool IsFileExist(const std::string& file_path) {
-  std::ifstream ifs(file_path.c_str());
-  return ifs.is_open();
-}
-
 bool IsDir(const std::string& file_path) {
   struct stat sb;
 
@@ -40,6 +33,10 @@ unsigned long GetFileSize(const std::string& file_path) {
 
   stat(file_path.c_str(), &sb);
   return sb.st_size;
+}
+
+bool IsFileExist(const std::string& file_path) {
+  return access(file_path.c_str(), F_OK) == 0;
 }
 
 bool IsReadableFile(const std::string& file_path) {

@@ -114,10 +114,9 @@ bool CgiRequest::DetermineExecutionCgiPath(
 // ========================================================================
 bool CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
-  if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockfds) == -1) {
+  if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sockfds) == -1) {
     return false;
   }
-  // TODO: UnixDomainSocketを O_NONBLOCK に設定
 
   int parentsock = sockfds[0];
   int childsock = sockfds[1];

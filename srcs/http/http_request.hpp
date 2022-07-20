@@ -77,9 +77,9 @@ class HttpRequest {
   const std::string &GetMethod() const;
   // LocalRedirect で使うために SetPath() を定義
   void SetPath(const std::string &path);
+  const std::string &GetQueryParam() const;
   const std::string &GetPath() const;
   void SetQueryParam(const std::string &param);
-  const std::string &GetQueryParam() const;
   const config::LocationConf *GetLocation() const;
   HttpStatus GetParseStatus() const;
   void SetLocalRedirectCount(int local_redirect_count);

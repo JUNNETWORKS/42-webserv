@@ -14,6 +14,19 @@ namespace config {
 using namespace result;
 
 class Parser {
+ private:
+  std::string file_content_;
+  size_t buf_idx_;
+
+  std::set<std::string> location_set_directives_;
+
+  // ピリオドを含むドメイン全体の長さ
+  static const int kMaxDomainLength = 253;
+  // ドメインの各ラベル(ピリオド区切りの文字列)の最大長
+  static const int kMaxDomainLabelLength = 63;
+  // ポート番号の最大値
+  static const unsigned long kMaxPortNumber = 65535;
+
  public:
   Parser();
   Parser(const Parser &rhs);
@@ -30,12 +43,15 @@ class Parser {
   Config ParseConfig();
 
   class ParserException : public std::exception {
+   private:
+    static const int MAX_ERROR_LEN = 1024;
+
    public:
-    ParserException(const char *errmsg = "Parser error.");
+    ParserException(const char *errfmt = "Parser error.", ...);
     const char *what() const throw();
 
    private:
-    const char *errmsg_;
+    char errmsg_[MAX_ERROR_LEN];
   };
 
  private:
@@ -124,15 +140,8 @@ class Parser {
   // file_content_ をすべて読み込んだか
   bool IsEofReached();
 
-  std::string file_content_;
-  size_t buf_idx_;
-
-  // ピリオドを含むドメイン全体の長さ
-  static const int kMaxDomainLength = 253;
-  // ドメインの各ラベル(ピリオド区切りの文字列)の最大長
-  static const int kMaxDomainLabelLength = 63;
-  // ポート番号の最大値
-  static const unsigned long kMaxPortNumber = 65535;
+  // location_set_directives_を参照し､そのディレクティブが今見ているlocation内で既にセットされたかどうかを返す
+  bool IsDirectiveSetInLocation(const std::string &directive);
 };
 
 }  // namespace config
