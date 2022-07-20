@@ -13,9 +13,13 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <string>
+
+#include "server/socket_address.hpp"
+
 namespace utils {
 
-int InetConnect(const char *host, const char *service, int type) {
+int InetConnect(const std::string &host, const std::string &service, int type) {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
   int sfd, s;
@@ -27,7 +31,7 @@ int InetConnect(const char *host, const char *service, int type) {
   hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
   hints.ai_socktype = type;
 
-  s = getaddrinfo(host, service, &hints, &result);
+  s = getaddrinfo(host.c_str(), service.c_str(), &hints, &result);
   if (s != 0) {
     errno = ENOSYS;
     return -1;
@@ -36,8 +40,8 @@ int InetConnect(const char *host, const char *service, int type) {
   /* Walk through returned list until we find an address structure
   that can be used to successfully connect a socket */
   for (rp = result; rp != NULL; rp = rp->ai_next) {
-    sfd =
-        socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC, rp->ai_protocol);
+    sfd = socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC | SOCK_NONBLOCK,
+                 rp->ai_protocol);
     if (sfd == -1)
       continue; /* On error, try next address */
 
@@ -52,8 +56,9 @@ int InetConnect(const char *host, const char *service, int type) {
 }
 
 /* Public interfaces: InetBind() and InetListen() */
-static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
-                             bool doListen, int backlog) {
+static int InetPassiveSocket(const std::string &service, int type,
+                             server::SocketAddress *sockaddr, bool doListen,
+                             int backlog) {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
   int sfd, optval, s;
@@ -66,7 +71,7 @@ static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
   hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
   hints.ai_flags = AI_PASSIVE; /* Use wildcadrd IP address */
 
-  s = getaddrinfo(NULL, service, &hints, &result);
+  s = getaddrinfo(NULL, service.c_str(), &hints, &result);
   if (s != 0)
     return -1;
 
@@ -74,8 +79,8 @@ static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
   that can be used to successfully create and bind a socket */
   optval = 1;
   for (rp = result; rp != NULL; rp = rp->ai_next) {
-    sfd =
-        socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC, rp->ai_protocol);
+    sfd = socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC | SOCK_NONBLOCK,
+                 rp->ai_protocol);
     if (sfd == -1)
       continue; /* On error, try next address */
 
@@ -101,19 +106,22 @@ static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
       return -1;
     }
   }
-  if (rp != NULL && addrlen != NULL)
-    *addrlen = rp->ai_addrlen; /* Return address structure size */
+  if (rp != NULL && sockaddr != NULL) {
+    sockaddr->SetSockaddr(rp->ai_addr, rp->ai_addrlen);
+  }
   freeaddrinfo(result);
   return (rp == NULL) ? -1 : sfd;
 }
 
 // TODO: Result を返すようにする
-int InetListen(const char *service, int backlog, socklen_t *addrlen) {
-  return InetPassiveSocket(service, SOCK_STREAM, addrlen, true, backlog);
+int InetListen(const std::string &service, int backlog,
+               server::SocketAddress *sockaddr) {
+  return InetPassiveSocket(service, SOCK_STREAM, sockaddr, true, backlog);
 }
 
-int InetBind(const char *service, int type, socklen_t *addrlen) {
-  return InetPassiveSocket(service, type, addrlen, false, 0);
+int InetBind(const std::string &service, int type,
+             server::SocketAddress *sockaddr) {
+  return InetPassiveSocket(service, type, sockaddr, false, 0);
 }
 
 char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,

@@ -41,7 +41,7 @@ class CgiProcess {
   ~CgiProcess();
 
   // Cgiプロセスを作成し､UnixDomainSocketをEpollに登録する｡
-  Result<void> RunCgi(http::HttpRequest &request);
+  Result<void> RunCgi(server::ConnSocket *conn_sock, http::HttpRequest &request);
 
   // Cgiプロセスをkillする
   void KillCgi();
