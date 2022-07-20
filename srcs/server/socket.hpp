@@ -61,6 +61,8 @@ class ConnSocket : public Socket {
   utils::ByteVector buffer_;
 
   // shutdown したかどうか
+  // サーバーから切る場合は shutdown() して FIN を送ったか
+  // クライアントから切る場合は FIN がサーバーに届いたか
   bool is_shutdown_;
 
  public:
