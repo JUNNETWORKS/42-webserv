@@ -124,17 +124,26 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
   }
 
   std::string abs_file_path = location_->GetAbsolutePath(request.GetPath());
+  printf("abs_path: %s\n", abs_file_path.c_str());
+
+  if (!utils::IsFileExist(abs_file_path)) {
+    return MakeErrorResponse(NOT_FOUND);
+  }
+
   Result<bool> is_dir = utils::IsDir(abs_file_path);
   if (is_dir.IsErr()) {
     return MakeErrorResponse(SERVER_ERROR);
   }
-  printf("abs_path: %s\n", abs_file_path.c_str());
 
   if (is_dir.Ok()) {
     Result<std::string> responsable_index_result =
         GetResponsableIndexPagePath();
     if (responsable_index_result.IsOk()) {
       abs_file_path = responsable_index_result.Ok();
+      is_dir = utils::IsDir(abs_file_path);
+      if (is_dir.IsErr()) {
+        return MakeErrorResponse(SERVER_ERROR);
+      }
     }
   }
 
