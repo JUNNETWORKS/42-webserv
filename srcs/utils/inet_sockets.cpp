@@ -36,8 +36,8 @@ int InetConnect(const char *host, const char *service, int type) {
   /* Walk through returned list until we find an address structure
   that can be used to successfully connect a socket */
   for (rp = result; rp != NULL; rp = rp->ai_next) {
-    sfd =
-        socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC, rp->ai_protocol);
+    sfd = socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC | SOCK_NONBLOCK,
+                 rp->ai_protocol);
     if (sfd == -1)
       continue; /* On error, try next address */
 
@@ -74,8 +74,8 @@ static int InetPassiveSocket(const char *service, int type, socklen_t *addrlen,
   that can be used to successfully create and bind a socket */
   optval = 1;
   for (rp = result; rp != NULL; rp = rp->ai_next) {
-    sfd =
-        socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC, rp->ai_protocol);
+    sfd = socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC | SOCK_NONBLOCK,
+                 rp->ai_protocol);
     if (sfd == -1)
       continue; /* On error, try next address */
 
