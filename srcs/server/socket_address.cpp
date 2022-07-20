@@ -17,7 +17,8 @@ SocketAddress::SocketAddress(const struct sockaddr *sockaddr,
   memcpy(sockaddr_, sockaddr, sockaddr_len);
 }
 
-SocketAddress::SocketAddress(const SocketAddress &rhs) {
+SocketAddress::SocketAddress(const SocketAddress &rhs)
+    : sockaddr_(NULL), sockaddr_len_(0) {
   *this = rhs;
 }
 
