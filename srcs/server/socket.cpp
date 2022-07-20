@@ -74,9 +74,6 @@ bool ConnSocket::HasParsedRequest() {
 }
 
 void ConnSocket::ShutDown() {
-  timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  std::cout << "Shutdown at " << ts.tv_sec << ":" << ts.tv_nsec << std::endl;
   shutdown(fd_, SHUT_RDWR);
   SetIsShutdown(true);
 }
@@ -98,7 +95,6 @@ bool ConnSocket::IsShutdown() {
 }
 
 void ConnSocket::SetIsShutdown(bool is_shutdown) {
-  std::cout << "Set shutdown " << std::boolalpha << is_shutdown << std::endl;
   is_shutdown_ = is_shutdown;
 }
 
