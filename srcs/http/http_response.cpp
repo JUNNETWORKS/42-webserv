@@ -70,8 +70,12 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
   if ((file_fd_ = open(file_path.c_str(), O_RDONLY | O_CLOEXEC)) < 0) {
     return Error();
   }
-  unsigned long file_size = utils::GetFileSize(file_path);
-  SetHeader("Content-Length", utils::ConvertToStr(file_size));
+  Result<unsigned long> file_size = utils::GetFileSize(file_path);
+  if (file_size.IsErr()) {
+    close(file_fd_);
+    return Error();
+  }
+  SetHeader("Content-Length", utils::ConvertToStr(file_size.Ok()));
   return Result<void>();
 }
 

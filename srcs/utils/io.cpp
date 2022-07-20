@@ -29,11 +29,12 @@ Result<bool> IsRegularFile(const std::string& file_path) {
   return S_ISREG(sb.st_mode);
 }
 
-// TODO: Resultで返したほうがいいかも?
-unsigned long GetFileSize(const std::string& file_path) {
+Result<unsigned long> GetFileSize(const std::string& file_path) {
   struct stat sb;
 
-  stat(file_path.c_str(), &sb);
+  if (stat(file_path.c_str(), &sb) < 0) {
+    return Error();
+  }
   return sb.st_size;
 }
 

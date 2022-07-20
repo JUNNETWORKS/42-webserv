@@ -20,7 +20,7 @@ bool IsDir(const std::string& path);
 
 Result<bool> IsRegularFile(const std::string& file_path);
 
-unsigned long GetFileSize(const std::string& file_path);
+Result<unsigned long> GetFileSize(const std::string& file_path);
 
 bool IsReadableFile(const std::string& file_path);
 
