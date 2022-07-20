@@ -35,7 +35,7 @@ std::string AutoIndexTail() {
 std::string AutoIndexFileName(const std::string &file_name) {
   std::stringstream ss;
 
-  std::string hyperlink_file_name = file_name;
+  std::string hyperlink_file_name = utils::PercentEncode(file_name);
   std::string display_file_name = file_name;
 
   if (display_file_name.length() > 50) {
