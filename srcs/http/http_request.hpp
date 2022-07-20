@@ -91,7 +91,9 @@ class HttpRequest {
 
   // ========================================================================
   // Getter and Setter
+  std::string GetHttpVersion() const;
   Result<const std::vector<std::string> &> GetHeader(std::string header) const;
+  const HeaderMap &GetHeaders() const;
   const utils::ByteVector &GetBody();
 
  private:

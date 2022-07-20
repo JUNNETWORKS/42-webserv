@@ -37,17 +37,13 @@ int main(int argc, char const *argv[]) {
   }
   config.Print();
 
-  Result<server::ListenFdPortMap> result = server::OpenLilstenFds(config);
-  if (result.IsErr()) {
-    utils::ErrExit("server::OpenLilstenFds()");
-  }
-
-  server::ListenFdPortMap listen_fd_port_map = result.Ok();
-
   // epoll インスタンス作成
   server::Epoll epoll;
 
-  server::AddListenFds2Epoll(epoll, config, listen_fd_port_map);
+  // listen socket を作成
+  if (RegisterListenSockets(epoll, config).IsErr()) {
+    utils::ErrExit("server::RegisterListenSockets()");
+  }
 
   server::StartEventLoop(epoll);
 

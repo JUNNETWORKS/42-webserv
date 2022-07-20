@@ -13,15 +13,12 @@ namespace server {
 // ========================================================================
 // Socket
 
-Socket::Socket(int fd, ESockType socktype, const std::string &port,
+Socket::Socket(int fd, const SocketAddress &server_addr,
                const config::Config &config)
-    : fd_(fd), socktype_(socktype), port_(port), config_(config) {}
+    : fd_(fd), server_addr_(server_addr), config_(config) {}
 
 Socket::Socket(const Socket &rhs)
-    : fd_(rhs.fd_),
-      socktype_(rhs.socktype_),
-      port_(rhs.port_),
-      config_(rhs.config_) {}
+    : fd_(rhs.fd_), server_addr_(rhs.server_addr_), config_(rhs.config_) {}
 
 Socket::~Socket() {
   close(fd_);
@@ -31,24 +28,27 @@ int Socket::GetFd() const {
   return fd_;
 }
 
-const std::string &Socket::GetPort() const {
-  return port_;
+std::string Socket::GetServerIp() const {
+  return server_addr_.GetIp();
+}
+
+std::string Socket::GetServerPort() const {
+  return server_addr_.GetPort();
 }
 
 const config::Config &Socket::GetConfig() const {
   return config_;
 }
 
-Socket::ESockType Socket::GetSockType() const {
-  return socktype_;
-}
-
 // ========================================================================
 // ConnSocket
 
-ConnSocket::ConnSocket(int fd, const std::string &port,
+ConnSocket::ConnSocket(int fd, const SocketAddress &server_addr,
+                       const SocketAddress &client_addr,
                        const config::Config &config)
-    : Socket(fd, ListenSock, port, config), response_(NULL) {}
+    : Socket(fd, server_addr, config),
+      client_addr_(client_addr),
+      response_(NULL) {}
 
 ConnSocket::~ConnSocket() {
   if (response_ != NULL) {
@@ -58,6 +58,14 @@ ConnSocket::~ConnSocket() {
 
 std::deque<http::HttpRequest> &ConnSocket::GetRequests() {
   return requests_;
+}
+
+std::string ConnSocket::GetRemoteIp() const {
+  return client_addr_.GetIp();
+}
+
+std::string ConnSocket::GetRemoteName() const {
+  return client_addr_.GetName();
 }
 
 bool ConnSocket::HasParsedRequest() {
@@ -79,13 +87,11 @@ utils::ByteVector &ConnSocket::GetBuffer() {
 // ========================================================================
 // ListenSocket
 
-ListenSocket::ListenSocket(int fd, const std::string &port,
+ListenSocket::ListenSocket(int fd, const SocketAddress &server_addr,
                            const config::Config &config)
-    : Socket(fd, ListenSock, port, config) {}
+    : Socket(fd, server_addr, config) {}
 
 Result<ConnSocket *> ListenSocket::AcceptNewConnection() {
-  assert(socktype_ == ListenSock);
-
   struct sockaddr_storage client_addr;
   socklen_t addrlen = sizeof(struct sockaddr_storage);
   int conn_fd = accept4(fd_, (struct sockaddr *)&client_addr, &addrlen,
@@ -96,7 +102,9 @@ Result<ConnSocket *> ListenSocket::AcceptNewConnection() {
 
   utils::LogConnectionInfoToStdout(client_addr);
 
-  ConnSocket *conn_sock = new ConnSocket(conn_fd, port_, config_);
+  ConnSocket *conn_sock = new ConnSocket(
+      conn_fd, server_addr_,
+      SocketAddress((const struct sockaddr *)&client_addr, addrlen), config_);
   return conn_sock;
 }
 
