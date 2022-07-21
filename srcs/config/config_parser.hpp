@@ -1,6 +1,7 @@
 #ifndef CONFIG_ONFIG_PARSER_HPP_
 #define CONFIG_ONFIG_PARSER_HPP_
 
+#include <climits>
 #include <list>
 #include <string>
 
