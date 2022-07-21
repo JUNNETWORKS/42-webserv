@@ -2,10 +2,12 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <ctime>
 #include <vector>
 
 #include "cgi/cgi_request.hpp"
@@ -14,17 +16,22 @@
 #include "http/http_request.hpp"
 #include "server/epoll.hpp"
 #include "utils/io.hpp"
+#include "utils/path.hpp"
 #include "utils/string.hpp"
 
 namespace http {
 
+namespace {
+std::string GetTimeStamp();
+bool AppendBytesToFile(const std::string &path, const utils::ByteVector &bytes);
+}  // namespace
 const std::string HttpResponse::kDefaultHttpVersion = "HTTP/1.1";
 
 HttpResponse::HttpResponse(const config::LocationConf *location,
                            server::Epoll *epoll)
     : location_(location),
       epoll_(epoll),
-      phase_(kLoadRequest),
+      phase_(kExecuteRequest),
       http_version_(kDefaultHttpVersion),
       status_(OK),
       status_message_(StatusCodes::GetMessage(OK)),
@@ -38,7 +45,7 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
                            server::Epoll *epoll, const HttpStatus status)
     : location_(location),
       epoll_(epoll),
-      phase_(kLoadRequest),
+      phase_(kExecuteRequest),
       http_version_(kDefaultHttpVersion),
       status_(OK),
       status_message_(StatusCodes::GetMessage(OK)),
@@ -103,10 +110,8 @@ Result<bool> HttpResponse::ReadFile() {
 //========================================================================
 // Reponse Maker
 
-HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
-    server::ConnSocket *conn_sock) {
-  http::HttpRequest &request = conn_sock->GetRequests().front();
-
+HttpResponse::CreateResponsePhase HttpResponse::ExecuteGetRequest(
+    const http::HttpRequest &request) {
   if (IsRequestHasConnectionClose(request)) {
     SetHeader("Connection", "close");
   }
@@ -149,6 +154,70 @@ HttpResponse::CreateResponsePhase HttpResponse::LoadRequest(
     return kStatusAndHeader;
 }
 
+HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
+    const http::HttpRequest &request) {
+  std::string request_path = location_->GetAbsolutePath(request.GetPath());
+
+  std::string target = utils::IsDir(request_path)
+                           ? utils::JoinPath(request_path, GetTimeStamp())
+                           : request_path;
+
+  printf("post_path: %s\n", target.c_str());
+
+  HttpStatus response_status = utils::IsFileExist(target) ? OK : CREATED;
+
+  if (AppendBytesToFile(target, request.GetBody()) == false) {
+    return MakeErrorResponse(SERVER_ERROR);
+  }
+
+  SetStatus(response_status, StatusCodes::GetMessage(response_status));
+
+  if (response_status == CREATED)
+    SetHeader("Location", target);
+
+  SetHeader("Content-Type",
+            ContentTypes::GetContentTypeFromExt(utils::GetExetension(target)));
+
+  if (RegisterFile(target).IsErr()) {
+    if (response_status == CREATED)
+      remove(target.c_str());
+    return MakeErrorResponse(SERVER_ERROR);
+  }
+  return kStatusAndHeader;
+}
+
+HttpResponse::CreateResponsePhase HttpResponse::ExecuteDeleteRequest(
+    const http::HttpRequest &request) {
+  std::string path = location_->GetAbsolutePath(request.GetPath());
+
+  if (utils::IsDir(path))
+    return MakeErrorResponse(BAD_REQUEST);
+
+  if (utils::IsFileExist(path) == false)
+    return MakeErrorResponse(NOT_FOUND);
+
+  if (remove(path.c_str()) < 0)
+    return MakeErrorResponse(SERVER_ERROR);
+
+  SetStatus(OK, StatusCodes::GetMessage(OK));
+  return kStatusAndHeader;
+}
+
+HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
+    server::ConnSocket *conn_sock) {
+  http::HttpRequest &request = conn_sock->GetRequests().front();
+  const std::string method = request.GetMethod();
+
+  if (method == method_strs::kGet)
+    return ExecuteGetRequest(request);
+  else if (method == method_strs::kPost)
+    return ExecutePostRequest(request);
+  else if (method == method_strs::kDelete)
+    return ExecuteDeleteRequest(request);
+  else
+    assert(false);
+}
+
 Result<HttpResponse::CreateResponsePhase> HttpResponse::MakeResponseBody() {
   if (file_fd_ < 0)
     return kComplete;
@@ -161,8 +230,8 @@ Result<HttpResponse::CreateResponsePhase> HttpResponse::MakeResponseBody() {
 }
 
 Result<void> HttpResponse::PrepareToWrite(server::ConnSocket *conn_sock) {
-  if (phase_ == kLoadRequest) {
-    phase_ = LoadRequest(conn_sock);
+  if (phase_ == kExecuteRequest) {
+    phase_ = ExecuteRequest(conn_sock);
   }
   if (phase_ == kStatusAndHeader) {
     write_buffer_.AppendDataToBuffer(SerializeStatusAndHeader());
@@ -345,7 +414,7 @@ const std::vector<std::string> &HttpResponse::GetHeader(
   return headers_[header];
 }
 
-bool HttpResponse::IsRequestHasConnectionClose(HttpRequest &request) {
+bool HttpResponse::IsRequestHasConnectionClose(const HttpRequest &request) {
   Result<const http::HeaderMap::mapped_type &> header_res =
       request.GetHeader("Connection");
   if (header_res.IsErr())
@@ -354,5 +423,38 @@ bool HttpResponse::IsRequestHasConnectionClose(HttpRequest &request) {
 
   return std::find(header.begin(), header.end(), "close") != header.end();
 }
+
+namespace {
+std::string GetTimeStamp() {
+  std::stringstream ss;
+  struct timeval time_now;
+  gettimeofday(&time_now, NULL);
+  time_t msecs_time = (time_now.tv_sec * 1000000 + time_now.tv_usec);
+
+  ss << msecs_time;
+  return ss.str();
+}
+
+bool AppendBytesToFile(const std::string &path,
+                       const utils::ByteVector &bytes) {
+  bool file_exist = utils::IsFileExist(path);
+  bool has_error = false;
+
+  int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR);
+  has_error = fd < 0;
+
+  if (has_error == false) {
+    if (bytes.empty() == false) {
+      ssize_t write_res =
+          write(fd, bytes.SubstrBeforePos(bytes.size()).c_str(), bytes.size());
+      has_error = write_res < static_cast<ssize_t>(bytes.size());
+    }
+    close(fd);
+  }
+  if (has_error && file_exist == false)
+    remove(path.c_str());
+  return has_error == false;
+}
+}  // namespace
 
 }  // namespace http

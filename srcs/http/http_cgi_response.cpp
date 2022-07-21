@@ -21,7 +21,7 @@ HttpCgiResponse::~HttpCgiResponse() {
   }
 }
 
-HttpCgiResponse::CreateResponsePhase HttpCgiResponse::LoadRequest(
+HttpCgiResponse::CreateResponsePhase HttpCgiResponse::ExecuteRequest(
     server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
   // TODO: 現在 cgi_request.RunCgi()

@@ -94,7 +94,7 @@ class HttpRequest {
   std::string GetHttpVersion() const;
   Result<const std::vector<std::string> &> GetHeader(std::string header) const;
   const HeaderMap &GetHeaders() const;
-  const utils::ByteVector &GetBody();
+  const utils::ByteVector &GetBody() const;
 
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);

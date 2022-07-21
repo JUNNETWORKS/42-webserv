@@ -24,7 +24,12 @@ using namespace result;
 class HttpResponse {
  protected:
   // レスポンスの作成状況
-  enum CreateResponsePhase { kLoadRequest, kStatusAndHeader, kBody, kComplete };
+  enum CreateResponsePhase {
+    kExecuteRequest,
+    kStatusAndHeader,
+    kBody,
+    kComplete
+  };
 
   // 1回のreadで何バイト読み取るか
   static const unsigned long kBytesPerRead = 1024;  // 1KB
@@ -87,7 +92,7 @@ class HttpResponse {
   void SetHeader(const std::string &header, const std::string &value);
   void AppendHeader(const std::string &header, const std::string &value);
 
-  static bool IsRequestHasConnectionClose(HttpRequest &request);
+  static bool IsRequestHasConnectionClose(const HttpRequest &request);
 
  private:
   HttpResponse();
@@ -95,8 +100,12 @@ class HttpResponse {
   HttpResponse &operator=(const HttpResponse &rhs);
 
   // CGIとFILEで処理が異なる部分
-  virtual CreateResponsePhase LoadRequest(server::ConnSocket *conn_sock);
+  virtual CreateResponsePhase ExecuteRequest(server::ConnSocket *conn_sock);
   virtual Result<CreateResponsePhase> MakeResponseBody();
+
+  CreateResponsePhase ExecuteGetRequest(const http::HttpRequest &request);
+  CreateResponsePhase ExecutePostRequest(const http::HttpRequest &request);
+  CreateResponsePhase ExecuteDeleteRequest(const http::HttpRequest &request);
 
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;
