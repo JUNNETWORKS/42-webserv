@@ -404,10 +404,22 @@ std::string Parser::GetWord() {
   return word;
 }
 
-bool Parser::IsDomainName(const std::string &domain_name) {
+bool Parser::IsDomainName(std::string domain_name) {
   if (domain_name.empty() || domain_name.size() > kMaxDomainLength) {
     return false;
   }
+
+  // validate port
+  if (domain_name.find(":") != std::string::npos) {
+    std::string port = domain_name.substr(domain_name.find(":") + 1);
+    Result<unsigned long> stoul_res = utils::Stoul(port);
+    if (stoul_res.IsErr() || stoul_res.Ok() > kMaxPortNumber) {
+      return false;
+    }
+  }
+
+  // remove port
+  domain_name = domain_name.substr(0, domain_name.find(":"));
 
   // split to labels
   std::vector<std::string> labels = utils::SplitString(domain_name, ".");
