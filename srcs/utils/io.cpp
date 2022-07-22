@@ -13,25 +13,30 @@
 
 namespace utils {
 
-bool IsDir(const std::string& file_path) {
+Result<bool> IsDir(const std::string& file_path) {
   struct stat sb;
 
-  stat(file_path.c_str(), &sb);
+  if (stat(file_path.c_str(), &sb) < 0) {
+    return Error();
+  }
   return S_ISDIR(sb.st_mode);
 }
 
-bool IsRegularFile(const std::string& file_path) {
+Result<bool> IsRegularFile(const std::string& file_path) {
   struct stat sb;
 
-  stat(file_path.c_str(), &sb);
+  if (stat(file_path.c_str(), &sb) < 0) {
+    return Error();
+  }
   return S_ISREG(sb.st_mode);
 }
 
-// TODO: Resultで返したほうがいいかも?
-unsigned long GetFileSize(const std::string& file_path) {
+Result<unsigned long> GetFileSize(const std::string& file_path) {
   struct stat sb;
 
-  stat(file_path.c_str(), &sb);
+  if (stat(file_path.c_str(), &sb) < 0) {
+    return Error();
+  }
   return sb.st_size;
 }
 

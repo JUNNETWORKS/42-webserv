@@ -64,7 +64,8 @@ HttpResponse::~HttpResponse() {
 }
 
 Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
-  if (!utils::IsRegularFile(file_path) || !utils::IsReadableFile(file_path)) {
+  Result<bool> is_regular_file = utils::IsReadableFile(file_path);
+  if (is_regular_file.IsErr() || is_regular_file.Ok() == false) {
     return Error();
   }
   if (file_fd_ >= 0) {
@@ -73,8 +74,13 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
   if ((file_fd_ = open(file_path.c_str(), O_RDONLY | O_CLOEXEC)) < 0) {
     return Error();
   }
-  unsigned long file_size = utils::GetFileSize(file_path);
-  SetHeader("Content-Length", utils::ConvertToStr(file_size));
+  Result<unsigned long> file_size = utils::GetFileSize(file_path);
+  if (file_size.IsErr()) {
+    close(file_fd_);
+    file_fd_ = -1;
+    return Error();
+  }
+  SetHeader("Content-Length", utils::ConvertToStr(file_size.Ok()));
   return Result<void>();
 }
 
@@ -123,20 +129,35 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteGetRequest(
   std::string abs_file_path = location_->GetAbsolutePath(request.GetPath());
   printf("abs_path: %s\n", abs_file_path.c_str());
 
-  if (utils::IsDir(abs_file_path)) {
+  if (!utils::IsFileExist(abs_file_path)) {
+    return MakeErrorResponse(NOT_FOUND);
+  }
+
+  Result<bool> is_dir_res = utils::IsDir(abs_file_path);
+  if (is_dir_res.IsErr()) {
+    return MakeErrorResponse(SERVER_ERROR);
+  }
+  bool is_dir = is_dir_res.Ok();
+
+  if (is_dir) {
     Result<std::string> responsable_index_result =
         GetResponsableIndexPagePath();
     if (responsable_index_result.IsOk()) {
       abs_file_path = responsable_index_result.Ok();
+      is_dir_res = utils::IsDir(abs_file_path);
+      if (is_dir_res.IsErr()) {
+        return MakeErrorResponse(SERVER_ERROR);
+      }
+      is_dir = is_dir_res.Ok();
     }
   }
 
   if (!utils::IsFileExist(abs_file_path) ||
-      (utils::IsDir(abs_file_path) && !location_->GetAutoIndex())) {
+      (is_dir && !location_->GetAutoIndex())) {
     return MakeErrorResponse(NOT_FOUND);
   }
 
-  if (utils::IsDir(abs_file_path)) {
+  if (is_dir) {
     return MakeAutoIndexResponse(abs_file_path, request.GetPath());
   }
 
@@ -158,9 +179,13 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
     const server::ConnSocket *conn_sock, const http::HttpRequest &request) {
   std::string request_path = location_->GetAbsolutePath(request.GetPath());
 
-  std::string target = utils::IsDir(request_path)
-                           ? utils::JoinPath(request_path, GetTimeStamp())
-                           : request_path;
+  Result<bool> is_dir_res = utils::IsDir(request_path);
+  if (is_dir_res.IsErr()) {
+    return MakeErrorResponse(SERVER_ERROR);
+  }
+  bool is_dir = is_dir_res.Ok();
+  std::string target =
+      is_dir ? utils::JoinPath(request_path, GetTimeStamp()) : request_path;
 
   printf("post_path: %s\n", target.c_str());
 
@@ -209,7 +234,13 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteDeleteRequest(
     const http::HttpRequest &request) {
   std::string path = location_->GetAbsolutePath(request.GetPath());
 
-  if (utils::IsDir(path))
+  Result<bool> is_dir_res = utils::IsDir(path);
+  if (is_dir_res.IsErr()) {
+    return MakeErrorResponse(SERVER_ERROR);
+  }
+  bool is_dir = is_dir_res.Ok();
+
+  if (is_dir)
     return MakeErrorResponse(BAD_REQUEST);
 
   if (utils::IsFileExist(path) == false)
