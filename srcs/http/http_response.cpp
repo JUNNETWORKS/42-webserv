@@ -68,9 +68,6 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
   if (is_regular_file.IsErr() || is_regular_file.Ok() == false) {
     return Error();
   }
-  if (!utils::IsReadableFile(file_path)) {
-    return Error();
-  }
   if (file_fd_ >= 0) {
     close(file_fd_);
   }
