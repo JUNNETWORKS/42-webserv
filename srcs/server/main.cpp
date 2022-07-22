@@ -11,6 +11,10 @@
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 
+namespace {
+const std::string kDefaultConfigPath = "configurations/default.conf";
+}
+
 int main(int argc, char const *argv[]) {
   using namespace result;
 
@@ -19,17 +23,20 @@ int main(int argc, char const *argv[]) {
   signal(SIGPIPE, SIG_IGN);
 
   setbuf(stdout, NULL);
-  config::Config config;
+  std::string config_path;
   if (argc >= 2) {
-    try {
-      config = config::ParseConfig(argv[1]);
-    } catch (const std::exception &err) {
-      std::cerr << "Parser Error!!\n";
-      std::cerr << "Error message: " << err.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
+    config_path = argv[1];
   } else {
-    config = config::CreateSampleConfig();
+    config_path = kDefaultConfigPath;
+  }
+
+  config::Config config;
+  try {
+    config = config::ParseConfig(config_path);
+  } catch (const std::exception &err) {
+    std::cerr << "Parser Error!!\n";
+    std::cerr << "Error message: " << err.what() << std::endl;
+    exit(EXIT_FAILURE);
   }
   if (!config.IsValid()) {
     std::cerr << "Config is invalid!!" << std::endl;
