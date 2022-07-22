@@ -104,8 +104,13 @@ class HttpResponse {
   virtual Result<CreateResponsePhase> MakeResponseBody();
 
   CreateResponsePhase ExecuteGetRequest(const http::HttpRequest &request);
-  CreateResponsePhase ExecutePostRequest(const http::HttpRequest &request);
+  CreateResponsePhase ExecutePostRequest(const server::ConnSocket *conn_sock,
+                                         const http::HttpRequest &request);
   CreateResponsePhase ExecuteDeleteRequest(const http::HttpRequest &request);
+
+  std::string CreateResourceUrl(const std::string &local_path,
+                                const server::ConnSocket *conn_sock,
+                                const http::HttpRequest &request);
 
   // StatusLine と Headers をバイト列にする
   utils::ByteVector SerializeStatusAndHeader() const;

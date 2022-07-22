@@ -155,7 +155,7 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteGetRequest(
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
-    const http::HttpRequest &request) {
+    const server::ConnSocket *conn_sock, const http::HttpRequest &request) {
   std::string request_path = location_->GetAbsolutePath(request.GetPath());
 
   std::string target = utils::IsDir(request_path)
@@ -172,8 +172,9 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
 
   SetStatus(response_status, StatusCodes::GetMessage(response_status));
 
-  if (response_status == CREATED)
-    SetHeader("Location", target);
+  if (response_status == CREATED) {
+    SetHeader("Location", CreateResourceUrl(target, conn_sock, request));
+  }
 
   SetHeader("Content-Type",
             ContentTypes::GetContentTypeFromExt(utils::GetExetension(target)));
@@ -184,6 +185,24 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
     return MakeErrorResponse(SERVER_ERROR);
   }
   return kStatusAndHeader;
+}
+
+std::string HttpResponse::CreateResourceUrl(const std::string &local_path,
+                                            const server::ConnSocket *conn_sock,
+                                            const http::HttpRequest &request) {
+  const std::string protocol = "http://";
+
+  std::string host;
+  if (request.GetHeader("Host").IsOk()) {
+    host = request.GetHeader("Host").Ok()[0];
+  } else {
+    host = conn_sock->GetServerIp() + ":" + conn_sock->GetServerPort();
+  }
+
+  std::string path = local_path;
+  path.replace(0, location_->GetRootDir().length(), "");
+
+  return protocol + host + path;
 }
 
 HttpResponse::CreateResponsePhase HttpResponse::ExecuteDeleteRequest(
@@ -211,7 +230,7 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteRequest(
   if (method == method_strs::kGet)
     return ExecuteGetRequest(request);
   else if (method == method_strs::kPost)
-    return ExecutePostRequest(request);
+    return ExecutePostRequest(conn_sock, request);
   else if (method == method_strs::kDelete)
     return ExecuteDeleteRequest(request);
   else
