@@ -34,12 +34,13 @@ Result<void> RegisterListenSockets(Epoll &epoll, const config::Config &config) {
       continue;
     }
     SocketAddress socket_address;
-    int fd = utils::InetListen(it->GetListenPort().c_str(), SOMAXCONN,
-                               &socket_address);
-    if (fd == -1) {
+    Result<int> listen_res = utils::InetListen(it->GetListenPort().c_str(),
+                                               SOMAXCONN, &socket_address);
+    if (listen_res.IsErr()) {
       CloseAllFds(fds);
       return Error("RegisterListenSockets");
     }
+    int fd = listen_res.Ok();
 
     ListenSocket *listen_sock = new ListenSocket(fd, socket_address, config);
     FdEvent *fde = CreateFdEvent(fd, HandleListenSocketEvent, listen_sock);
