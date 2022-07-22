@@ -190,7 +190,7 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
 std::string HttpResponse::CreateResourceUrl(const std::string &local_path,
                                             const server::ConnSocket *conn_sock,
                                             const http::HttpRequest &request) {
-  std::string protocol = "http://";
+  const std::string protocol = "http://";
 
   std::string host;
   if (request.GetHeader("Host").IsOk()) {
