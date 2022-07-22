@@ -6,11 +6,14 @@
 
 #include <string>
 
+#include "result/result.hpp"
 #include "server/socket_address.hpp"
 
 // インターネットドメインソケットライブラリ
 
 namespace utils {
+
+using namespace result;
 
 /* typeに指定されたソケットを作成し、
  * host, service に指定されたアドレスへ接続します。
@@ -38,8 +41,8 @@ int InetConnect(const std::string &host, const std::string &service, int type);
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-int InetListen(const std::string &service, int backlog,
-               server::SocketAddress *sockaddr);
+Result<int> InetListen(const std::string &service, int backlog,
+                       server::SocketAddress *sockaddr);
 
 /* typeに指定されたソケットを作成し、service､typeに指定されたポートのワイルドカードアドレスへバインドする｡
  * この関数はソケットを特定のアドレスへバインドするUDPサーバ､UDPクライアント用です｡
@@ -53,36 +56,25 @@ int InetListen(const std::string &service, int backlog,
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-int InetBind(const std::string &service, int type,
-             server::SocketAddress *sockaddr);
+Result<int> InetBind(const std::string &service, int type,
+                     server::SocketAddress *sockaddr);
 
 /* インターネットソケットアドレスを可読形式に変換します｡
- * addrStrに"(hostname, port-number)"の形式の文字列を格納する｡
- * addrStrが指すバッファに対してaddrlenバイトの領域を割り当てるのはコール側の責任です｡
- * 文字列が addrlen - 1 より大きくなる場合は切り詰められます｡
- * addrStrが指すバッファがすべての場合の文字列を格納できるサイズを
- * マクロ定数 IS_ADDR_STR_LEN として定義してあります｡
+ * "(hostname, port-number)"の形式の文字列を返す｡
  *
  * Args:
  *   addr: 可読形式に変換したいソケットアドレス
  *   addrlen: addr の構造体のデータサイズ
- *   addrStr: 文字列を格納するためのバッファへのポインタ｡
- *            コール側で確保する必要がある｡
- *   addrStrLen: addrStr が指すバッファのサイズ
+
  *
  * Return:
- *   addrStr をそのまま返す｡
+ *   結果の文字列を std::string で返す｡
  */
-char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
-                     char *addrStr, int addrStrLen);
+std::string InetAddressStr(const struct sockaddr *addr, socklen_t addrlen);
 
 /* client_addrを元に "Connection from (<address>, <port>)\n"
  * のメッセージを標準出力に出力する｡ */
 void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr);
-
-/* InetAddressStr() に指定する文字列のサイズ.
-  (NI_MAXHOST + NI_MAXSERV + 4) よりも大きくなくてはならない. */
-const int IS_ADDR_STR_LEN = 4096;
 
 }  // namespace utils
 
