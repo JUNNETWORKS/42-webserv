@@ -109,9 +109,6 @@ Result<std::string> CgiRequest::SearchCgiPath(
   const std::vector<std::string> &index_pages = location.GetIndexPages();
   for (std::vector<std::string>::const_iterator it = index_pages.begin();
        it != index_pages.end(); it++) {
-    if (*it == "") {
-      continue;
-    }
     exec_cgi_path = utils::JoinPath(index_base, *it);
     if (utils::IsFileExist(exec_cgi_path)) {
       return exec_cgi_path;
