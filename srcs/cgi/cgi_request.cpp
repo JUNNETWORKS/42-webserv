@@ -159,7 +159,6 @@ bool CgiRequest::ForkAndExecuteCgi() {
     close(parentsock);
     if (dup2(childsock, STDIN_FILENO) < 0 ||
         dup2(childsock, STDOUT_FILENO) < 0) {
-      close(parentsock);
       close(childsock);
       exit(EXIT_FAILURE);
     }
