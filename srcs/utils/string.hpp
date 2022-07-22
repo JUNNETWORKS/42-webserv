@@ -67,6 +67,9 @@ bool ReadFile(const std::string &path, std::string &dest);
 
 std::string GetExetension(const std::string &file_path);
 
+char **AllocVectorStringToCharDptr(const std::vector<std::string> &v);
+void DeleteCharDprt(char **dstr);
+
 }  // namespace utils
 
 #endif
