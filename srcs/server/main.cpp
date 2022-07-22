@@ -11,6 +11,10 @@
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
 
+namespace {
+const std::string kDefaultConfigPath = "configurations/default.conf";
+}
+
 int main(int argc, char const *argv[]) {
   using namespace result;
 
@@ -19,17 +23,23 @@ int main(int argc, char const *argv[]) {
   signal(SIGPIPE, SIG_IGN);
 
   setbuf(stdout, NULL);
-  config::Config config;
-  if (argc >= 2) {
-    try {
-      config = config::ParseConfig(argv[1]);
-    } catch (const std::exception &err) {
-      std::cerr << "Parser Error!!\n";
-      std::cerr << "Error message: " << err.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
+  std::string config_path;
+  if (argc == 2) {
+    config_path = argv[1];
+  } else if (argc == 1) {
+    config_path = kDefaultConfigPath;
   } else {
-    config = config::CreateSampleConfig();
+    std::cerr << "Error: Too many arguments." << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  config::Config config;
+  try {
+    config = config::ParseConfig(config_path);
+  } catch (const std::exception &err) {
+    std::cerr << "Parser Error!!\n";
+    std::cerr << "Error message: " << err.what() << std::endl;
+    exit(EXIT_FAILURE);
   }
   if (!config.IsValid()) {
     std::cerr << "Config is invalid!!" << std::endl;

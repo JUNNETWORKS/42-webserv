@@ -14,7 +14,7 @@ namespace http {
 using namespace result;
 const std::string kConfigurationDirPath = "unit_test/http/config/";
 const config::Config default_conf =
-    config::ParseConfig((kConfigurationDirPath + "SimpleServer.conf").c_str());
+    config::ParseConfig(kConfigurationDirPath + "SimpleServer.conf");
 
 utils::ByteVector OpenFile(const std::string& name) {
   std::ifstream ifs(("./unit_test/http/req/" + name).c_str());
@@ -173,7 +173,7 @@ TEST(RequestParserTest, KOMethodNotAllowd) {
   http::HttpRequest req;
   utils::ByteVector buf = OpenFile("KOMethodNotAllowd.txt");
   const config::Config not_allowed_conf =
-      config::ParseConfig((kConfigurationDirPath + "NotAllowed.conf").c_str());
+      config::ParseConfig(kConfigurationDirPath + "NotAllowed.conf");
 
   req.ParseRequest(buf, not_allowed_conf, "8080");
   EXPECT_TRUE(req.IsErrorRequest() == true);
@@ -291,8 +291,8 @@ TEST(RequestParserTest, OKCorrectNewLine) {
 TEST(RequestParserTest, KOLocationNotFound) {
   http::HttpRequest req;
   utils::ByteVector buf = OpenFile("KOLocationNotFound.txt");
-  const config::Config conf = config::ParseConfig(
-      (kConfigurationDirPath + "LocationNotFound.conf").c_str());
+  const config::Config conf =
+      config::ParseConfig(kConfigurationDirPath + "LocationNotFound.conf");
 
   req.ParseRequest(buf, conf, "8080");
   EXPECT_TRUE(req.IsErrorRequest() == true);
