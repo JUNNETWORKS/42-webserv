@@ -60,6 +60,11 @@ class ConnSocket : public Socket {
   http::HttpResponse *response_;
   utils::ByteVector buffer_;
 
+  // shutdown したかどうか
+  // サーバーから切る場合は shutdown() して FIN を送ったか
+  // クライアントから切る場合は FIN がサーバーに届いたか
+  bool is_shutdown_;
+
  public:
   // タイムアウトのデフォルト時間は5秒
   // HTTP/1.1 では Connection: close が来るまでソケットを接続し続ける｡
@@ -77,9 +82,12 @@ class ConnSocket : public Socket {
   std::deque<http::HttpRequest> &GetRequests();
 
   bool HasParsedRequest();
+  void ShutDown();
 
   http::HttpResponse *GetResponse();
   void SetResponse(http::HttpResponse *response);
+  bool IsShutdown();
+  void SetIsShutdown(bool is_shutdown);
 
   utils::ByteVector &GetBuffer();
 
