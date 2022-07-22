@@ -73,6 +73,7 @@ Result<void> HttpResponse::RegisterFile(const std::string &file_path) {
   Result<unsigned long> file_size = utils::GetFileSize(file_path);
   if (file_size.IsErr()) {
     close(file_fd_);
+    file_fd_ = -1;
     return Error();
   }
   SetHeader("Content-Length", utils::ConvertToStr(file_size.Ok()));
