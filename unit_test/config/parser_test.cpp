@@ -660,7 +660,19 @@ TEST(ParserTest, ServerNamePortEmpty) {
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
 }
 
-// TODO: root や error_page の引数が絶対パスじゃなければエラーのテスト
+TEST(ParserTest, RootIsNotAbsolutePath) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost;                     "
+      "                                             "
+      "  location / {                               "
+      "    root var/www/html;                       "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
 
 //========================
 // 重複やディレクティブ関係のエラーパターン
