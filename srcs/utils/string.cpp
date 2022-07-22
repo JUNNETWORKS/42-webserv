@@ -89,7 +89,7 @@ std::string PercentEncode(const utils::ByteVector &to_encode) {
   for (utils::ByteVector::const_iterator it = to_encode.begin();
        it != to_encode.end(); it++) {
     if (!std::isalnum(*it) && *it != '-' && *it != '_' && *it != '.' &&
-        *it != '~') {
+        *it != '~' && *it != '/') {
       int n = *it;
       ss << "%" << std::uppercase << std::setw(2) << std::setfill('0')
          << std::hex << n;
