@@ -75,7 +75,7 @@ void Config::AppendVirtualServerConf(
   servers_.push_back(virtual_server_conf);
 }
 
-Config ParseConfig(const char *filepath) {
+Config ParseConfig(const std::string &filepath) {
   Parser parser;
   parser.LoadFile(filepath);
   return parser.ParseConfig();
