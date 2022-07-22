@@ -21,14 +21,14 @@ HttpCgiResponse::~HttpCgiResponse() {
   }
 }
 
-HttpCgiResponse::CreateResponsePhase HttpCgiResponse::LoadRequest(
+HttpCgiResponse::CreateResponsePhase HttpCgiResponse::ExecuteRequest(
     server::ConnSocket *conn_sock) {
   http::HttpRequest &request = conn_sock->GetRequests().front();
   // TODO: 現在 cgi_request.RunCgi()
   // ではファイルの有無に関するエラーチェックをしていないので､
   // 存在しないCGIへのリクエストをするとInternalServerErrorが返ってくる｡
   if (cgi_process_->IsCgiExecuted() == false) {
-    if (cgi_process_->RunCgi(request).IsErr()) {
+    if (cgi_process_->RunCgi(conn_sock, request).IsErr()) {
       return MakeErrorResponse(SERVER_ERROR);
     }
     return phase_;

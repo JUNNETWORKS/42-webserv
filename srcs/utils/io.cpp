@@ -48,6 +48,10 @@ bool IsReadableFile(const std::string& file_path) {
   return access(file_path.c_str(), R_OK) == 0;
 }
 
+bool IsExecutableFile(const std::string& file_path) {
+  return access(file_path.c_str(), X_OK) == 0;
+}
+
 Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
   std::vector<utils::File> vec;
   struct dirent* dent;

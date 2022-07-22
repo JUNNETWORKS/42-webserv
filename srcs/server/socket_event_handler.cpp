@@ -82,7 +82,7 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
   if (events & kFdeError) {
     // Listenしているソケットが正常に動いていない場合はプログラムを終了させる
     utils::ErrExit("ListenSocket(port %s) occur error\n",
-                   listen_sock->GetPort().c_str());
+                   listen_sock->GetServerPort().c_str());
   }
 }
 
@@ -108,7 +108,7 @@ bool ProcessRequest(ConnSocket *socket) {
         requests.push_back(http::HttpRequest());
       }
       requests.back().ParseRequest(buffer, socket->GetConfig(),
-                                   socket->GetPort());
+                                   socket->GetServerPort());
       if (requests.back().IsErrorRequest()) {
         buffer.clear();
         break;

@@ -24,6 +24,8 @@ Result<unsigned long> GetFileSize(const std::string& file_path);
 
 bool IsReadableFile(const std::string& file_path);
 
+bool IsExecutableFile(const std::string& file_path);
+
 Result<std::vector<utils::File> > GetFileList(const std::string& target_dir);
 
 bool PutStrFd(const std::string str, int fd);

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include <climits>
 #include <map>
 #include <set>
 #include <string>
@@ -34,8 +35,8 @@ class LocationConf {
   // returnディレクティブで指定されたURL
   std::string redirect_url_;
 
-  static const unsigned long kDefaultClientMaxBodySize = 1024 * 1024;     // 1MB
-  static const unsigned long kMaxClientMaxBodySize = 1024 * 1024 * 1024;  // 1GB
+  static const unsigned long kDefaultClientMaxBodySize = 1024 * 1024;  // 1MB
+  static const unsigned long kMaxClientMaxBodySize = INT_MAX;          // 約2GB
 
  public:
   LocationConf();
@@ -105,6 +106,11 @@ class LocationConf {
   // req      : /cgi-bin/test-cgi;
   // -> /public/cgi-bin/test-cgi
   std::string GetAbsolutePath(std::string path) const;
+
+  // path     : /cgi-bin/test-cgi/hoge/fuga
+  // location : /cgi-bin
+  // -> /test-cgi/hoge/fuga
+  std::string RemovePathPatternFromPath(std::string path) const;
 };
 
 }  // namespace config
