@@ -11,6 +11,7 @@
 #include "config/location_conf.hpp"
 #include "http/http_request.hpp"
 #include "utils/io.hpp"
+#include "utils/string.hpp"
 
 namespace cgi {
 
@@ -180,12 +181,9 @@ void CgiRequest::ExecuteCgi() {
     return;
   }
   cgi_args_.insert(cgi_args_.begin(), script_name_);
-  char **argv = AllocCharPtrsFromVectorString(cgi_args_);
-  if (argv == NULL) {
-    return;
-  }
+  char **argv = utils::AllocVectorStringToCharDptr(cgi_args_);
   execve(exec_cgi_script_path_.c_str(), argv, environ);
-  FreePtrArray(argv);
+  utils::DeleteCharDprt(argv);
 }
 
 void CgiRequest::UnsetAllEnvironmentVariables() const {
@@ -299,33 +297,6 @@ bool CgiRequest::MoveToCgiExecutionDir(
     return false;
   }
   return true;
-}
-
-char **CgiRequest::AllocCharPtrsFromVectorString(
-    const std::vector<std::string> &v) const {
-  char **dptr;
-
-  dptr = (char **)malloc(sizeof(char *) * (v.size() + 1));
-  if (dptr == NULL) {
-    return NULL;
-  }
-  size_t i = 0;
-  for (; i < v.size(); i++) {
-    dptr[i] = strdup(v[i].c_str());
-    if (dptr[i] == NULL) {
-      FreePtrArray(dptr);
-      return (NULL);
-    }
-  }
-  dptr[i] = NULL;
-  return (dptr);
-}
-
-void CgiRequest::FreePtrArray(char **dptr) const {
-  for (size_t i = 0; dptr[i]; i++) {
-    free(dptr[i]);
-  }
-  free(dptr);
 }
 
 }  // namespace cgi
