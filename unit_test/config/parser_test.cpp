@@ -615,6 +615,51 @@ TEST(ParserTest, ClientMaxBodySizeIsOverIntmax) {
   EXPECT_FALSE(config.IsValid());
 }
 
+TEST(ParserTest, ServerNameAcceptDomainWithPort) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost localhost:49200;     "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "  }                                          "
+      "}                                            ");
+  Config config = parser.ParseConfig();
+  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  EXPECT_TRUE(config.IsValid());
+  EXPECT_TRUE(vserver->IsServerNameIncluded("localhost:49200"));
+}
+
+TEST(ParserTest, ServerNamePortOverMaxNumber) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost:65536;               "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+TEST(ParserTest, ServerNamePortEmpty) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost:;                    "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
 // TODO: root や error_page の引数が絶対パスじゃなければエラーのテスト
 
 //========================
