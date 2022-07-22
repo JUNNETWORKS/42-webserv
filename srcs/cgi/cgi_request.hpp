@@ -48,6 +48,9 @@ class CgiRequest {
   bool ParseQueryString(const http::HttpRequest &request);
   bool DetermineExecutionCgiPath(const http::HttpRequest &request,
                                  const config::LocationConf &location);
+  Result<std::string> SearchCgiPath(const std::string &base_path,
+                                    const std::vector<std::string> &v,
+                                    const config::LocationConf &location);
 
   // 返り値は無名ドメインソケットのfd
   bool ForkAndExecuteCgi();
