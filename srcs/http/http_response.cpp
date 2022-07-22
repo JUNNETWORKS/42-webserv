@@ -196,7 +196,7 @@ std::string HttpResponse::CreateResourceUrl(const std::string &local_path,
   if (request.GetHeader("Host").IsOk()) {
     host = request.GetHeader("Host").Ok()[0];
   } else {
-    host = conn_sock->GetServerIp();
+    host = conn_sock->GetServerIp() + ":" + conn_sock->GetServerPort();
   }
 
   std::string path = local_path;
