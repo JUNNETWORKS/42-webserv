@@ -24,10 +24,13 @@ int main(int argc, char const *argv[]) {
 
   setbuf(stdout, NULL);
   std::string config_path;
-  if (argc >= 2) {
+  if (argc == 2) {
     config_path = argv[1];
-  } else {
+  } else if (argc == 1) {
     config_path = kDefaultConfigPath;
+  } else {
+    std::cerr << "Error: Too many arguments." << std::endl;
+    exit(EXIT_FAILURE);
   }
 
   config::Config config;
