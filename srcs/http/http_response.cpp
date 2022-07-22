@@ -182,9 +182,13 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
     const http::HttpRequest &request) {
   std::string request_path = location_->GetAbsolutePath(request.GetPath());
 
-  std::string target = utils::IsDir(request_path)
-                           ? utils::JoinPath(request_path, GetTimeStamp())
-                           : request_path;
+  Result<bool> is_dir_res = utils::IsDir(request_path);
+  if (is_dir_res.IsErr()) {
+    return MakeErrorResponse(SERVER_ERROR);
+  }
+  bool is_dir = is_dir_res.Ok();
+  std::string target =
+      is_dir ? utils::JoinPath(request_path, GetTimeStamp()) : request_path;
 
   printf("post_path: %s\n", target.c_str());
 
@@ -214,7 +218,13 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteDeleteRequest(
     const http::HttpRequest &request) {
   std::string path = location_->GetAbsolutePath(request.GetPath());
 
-  if (utils::IsDir(path))
+  Result<bool> is_dir_res = utils::IsDir(path);
+  if (is_dir_res.IsErr()) {
+    return MakeErrorResponse(SERVER_ERROR);
+  }
+  bool is_dir = is_dir_res.Ok();
+
+  if (is_dir)
     return MakeErrorResponse(BAD_REQUEST);
 
   if (utils::IsFileExist(path) == false)
