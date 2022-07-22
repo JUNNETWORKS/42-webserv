@@ -86,19 +86,45 @@ bool CgiRequest::ParseQueryString(const http::HttpRequest &request) {
 
 bool CgiRequest::DetermineExecutionCgiPath(
     const http::HttpRequest &request, const config::LocationConf &location) {
+  typedef std::vector<std::pair<std::string, std::string> > StringPairVec;
+
+  StringPairVec possible_scipts;
+
   std::string request_path = request.GetPath();
   std::vector<std::string> file_vec =
       utils::SplitString(location.RemovePathPatternFromPath(request_path), "/");
 
-  std::string exec_cgi_path = location.GetRootDir();
-  std::string script_name = "";
-  for (std::vector<std::string>::const_iterator it = file_vec.begin();
-       it != file_vec.end(); it++) {
-    if (*it == "") {
-      continue;
+  {
+    std::string script_name = "";
+    std::string exec_cgi_path = location.GetRootDir();
+    for (std::vector<std::string>::const_iterator it = file_vec.begin();
+         it != file_vec.end(); it++) {
+      if (*it == "") {
+        continue;
+      }
+      script_name = utils::JoinPath(script_name, *it);
+      exec_cgi_path = utils::JoinPath(exec_cgi_path, script_name);
+      possible_scipts.push_back(std::make_pair(script_name, exec_cgi_path));
     }
-    script_name = utils::JoinPath(script_name, *it);
-    exec_cgi_path = utils::JoinPath(exec_cgi_path, script_name);
+  }
+
+  {
+    // index が設定されている場合は実行できるか確認する
+    std::string script_name = "";
+    std::string exec_cgi_path = location.GetRootDir();
+    const std::vector<std::string> &index_pages = location.GetIndexPages();
+    for (std::vector<std::string>::const_iterator it = index_pages.begin();
+         it != index_pages.end(); ++it) {
+      script_name = utils::JoinPath(location.GetPathPattern(), *it);
+      exec_cgi_path = utils::JoinPath(location.GetRootDir(), *it);
+      possible_scipts.push_back(std::make_pair(script_name, exec_cgi_path));
+    }
+  }
+
+  for (StringPairVec::const_iterator it = possible_scipts.begin();
+       it != possible_scipts.end(); ++it) {
+    std::string script_name = it->first;
+    std::string exec_cgi_path = it->second;
     if (utils::IsExecutableFile(exec_cgi_path)) {
       script_name_ = utils::JoinPath(location.GetPathPattern(), script_name);
       exec_cgi_script_path_ = exec_cgi_path;
