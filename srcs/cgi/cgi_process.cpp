@@ -62,6 +62,8 @@ http::HttpStatus CgiProcess::RunCgi(server::ConnSocket *conn_sock,
   epoll_->Register(fde);
   if (!cgi_input_buffer_.empty()) {
     epoll_->Add(fde, kFdeWrite);
+  } else {
+    shutdown(cgi_request_->GetCgiUnisock(), SHUT_WR);
   }
   epoll_->Add(fde, kFdeRead);
   epoll_->SetTimeout(fde, kUnisockTimeout);
@@ -153,6 +155,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
     }
     cgi_process->cgi_input_buffer_.EraseHead(write_res);
     if (cgi_process->cgi_input_buffer_.empty()) {
+      shutdown(cgi_request->GetCgiUnisock(), SHUT_WR);
       epoll->Del(fde, kFdeWrite);
     }
   }
