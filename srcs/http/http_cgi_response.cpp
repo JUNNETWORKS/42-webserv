@@ -28,8 +28,10 @@ HttpCgiResponse::CreateResponsePhase HttpCgiResponse::ExecuteRequest(
   // ではファイルの有無に関するエラーチェックをしていないので､
   // 存在しないCGIへのリクエストをするとInternalServerErrorが返ってくる｡
   if (cgi_process_->IsCgiExecuted() == false) {
-    if (cgi_process_->RunCgi(conn_sock, request).IsErr()) {
-      return MakeErrorResponse(SERVER_ERROR);
+    const http::HttpStatus cgi_res_code =
+        cgi_process_->RunCgi(conn_sock, request);
+    if (cgi_res_code != http::OK) {
+      return MakeErrorResponse(cgi_res_code);
     }
     return phase_;
   }
