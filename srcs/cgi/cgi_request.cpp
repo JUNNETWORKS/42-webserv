@@ -52,20 +52,20 @@ const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
 
 // RunCgi
 // ========================================================================
-bool CgiRequest::RunCgi(const server::ConnSocket *conn_sock,
-                        const http::HttpRequest &request,
-                        const config::LocationConf &location) {
+http::HttpStatus CgiRequest::RunCgi(const server::ConnSocket *conn_sock,
+                                    const http::HttpRequest &request,
+                                    const config::LocationConf &location) {
   if (ParseQueryString(request) == false) {
-    return false;
+    return http::BAD_REQUEST;
   }
   if (DetermineExecutionCgiPath(request, location) == false) {
-    return false;
+    return http::NOT_FOUND;
   }
   CreateCgiMetaVariablesFromHttpRequest(conn_sock, request, location);
   if (ForkAndExecuteCgi() == false) {
-    return false;
+    return http::SERVER_ERROR;
   }
-  return true;
+  return http::OK;
 }
 
 // Parse

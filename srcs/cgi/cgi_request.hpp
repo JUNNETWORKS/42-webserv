@@ -40,9 +40,9 @@ class CgiRequest {
   int GetCgiUnisock() const;
   const std::vector<std::string> &GetCgiArgs() const;
 
-  bool RunCgi(const server::ConnSocket *conn_sock,
-              const http::HttpRequest &request,
-              const config::LocationConf &location);
+  http::HttpStatus RunCgi(const server::ConnSocket *conn_sock,
+                          const http::HttpRequest &request,
+                          const config::LocationConf &location);
 
  private:
   bool ParseQueryString(const http::HttpRequest &request);
