@@ -1,5 +1,6 @@
 #include "cgi/cgi_request.hpp"
 
+#include <fcntl.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -144,12 +145,20 @@ bool CgiRequest::DetermineExecutionCgiPath(
 // ========================================================================
 bool CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
-  if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sockfds) == -1) {
+  if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockfds) == -1) {
     return false;
   }
 
   int parentsock = sockfds[0];
   int childsock = sockfds[1];
+
+  int fd_flags;
+  if ((fd_flags = fcntl(parentsock, F_GETFL, 0)) < 0 ||
+      fcntl(parentsock, F_SETFL, fd_flags | O_NONBLOCK) < 0) {
+    close(parentsock);
+    close(childsock);
+    return false;
+  }
 
   cgi_pid_ = fork();
   if (cgi_pid_ < -1) {
