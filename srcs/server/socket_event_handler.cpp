@@ -17,7 +17,7 @@ namespace {
 
 // リクエストに応じたレスポンスを返す
 http::HttpResponse *AllocateResponseObj(const http::HttpRequest &request,
-                                        Epoll *epoll);
+                                        Epoll *epoll, int conn_fd);
 
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessRequest(ConnSocket *socket);
@@ -145,7 +145,8 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 
     if (socket->GetResponse() == NULL) {
       // レスポンスオブジェクトがまだない
-      http::HttpResponse *response = AllocateResponseObj(request, epoll);
+      http::HttpResponse *response =
+          AllocateResponseObj(request, epoll, conn_fd);
       socket->SetResponse(response);
     }
 
@@ -169,12 +170,12 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 }
 
 http::HttpResponse *AllocateResponseObj(const http::HttpRequest &request,
-                                        Epoll *epoll) {
+                                        Epoll *epoll, int conn_fd) {
   const config::LocationConf *location = request.GetLocation();
   if (request.IsErrorRequest())
     return new http::HttpResponse(location, epoll, request.GetParseStatus());
   if (location->GetIsCgi()) {
-    return new http::HttpCgiResponse(location, epoll);
+    return new http::HttpCgiResponse(location, epoll, conn_fd);
   } else {
     return new http::HttpResponse(location, epoll);
   }

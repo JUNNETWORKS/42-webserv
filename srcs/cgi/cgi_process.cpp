@@ -7,7 +7,8 @@
 
 namespace cgi {
 
-CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll)
+CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll,
+                       int conn_fd)
     : cgi_request_(NULL),
       cgi_response_(NULL),
       cgi_input_buffer_(),
@@ -15,7 +16,8 @@ CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll)
       location_(location),
       epoll_(epoll),
       fde_(NULL),
-      status_(0) {}
+      status_(0),
+      conn_fd_(conn_fd) {}
 
 CgiProcess::~CgiProcess() {
   if (cgi_request_) {

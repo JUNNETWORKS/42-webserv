@@ -7,9 +7,9 @@ namespace http {
 const std::string HttpCgiResponse::kLastChunk = "0" + kCrlf + kCrlf;
 
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
-                                 server::Epoll *epoll)
+                                 server::Epoll *epoll, int conn_fd)
     : HttpResponse(location, epoll),
-      cgi_process_(new cgi::CgiProcess(location, epoll)) {}
+      cgi_process_(new cgi::CgiProcess(location, epoll, conn_fd)) {}
 
 HttpCgiResponse::~HttpCgiResponse() {
   printf("HttpCgiResponse::~HttpCgiResponse\n");
