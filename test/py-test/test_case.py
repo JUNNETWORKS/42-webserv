@@ -157,6 +157,8 @@ def cgi_simple_test():
         "/cgi-bin/simple-cgi", expect_port=cmd_args.APACHE_PORT, save_diff=True
     )
 
+    run_cmp_test("/cgi-bin/hogehogehoge-cgi", expect_port=cmd_args.APACHE_PORT)
+
     expect_res = res.response(404)
     run_test("/cgi-bin/notexist-cgi", expect_res, ck_body=False)
 
