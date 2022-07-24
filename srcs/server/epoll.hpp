@@ -61,6 +61,7 @@ class Epoll {
  private:
   const int epfd_;
 
+ public:  // TODO : 消す
   // map[<fd>] = <FdEvent>
   std::map<int, FdEvent *> registered_fd_events_;
 

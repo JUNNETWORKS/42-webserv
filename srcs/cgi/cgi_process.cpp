@@ -163,6 +163,14 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
     utils::Byte buf[kDataPerRead];
     ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
     printf("HandleCgiEvent() read_res == %ld\n", read_res);
+
+    // cgi からの書き込みがないと、
+    // クライアントへの write イベント監視しないようにしたので、
+    // cgi から、read した時、write イベント監視するようにする。
+    // read で エラーが起こった際なども、on にしないとダメかも。
+    FdEvent *client_fde = epoll->registered_fd_events_[cgi_process->conn_fd_];
+    epoll->Add(client_fde, kFdeWrite);
+
     if (read_res < 0) {
       DeleteCgiProcess(epoll, fde);
       return;

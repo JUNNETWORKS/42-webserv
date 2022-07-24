@@ -45,7 +45,13 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
     should_close_conn |= ProcessResponse(conn_sock, epoll);
   }
 
-  if (conn_sock->HasParsedRequest()) {
+  // buffer が なければ、write イベント を 無視
+  // cgi は cgi から read イベントで読み込んだ時、write
+  // イベントを監視するようにした。
+  // 通常ファイルの時問題ないか確認する。
+  http::HttpResponse *response = conn_sock->GetResponse();
+  if (conn_sock->HasParsedRequest() &&
+      (response == NULL || (response && !response->IsWriteBufferEmpty()))) {
     epoll->Add(fde, kFdeWrite);
   } else {
     epoll->Del(fde, kFdeWrite);

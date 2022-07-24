@@ -390,6 +390,10 @@ bool HttpResponse::IsAllDataWritingCompleted() {
   return phase_ == kComplete && write_buffer_.empty();
 }
 
+bool HttpResponse::IsWriteBufferEmpty() const {
+  return write_buffer_.empty();
+}
+
 //========================================================================
 // Serialization
 
