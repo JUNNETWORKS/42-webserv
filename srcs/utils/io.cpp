@@ -72,26 +72,4 @@ Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
   return vec;
 }
 
-bool PutStrFdBase(const char* str, size_t len, int fd) {
-  ssize_t write_byte;
-
-  while (len > 0) {
-    if (len > INT_MAX) {
-      write_byte = write(fd, str, INT_MAX);
-    } else {
-      write_byte = write(fd, str, len);
-    }
-    if (write_byte < 0) {  // TODO : errno EINTR
-      return false;
-    }
-    len -= write_byte;
-    str += write_byte;
-  }
-  return true;
-}
-
-bool PutStrFd(const std::string str, int fd) {
-  return PutStrFdBase(str.c_str(), str.length(), fd);
-}
-
 }  // namespace utils
