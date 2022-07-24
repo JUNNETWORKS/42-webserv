@@ -152,9 +152,7 @@ bool CgiRequest::ForkAndExecuteCgi() {
   int parentsock = sockfds[0];
   int childsock = sockfds[1];
 
-  int fd_flags;
-  if ((fd_flags = fcntl(parentsock, F_GETFL, 0)) < 0 ||
-      fcntl(parentsock, F_SETFL, fd_flags | O_NONBLOCK) < 0) {
+  if (AddNonBlockingOptToFd(parentsock) == false) {
     close(parentsock);
     close(childsock);
     return false;
@@ -184,6 +182,16 @@ bool CgiRequest::ForkAndExecuteCgi() {
     close(childsock);
     return true;
   }
+}
+
+bool CgiRequest::AddNonBlockingOptToFd(int fd) const {
+  int fd_flags;
+
+  if ((fd_flags = fcntl(fd, F_GETFL, 0)) < 0 ||
+      fcntl(fd, F_SETFL, fd_flags | O_NONBLOCK) < 0) {
+    return false;
+  }
+  return true;
 }
 
 void CgiRequest::ExecuteCgi() {
