@@ -17,7 +17,7 @@ set -f
 echo "Content-type: text/plain; charset=iso-8859-1"
 echo
 
-for i in {0..99999};
+for i in {0..30000};
 do 
 	echo "hoge"
 done
