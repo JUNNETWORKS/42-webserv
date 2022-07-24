@@ -151,6 +151,12 @@ def content_type_test():
 def cmp_test():
     run_cmp_test("/sample.html", expect_port=cmd_args.NGINX_PORT, save_diff=True)
 
+    expect_res = res.response(404)
+    run_test("/cgi-bin/dir", expect_res, ck_body=False)
+
+    expect_res = res.response(200)
+    run_test("/cgi-bin/dir/dir-cgi", expect_res, ck_body=False)
+
 
 def cgi_simple_test():
     run_cmp_test(
