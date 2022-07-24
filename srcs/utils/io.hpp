@@ -28,8 +28,6 @@ bool IsExecutableFile(const std::string& file_path);
 
 Result<std::vector<utils::File> > GetFileList(const std::string& target_dir);
 
-bool PutStrFd(const std::string str, int fd);
-
 }  // namespace utils
 
 #endif

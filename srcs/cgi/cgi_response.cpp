@@ -54,6 +54,10 @@ CgiResponse::ResponseType CgiResponse::Parse(utils::ByteVector &buffer) {
   if (response_type_ == kNotIdentified) {
     // まだ response_type が決まっていない場合
     if (newline_chars_.empty() && DetermineNewlineChars(buffer).IsErr()) {
+      // ステータス部とヘッダー部の上限サイズを超えている場合はエラー
+      if (buffer.size() > kMaxStatusHeaderSize) {
+        return response_type_ = kParseError;
+      }
       // ヘッダーとボディの区切りが見つからない場合は kNotIdentified
       return response_type_ = kNotIdentified;
     }

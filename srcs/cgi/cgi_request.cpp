@@ -1,5 +1,6 @@
 #include "cgi/cgi_request.hpp"
 
+#include <fcntl.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -126,7 +127,7 @@ bool CgiRequest::DetermineExecutionCgiPath(
                          "/"),
       location);
   if (exec_cgi_path_res.IsErr()) {
-    return false;  // TODO : NOT FOUND を 返したい。
+    return false;
   }
 
   std::string exec_cgi_path = exec_cgi_path_res.Ok();
@@ -144,12 +145,18 @@ bool CgiRequest::DetermineExecutionCgiPath(
 // ========================================================================
 bool CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
-  if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sockfds) == -1) {
+  if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockfds) == -1) {
     return false;
   }
 
   int parentsock = sockfds[0];
   int childsock = sockfds[1];
+
+  if (AddNonBlockingOptToFd(parentsock) == false) {
+    close(parentsock);
+    close(childsock);
+    return false;
+  }
 
   cgi_pid_ = fork();
   if (cgi_pid_ < -1) {
@@ -175,6 +182,16 @@ bool CgiRequest::ForkAndExecuteCgi() {
     close(childsock);
     return true;
   }
+}
+
+bool CgiRequest::AddNonBlockingOptToFd(int fd) const {
+  int fd_flags;
+
+  if ((fd_flags = fcntl(fd, F_GETFL, 0)) < 0 ||
+      fcntl(fd, F_SETFL, fd_flags | O_NONBLOCK) < 0) {
+    return false;
+  }
+  return true;
 }
 
 void CgiRequest::ExecuteCgi() {
