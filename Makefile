@@ -78,4 +78,6 @@ req-test: all
 	cd test && mkfifo fifo-file
 	./webserv test/webserv_configurations/sample.conf.sed > /dev/null &
 	sleep 3
-	make -C test req-test WEBSERV_PORT=$(WEBSERV_PORT)
+	curl 127.0.0.1:8080/fifo-file
+	cd test && ls
+#	make -C test req-test WEBSERV_PORT=$(WEBSERV_PORT)
