@@ -97,9 +97,6 @@ Result<std::string> CgiRequest::SearchCgiPath(
 
   for (std::vector<std::string>::const_iterator it = v.begin(); it != v.end();
        it++) {
-    if (*it == "") {
-      continue;
-    }
     exec_cgi_path = utils::JoinPath(exec_cgi_path, *it);
     Result<bool> is_executable_file_res =
         utils::IsExecutableFile(exec_cgi_path);
