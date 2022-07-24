@@ -55,6 +55,8 @@ class CgiRequest {
   // 返り値は無名ドメインソケットのfd
   bool ForkAndExecuteCgi();
 
+  bool AddNonBlockingOptToFd(int fd) const;
+
   // リクエストからCGIスクリプトに渡す変数を作成する
   void CreateCgiMetaVariablesFromHttpRequest(
       const server::ConnSocket *conn_sock, const http::HttpRequest &request,
