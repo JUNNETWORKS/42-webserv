@@ -161,6 +161,7 @@ def cgi_simple_test():
         "/cgi-bin/simple-cgi", expect_port=cmd_args.APACHE_PORT, save_diff=True
     )
 
+    run_cmp_test("/cgi-bin/cat-cgi", expect_port=cmd_args.APACHE_PORT)
     run_cmp_test("/cgi-bin/hogehogehoge-cgi", expect_port=cmd_args.APACHE_PORT)
 
     expect_res = res.response(404)
