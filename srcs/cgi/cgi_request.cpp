@@ -126,7 +126,7 @@ bool CgiRequest::DetermineExecutionCgiPath(
                          "/"),
       location);
   if (exec_cgi_path_res.IsErr()) {
-    return false;  // TODO : NOT FOUND を 返したい。
+    return false;
   }
 
   std::string exec_cgi_path = exec_cgi_path_res.Ok();
