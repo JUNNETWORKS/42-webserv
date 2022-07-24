@@ -25,6 +25,10 @@ def simple_test():
     expect_res = res.response(200, file_path=file_path)
     run_test(req_path, expect_res)
 
+    req_path = "/fifo-file"
+    expect_res = res.response(500)
+    run_test(req_path, expect_res, ck_body=False)
+
 
 def not_found_test():
     expect_res = res.response(404, file_path="public/error_pages/404.html")
