@@ -58,7 +58,7 @@ int InetConnect(const std::string &host, const std::string &service, int type) {
 }
 
 /* Public interfaces: InetBind() and InetListen() */
-static int InetPassiveSocket(const std::string &service, int type,
+static int InetPassiveSocket(const char *host, const char *service, int type,
                              server::SocketAddress *sockaddr, bool doListen,
                              int backlog) {
   struct addrinfo hints;
@@ -73,7 +73,7 @@ static int InetPassiveSocket(const std::string &service, int type,
   hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
   hints.ai_flags = AI_PASSIVE; /* Use wildcadrd IP address */
 
-  s = getaddrinfo(NULL, service.c_str(), &hints, &result);
+  s = getaddrinfo(host, service, &hints, &result);
   if (s != 0)
     return -1;
 
@@ -115,18 +115,22 @@ static int InetPassiveSocket(const std::string &service, int type,
   return (rp == NULL) ? -1 : sfd;
 }
 
-Result<int> InetListen(const std::string &service, int backlog,
-                       server::SocketAddress *sockaddr) {
-  int fd = InetPassiveSocket(service, SOCK_STREAM, sockaddr, true, backlog);
+Result<int> InetListen(const std::string &host, const std::string &service,
+                       int backlog, server::SocketAddress *sockaddr) {
+  const char *host_cstr = host.empty() ? NULL : host.c_str();
+  int fd = InetPassiveSocket(host_cstr, service.c_str(), SOCK_STREAM, sockaddr,
+                             true, backlog);
   if (fd < 0) {
     return Error();
   }
   return fd;
 }
 
-Result<int> InetBind(const std::string &service, int type,
-                     server::SocketAddress *sockaddr) {
-  int fd = InetPassiveSocket(service, type, sockaddr, false, 0);
+Result<int> InetBind(const std::string &host, const std::string &service,
+                     int type, server::SocketAddress *sockaddr) {
+  const char *host_cstr = host.empty() ? NULL : host.c_str();
+  int fd =
+      InetPassiveSocket(host_cstr, service.c_str(), type, sockaddr, false, 0);
   if (fd < 0) {
     return Error();
   }

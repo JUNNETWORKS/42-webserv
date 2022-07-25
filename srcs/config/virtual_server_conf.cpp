@@ -42,10 +42,10 @@ bool VirtualServerConf::IsValid() const {
 void VirtualServerConf::Print() const {
   std::cout << "server {\n";
 
-  std::cout << "listen: " << listen_port_ << ";"
+  std::cout << "\tlisten: " << listen_ip_ << ":" << listen_port_ << ";"
             << "\n";
 
-  std::cout << "server_name:";
+  std::cout << "\tserver_name:";
   for (std::set<std::string>::const_iterator it = server_names_.begin();
        it != server_names_.end(); ++it) {
     std::cout << " " << *it;

@@ -41,8 +41,8 @@ int InetConnect(const std::string &host, const std::string &service, int type);
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-Result<int> InetListen(const std::string &service, int backlog,
-                       server::SocketAddress *sockaddr);
+Result<int> InetListen(const std::string &host, const std::string &service,
+                       int backlog, server::SocketAddress *sockaddr);
 
 /* typeに指定されたソケットを作成し、service､typeに指定されたポートのワイルドカードアドレスへバインドする｡
  * この関数はソケットを特定のアドレスへバインドするUDPサーバ､UDPクライアント用です｡
@@ -56,8 +56,8 @@ Result<int> InetListen(const std::string &service, int backlog,
  * Return:
  *   ファイルディスクリプタ。 エラーの場合は-1を返す。
  */
-Result<int> InetBind(const std::string &service, int type,
-                     server::SocketAddress *sockaddr);
+Result<int> InetBind(const std::string &host, const std::string &service,
+                     int type, server::SocketAddress *sockaddr);
 
 /* インターネットソケットアドレスを可読形式に変換します｡
  * "(hostname, port-number)"の形式の文字列を返す｡
