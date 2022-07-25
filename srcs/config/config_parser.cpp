@@ -98,12 +98,25 @@ void Parser::ParseListenDirective(VirtualServerConf &vserver) {
     throw ParserException("Port has already set.");
   }
   SkipSpaces();
-  std::string port = GetWord();
+  std::string listen_arg = GetWord();
   SkipSpaces();
-  if (!IsValidPort(port) || GetC() != ';') {
+  if (!IsValidListenArgument(listen_arg) || GetC() != ';') {
     throw ParserException("Port directive's argument is invalid.");
   }
-  vserver.SetListenPort(port);
+  std::pair<std::string, std::string> ip_port = SplitToIpAndPort(listen_arg);
+  vserver.SetListenIp(ip_port.first);
+  vserver.SetListenPort(ip_port.second);
+}
+
+std::pair<std::string, std::string> Parser::SplitToIpAndPort(
+    const std::string &ip_port) {
+  if (ip_port.find(":") != std::string::npos) {
+    std::string ip = ip_port.substr(0, ip_port.find(":"));
+    std::string port = ip_port.substr(ip_port.find(":") + 1);
+    return std::make_pair(ip, port);
+  } else {
+    return std::make_pair("0.0.0.0", ip_port);
+  }
 }
 
 void Parser::ParseServerNameDirective(VirtualServerConf &vserver) {
@@ -470,6 +483,31 @@ bool Parser::IsValidHttpStatusCode(const std::string &code) {
     return true;
   }
   return false;
+}
+
+bool Parser::IsValidListenArgument(const std::string &word) {
+  if (word.find(":") != std::string::npos) {
+    std::string ip = word.substr(0, word.find(":"));
+    std::string port = word.substr(word.find(":") + 1);
+    return IsValidIp(ip) && IsValidPort(port);
+  } else {
+    return IsValidPort(word);
+  }
+}
+
+bool Parser::IsValidIp(const std::string &ip) {
+  if (std::count(ip.begin(), ip.end(), '.') != 3) {
+    return false;
+  }
+  std::vector<std::string> nums = utils::SplitString(ip, ".");
+  for (std::vector<std::string>::const_iterator it = nums.begin();
+       it != nums.end(); ++it) {
+    Result<unsigned long> stoul_res = utils::Stoul(*it);
+    if (stoul_res.IsErr() || stoul_res.Ok() > 255) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool Parser::IsValidPort(const std::string &port) {

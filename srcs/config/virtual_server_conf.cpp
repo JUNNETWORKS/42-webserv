@@ -5,7 +5,7 @@
 namespace config {
 
 VirtualServerConf::VirtualServerConf()
-    : listen_port_(), server_names_(), locations_() {}
+    : listen_ip_(), listen_port_(), server_names_(), locations_() {}
 
 VirtualServerConf::VirtualServerConf(const VirtualServerConf &rhs) {
   *this = rhs;
@@ -13,6 +13,7 @@ VirtualServerConf::VirtualServerConf(const VirtualServerConf &rhs) {
 
 VirtualServerConf &VirtualServerConf::operator=(const VirtualServerConf &rhs) {
   if (this != &rhs) {
+    listen_ip_ = rhs.listen_ip_;
     listen_port_ = rhs.listen_port_;
     server_names_ = rhs.server_names_;
     locations_ = rhs.locations_;
@@ -59,8 +60,16 @@ void VirtualServerConf::Print() const {
   std::cout << "}\n";
 }
 
+std::string VirtualServerConf::GetListenIp() const {
+  return listen_ip_;
+}
+
 PortType VirtualServerConf::GetListenPort() const {
   return listen_port_;
+}
+
+void VirtualServerConf::SetListenIp(std::string listen_ip) {
+  listen_ip_ = listen_ip;
 }
 
 void VirtualServerConf::SetListenPort(PortType listen_port) {
