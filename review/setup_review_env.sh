@@ -1,3 +1,5 @@
+rm -rf /var/webserv
+
 mkdir -p /var/webserv/
 
 cp -r error_pages /var/webserv/error_pages
