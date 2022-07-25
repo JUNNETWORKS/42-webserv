@@ -1,0 +1,9 @@
+#!/bin/bash
+
+printf "Content-Type: text/html\n"
+printf "Status: 404 Not Found\n"
+printf "Optional: hoge\n"
+printf "\n"
+printf "<HTML>\n"
+printf "<body><p>404 Not Found</p></body>\n"
+printf "</HTML>"
