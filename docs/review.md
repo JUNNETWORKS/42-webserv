@@ -12,7 +12,7 @@
 
 `./webserv default.conf`
 
-## Docker の中でやる
+## レビュー確認事項
 
 - [ ] 複数ポート対応
 - [ ] 1つのポートに複数のバーチャルサーバー
@@ -21,6 +21,10 @@
 - [ ] デフォルトエラーページ
 - [ ] 設定したエラーページ
 - [ ] CGIが動くか
+  - [ ] Document-Response
+  - [ ] Local-Redirect
+  - [ ] Client-Redirect
+- [ ] `.py` などの拡張子によってCGIを実行する
 - [ ] 静的ファイルのサーブ
 - [ ] ファイルアップロード
 - [ ] client_body_size の制限
@@ -28,4 +32,4 @@
 - [ ] root で指定したディレクトリからファイルを探す
 - [ ] autoindex の on / off
 - [ ] index ファイル
-- [ ] `.py` などの拡張子によってCGIを実行する
+- [ ] `return` リダイレクト
