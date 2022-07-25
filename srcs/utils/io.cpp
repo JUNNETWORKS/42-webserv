@@ -58,9 +58,10 @@ Result<bool> IsExecutableFile(const std::string& file_path) {
   if (is_regular_file_res.IsErr()) {
     return Error();
   }
-  bool is_regular_file = is_regular_file_res.Ok();
-
-  return is_executable && is_regular_file;
+  if (is_regular_file_res.Ok() == false) {
+    return false;
+  }
+  return true;
 }
 
 Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
