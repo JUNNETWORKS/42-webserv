@@ -1,3 +1,5 @@
+# レビュー用資料
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -10,10 +12,6 @@
   - [Docker の中でやる](#docker-%E3%81%AE%E4%B8%AD%E3%81%A7%E3%82%84%E3%82%8B)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# レビュー用資料
-
-## Docker の外でやる
 
 ### コンフィグ
 
