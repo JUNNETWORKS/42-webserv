@@ -11,6 +11,8 @@
 
 namespace config {
 
+const std::string kAnyIpAddress = "0.0.0.0";
+
 // getaddrinfo()などの標準ライブラリのインターフェースに合わせている｡
 // サービス名("http")などは受け付けず､数値での指定のみ
 typedef std::string PortType;

@@ -12,7 +12,7 @@ namespace config {
 TEST(VirtualServerConfTest, GetLocationByForwardMatch) {
   Config config = CreateTestConfig();
   const VirtualServerConf *vserver =
-      config.GetVirtualServerConf("0.0.0.0", "8080", "localhost");
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "localhost");
 
   {
     const LocationConf *location = vserver->GetLocation("/");
@@ -53,7 +53,7 @@ TEST(VirtualServerConfTest, GetLocationByForwardMatch) {
 TEST(VirtualServerConfTest, GetLocationByBackwardMatch) {
   Config config = CreateTestConfig();
   const VirtualServerConf *vserver =
-      config.GetVirtualServerConf("0.0.0.0", "8080", "www.webserv.com");
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "www.webserv.com");
 
   {
     const LocationConf *location = vserver->GetLocation("/index.php");
@@ -71,7 +71,7 @@ TEST(VirtualServerConfTest, GetLocationByBackwardMatch) {
 TEST(VirtualServerConfTest, GetFirstLocationIfMultipleServerHaveSamePath) {
   Config config = CreateTestConfig();
   const VirtualServerConf *vserver =
-      config.GetVirtualServerConf("0.0.0.0", "8888", "localhost");
+      config.GetVirtualServerConf(kAnyIpAddress, "8888", "localhost");
   const LocationConf *location = vserver->GetLocation("/");
   EXPECT_TRUE(location != NULL);
   EXPECT_TRUE(location->GetRootDir() == "/var/www/html");
@@ -81,7 +81,7 @@ TEST(VirtualServerConfTest, GetFirstLocationIfMultipleServerHaveSamePath) {
 TEST(VirtualServerConfTest, ReturnNullIfNoServerIsMatched) {
   Config config = CreateTestConfig();
   const VirtualServerConf *vserver =
-      config.GetVirtualServerConf("0.0.0.0", "8080", "localhost");
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "localhost");
   const LocationConf *location =
       vserver->GetLocation("hogefuga");  // /が先頭についてない
   EXPECT_TRUE(location == NULL);

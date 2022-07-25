@@ -115,7 +115,7 @@ std::pair<std::string, std::string> Parser::SplitToIpAndPort(
     std::string port = ip_port.substr(ip_port.find(":") + 1);
     return std::make_pair(ip, port);
   } else {
-    return std::make_pair("0.0.0.0", ip_port);
+    return std::make_pair(kAnyIpAddress, ip_port);
   }
 }
 

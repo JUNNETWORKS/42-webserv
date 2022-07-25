@@ -54,7 +54,7 @@ const VirtualServerConf *Config::GetVirtualServerConf(
 
   for (VirtualServerConfVector::const_iterator it = servers_.begin();
        it != servers_.end(); ++it) {
-    if ((listen_ip == "0.0.0.0" || it->GetListenIp() == listen_ip) &&
+    if ((listen_ip == kAnyIpAddress || it->GetListenIp() == listen_ip) &&
         it->GetListenPort() == listen_port) {
       if (virtual_server_conf == NULL) {
         virtual_server_conf = &(*it);
