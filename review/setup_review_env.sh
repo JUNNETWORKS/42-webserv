@@ -1,3 +1,14 @@
+set -eux
+
+if [[ $UID != 0 ]]; then
+    echo "Please run this script with sudo:"
+    echo "sudo $0 $*"
+    exit 1
+fi
+
+# Nginx が80番ポートを使っている可能性があるので止めておく
+systemctl stop nginx
+
 rm -rf /var/webserv
 
 mkdir -p /var/webserv/
