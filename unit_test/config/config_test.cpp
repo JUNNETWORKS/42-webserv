@@ -58,6 +58,23 @@ TEST(ConfigTest, ReturnNullIfThereIsNoCorrespondingPortNumber) {
 
   EXPECT_TRUE(config.GetVirtualServerConf(kAnyIpAddress, "10", "") == NULL);
 }
+
+// Host:Ip のように指定されているときに正しく取得できる
+TEST(ConfigTest, GetVirtualServerByHostIp) {
+  Config config = CreateTestConfig();
+
+  const VirtualServerConf *vserver = NULL;
+
+  vserver = config.GetVirtualServerConf("127.0.0.1", "4545", "");
+  EXPECT_TRUE(vserver != NULL);
+  EXPECT_EQ(vserver->GetLocation("/")->GetRootDir(), "/var/www/127_0_0_1_4545");
+
+  vserver = config.GetVirtualServerConf("127.0.0.2", "4545", "");
+  EXPECT_TRUE(vserver != NULL);
+  EXPECT_EQ(vserver->GetLocation("/")->GetRootDir(), "/var/www/127_0_0_2_4545");
+
+  vserver = config.GetVirtualServerConf("127.0.0.3", "4545", "");
+  EXPECT_TRUE(vserver == NULL);
 }
 
 }  // namespace config
