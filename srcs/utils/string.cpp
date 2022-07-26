@@ -184,4 +184,17 @@ std::string GetExetension(const std::string &file_path) {
   return ext;
 }
 
+std::string ReplaceAll(std::string s, const std::string &target,
+                       const std::string &replacement) {
+  if (s.empty() || target.empty() || replacement.empty()) {
+    return s;
+  }
+  std::string::size_type pos = 0;
+  while ((pos = s.find(target, pos)) != std::string::npos) {
+    s.replace(pos, target.length(), replacement);
+    pos += replacement.length();
+  }
+  return s;
+}
+
 }  // namespace utils
