@@ -54,33 +54,33 @@ bool LocationConf::IsValid() const {
 }
 
 void LocationConf::Print() const {
-  std::cout << "location " << path_pattern_ << " {\n";
-  std::cout << "is_backward_search: " << is_backward_search_ << ";\n";
-  std::cout << "allowed_methods:";
+  std::cout << "\tlocation " << path_pattern_ << " {\n";
+  std::cout << "\t\tis_backward_search: " << is_backward_search_ << ";\n";
+  std::cout << "\t\tallowed_methods:";
   for (std::set<std::string>::const_iterator it = allowed_methods_.begin();
        it != allowed_methods_.end(); ++it) {
     std::cout << " " << *it;
   }
   std::cout << ";\n";
-  std::cout << "client_max_body_size: " << client_max_body_size_ << "\n";
-  std::cout << "root_dir: " << root_dir_ << "\n";
-  std::cout << "index_pages:";
+  std::cout << "\t\tclient_max_body_size: " << client_max_body_size_ << "\n";
+  std::cout << "\t\troot_dir: " << root_dir_ << "\n";
+  std::cout << "\t\tindex_pages:";
   for (std::vector<std::string>::const_iterator it = index_pages_.begin();
        it != index_pages_.end(); ++it) {
     std::cout << " " << *it;
   }
   std::cout << ";\n";
-  std::cout << "is_cgi: " << is_cgi_ << "\n";
-  std::cout << "error_pages:";
+  std::cout << "\t\tis_cgi: " << is_cgi_ << "\n";
+  std::cout << "\t\terror_pages:";
   for (std::map<http::HttpStatus, std::string>::const_iterator it =
            error_pages_.begin();
        it != error_pages_.end(); ++it) {
     std::cout << " " << it->first << "=" << it->second;
   }
   std::cout << ";\n";
-  std::cout << "auto_index: " << auto_index_ << "\n";
-  std::cout << "redirect_url: " << redirect_url_ << "\n";
-  std::cout << "}\n";
+  std::cout << "\t\tauto_index: " << auto_index_ << "\n";
+  std::cout << "\t\tredirect_url: " << redirect_url_ << "\n";
+  std::cout << "\t}\n";
 }
 
 std::string LocationConf::GetPathPattern() const {

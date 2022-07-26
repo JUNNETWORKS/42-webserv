@@ -24,7 +24,8 @@ TEST(ParserTest, SimpleServer) {
   config.Print();
   EXPECT_TRUE(config.IsValid());
 
-  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "");
   ASSERT_TRUE(vserver != NULL);
   EXPECT_TRUE(vserver->GetListenPort() == "8080");
 
@@ -62,7 +63,8 @@ TEST(ParserTest, SimpleServerInOneLine) {
   config.Print();
   EXPECT_TRUE(config.IsValid());
 
-  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "");
   ASSERT_TRUE(vserver != NULL);
   EXPECT_TRUE(vserver->GetListenPort() == "8080");
 
@@ -100,7 +102,8 @@ TEST(ParserTest, EscapedChar) {
   Config config = parser.ParseConfig();
   config.Print();
 
-  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "");
   ASSERT_TRUE(vserver != NULL);
 
   const LocationConf *location = vserver->GetLocation("/");
@@ -132,7 +135,7 @@ TEST(ParserTest, MultipleValidServers) {
 
   {
     const VirtualServerConf *vserver =
-        config.GetVirtualServerConf("80", "localhost");
+        config.GetVirtualServerConf(kAnyIpAddress, "80", "localhost");
     ASSERT_TRUE(vserver != NULL);
 
     {
@@ -190,7 +193,7 @@ TEST(ParserTest, MultipleValidServers) {
 
   {
     const VirtualServerConf *vserver =
-        config.GetVirtualServerConf("80", "www.webserv.com");
+        config.GetVirtualServerConf(kAnyIpAddress, "80", "www.webserv.com");
     ASSERT_TRUE(vserver != NULL);
 
     {
@@ -239,7 +242,8 @@ TEST(ParserTest, MultipleValidServers) {
   }
 
   {
-    const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+    const VirtualServerConf *vserver =
+        config.GetVirtualServerConf(kAnyIpAddress, "8080", "");
     ASSERT_TRUE(vserver != NULL);
 
     const LocationConf *location = vserver->GetLocation("/");
@@ -255,7 +259,8 @@ TEST(ParserTest, MultipleValidServers) {
   }
 
   {
-    const VirtualServerConf *vserver = config.GetVirtualServerConf("9090", "");
+    const VirtualServerConf *vserver =
+        config.GetVirtualServerConf(kAnyIpAddress, "9090", "");
     ASSERT_TRUE(vserver != NULL);
     const LocationConf *location = vserver->GetLocation("/");
     ASSERT_TRUE(location != NULL);
@@ -268,6 +273,26 @@ TEST(ParserTest, MultipleValidServers) {
     EXPECT_TRUE(location->GetRedirectUrl() == "http://localhost:8080/");
     EXPECT_TRUE(config.IsValid());
   }
+}
+
+TEST(ParserTest, IpAndPort) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 127.0.0.1:8080;                     "
+      "                                             "
+      "  location / {                               "
+      "    allow_method GET;                        "
+      "    index index.html;                        "
+      "    error_page 404 403 NotFound.html;        "
+      "  }                                          "
+      "}                                            ");
+  Config config = parser.ParseConfig();
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf("127.0.0.1", "8080", "");
+  EXPECT_TRUE(vserver != NULL);
+  EXPECT_EQ(vserver->GetListenIp(), "127.0.0.1");
+  EXPECT_EQ(vserver->GetListenPort(), "8080");
 }
 
 TEST(ParserTest, ConfigFileIsNotFound) {
@@ -573,7 +598,8 @@ TEST(ParserTest, ValidIpv4AddrInServername) {
   Config config = parser.ParseConfig();
   EXPECT_TRUE(
       config.GetVirtualServerConfs()[0].IsServerNameIncluded("198.0.255.1"));
-  EXPECT_TRUE(config.GetVirtualServerConf("8080", "198.0.255.1") != NULL);
+  EXPECT_TRUE(config.GetVirtualServerConf(kAnyIpAddress, "8080",
+                                          "198.0.255.1") != NULL);
 }
 
 TEST(ParserTest, ClientMaxBodySizeIsIntmax) {
@@ -590,7 +616,8 @@ TEST(ParserTest, ClientMaxBodySizeIsIntmax) {
       "  }                                          "
       "}                                            ");
   Config config = parser.ParseConfig();
-  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "");
   const LocationConf *location = vserver->GetLocation("/");
   EXPECT_TRUE(config.IsValid());
   EXPECT_EQ(location->GetClientMaxBodySize(), INT_MAX);
@@ -610,7 +637,8 @@ TEST(ParserTest, ClientMaxBodySizeIsOverIntmax) {
       "  }                                          "
       "}                                            ");
   Config config = parser.ParseConfig();
-  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "");
   const LocationConf *location = vserver->GetLocation("/");
   EXPECT_FALSE(config.IsValid());
 }
@@ -627,7 +655,8 @@ TEST(ParserTest, ServerNameAcceptDomainWithPort) {
       "  }                                          "
       "}                                            ");
   Config config = parser.ParseConfig();
-  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "");
   EXPECT_TRUE(config.IsValid());
   EXPECT_TRUE(vserver->IsServerNameIncluded("localhost:49200"));
 }

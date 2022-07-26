@@ -110,6 +110,7 @@ bool ProcessRequest(ConnSocket *socket) {
         requests.push_back(http::HttpRequest());
       }
       requests.back().ParseRequest(buffer, socket->GetConfig(),
+                                   socket->GetServerIp(),
                                    socket->GetServerPort());
       if (requests.back().IsErrorRequest()) {
         buffer.clear();
