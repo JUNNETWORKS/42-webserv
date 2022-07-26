@@ -206,7 +206,7 @@ void DeleteCharDprt(char **dstr) {
   for (size_t i = 0; dstr[i]; i++) {
     delete[] dstr[i];
   }
-  delete dstr;
+  delete[] dstr;
 }
 
 }  // namespace utils

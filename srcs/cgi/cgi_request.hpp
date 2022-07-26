@@ -40,17 +40,22 @@ class CgiRequest {
   int GetCgiUnisock() const;
   const std::vector<std::string> &GetCgiArgs() const;
 
-  bool RunCgi(const server::ConnSocket *conn_sock,
-              const http::HttpRequest &request,
-              const config::LocationConf &location);
+  http::HttpStatus RunCgi(const server::ConnSocket *conn_sock,
+                          const http::HttpRequest &request,
+                          const config::LocationConf &location);
 
  private:
   bool ParseQueryString(const http::HttpRequest &request);
   bool DetermineExecutionCgiPath(const http::HttpRequest &request,
                                  const config::LocationConf &location);
+  Result<std::string> SearchCgiPath(const std::string &base_path,
+                                    const std::vector<std::string> &v,
+                                    const config::LocationConf &location);
 
   // 返り値は無名ドメインソケットのfd
   bool ForkAndExecuteCgi();
+
+  bool AddNonBlockingOptToFd(int fd) const;
 
   // リクエストからCGIスクリプトに渡す変数を作成する
   void CreateCgiMetaVariablesFromHttpRequest(
@@ -66,11 +71,6 @@ class CgiRequest {
 
   void ExecuteCgi();
   bool MoveToCgiExecutionDir(const std::string &exec_cgi_script_path_) const;
-
-  // TODO : どこかに移動させる。
-  // exec なども移動させたい。
-  char **AllocCharPtrsFromVectorString(const std::vector<std::string> &v) const;
-  void FreePtrArray(char **dptr) const;
 };
 
 }  // namespace cgi

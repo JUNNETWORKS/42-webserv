@@ -18,7 +18,7 @@ int StartEventLoop(Epoll &epoll) {
       InvokeFdEvent(fde, events, &epoll);
     }
 
-    Result<std::vector<FdEventEvent> > result = epoll.WaitEvents(0);
+    Result<std::vector<FdEventEvent> > result = epoll.WaitEvents(100);
     if (result.IsErr()) {
       utils::ErrExit("WaitEvents");
     }

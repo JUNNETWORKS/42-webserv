@@ -13,6 +13,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <iostream>
+#include <sstream>
 #include <string>
 
 #include "server/socket_address.hpp"
@@ -56,7 +58,7 @@ int InetConnect(const std::string &host, const std::string &service, int type) {
 }
 
 /* Public interfaces: InetBind() and InetListen() */
-static int InetPassiveSocket(const std::string &service, int type,
+static int InetPassiveSocket(const char *host, const char *service, int type,
                              server::SocketAddress *sockaddr, bool doListen,
                              int backlog) {
   struct addrinfo hints;
@@ -71,7 +73,7 @@ static int InetPassiveSocket(const std::string &service, int type,
   hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
   hints.ai_flags = AI_PASSIVE; /* Use wildcadrd IP address */
 
-  s = getaddrinfo(NULL, service.c_str(), &hints, &result);
+  s = getaddrinfo(host, service, &hints, &result);
   if (s != 0)
     return -1;
 
@@ -113,35 +115,45 @@ static int InetPassiveSocket(const std::string &service, int type,
   return (rp == NULL) ? -1 : sfd;
 }
 
-// TODO: Result を返すようにする
-int InetListen(const std::string &service, int backlog,
-               server::SocketAddress *sockaddr) {
-  return InetPassiveSocket(service, SOCK_STREAM, sockaddr, true, backlog);
+Result<int> InetListen(const std::string &host, const std::string &service,
+                       int backlog, server::SocketAddress *sockaddr) {
+  const char *host_cstr = host.empty() ? NULL : host.c_str();
+  int fd = InetPassiveSocket(host_cstr, service.c_str(), SOCK_STREAM, sockaddr,
+                             true, backlog);
+  if (fd < 0) {
+    return Error();
+  }
+  return fd;
 }
 
-int InetBind(const std::string &service, int type,
-             server::SocketAddress *sockaddr) {
-  return InetPassiveSocket(service, type, sockaddr, false, 0);
+Result<int> InetBind(const std::string &host, const std::string &service,
+                     int type, server::SocketAddress *sockaddr) {
+  const char *host_cstr = host.empty() ? NULL : host.c_str();
+  int fd =
+      InetPassiveSocket(host_cstr, service.c_str(), type, sockaddr, false, 0);
+  if (fd < 0) {
+    return Error();
+  }
+  return fd;
 }
 
-char *InetAddressStr(const struct sockaddr *addr, socklen_t addrlen,
-                     char *addrStr, int addrStrLen) {
+std::string InetAddressStr(const struct sockaddr *addr, socklen_t addrlen) {
+  std::stringstream ss;
   char host[NI_MAXHOST], service[NI_MAXSERV];
 
   if (getnameinfo(addr, addrlen, host, NI_MAXHOST, service, NI_MAXSERV,
-                  NI_NUMERICSERV) == 0)
-    snprintf(addrStr, addrStrLen, "(%s, %s)", host, service);
-  else
-    snprintf(addrStr, addrStrLen, "(?UNKNOWN?)");
-  return addrStr;
+                  NI_NUMERICSERV) == 0) {
+    ss << "(" << host << ", " << service << ")";
+  } else {
+    ss << "(?UNKNOWN?)";
+  };
+  return ss.str();
 }
 
 void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr) {
   socklen_t len = sizeof(struct sockaddr_storage);
-  char addrStr[utils::IS_ADDR_STR_LEN];
-  InetAddressStr((struct sockaddr *)&client_addr, len, addrStr,
-                 utils::IS_ADDR_STR_LEN);
-  printf("Connection from %s\n", addrStr);
+  std::string addr_str = InetAddressStr((struct sockaddr *)&client_addr, len);
+  std::cout << "Connection from " << addr_str << std::endl;
 }
 
 }  // namespace utils

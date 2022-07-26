@@ -68,6 +68,10 @@ class CgiResponse {
   static const std::string kCharExceptCtlAndSeparator;
   static const std::string kQdtext;
 
+  // ステータス部とヘッダー部の最大サイズ
+  // 16KB は Nginx と同じ設定
+  static const unsigned long kMaxStatusHeaderSize = 16 * 1024;  // 16KB
+
   // 改行文字を決定する
   Result<void> DetermineNewlineChars(const utils::ByteVector &buffer);
 

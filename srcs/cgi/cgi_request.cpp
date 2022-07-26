@@ -1,5 +1,6 @@
 #include "cgi/cgi_request.hpp"
 
+#include <fcntl.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -52,15 +53,20 @@ const std::vector<std::string> &CgiRequest::GetCgiArgs() const {
 
 // RunCgi
 // ========================================================================
-bool CgiRequest::RunCgi(const server::ConnSocket *conn_sock,
-                        const http::HttpRequest &request,
-                        const config::LocationConf &location) {
-  bool result = true;
-  result &= ParseQueryString(request);
-  result &= DetermineExecutionCgiPath(request, location);
+http::HttpStatus CgiRequest::RunCgi(const server::ConnSocket *conn_sock,
+                                    const http::HttpRequest &request,
+                                    const config::LocationConf &location) {
+  if (ParseQueryString(request) == false) {
+    return http::BAD_REQUEST;
+  }
+  if (DetermineExecutionCgiPath(request, location) == false) {
+    return http::NOT_FOUND;
+  }
   CreateCgiMetaVariablesFromHttpRequest(conn_sock, request, location);
-  result &= ForkAndExecuteCgi();
-  return result;
+  if (ForkAndExecuteCgi() == false) {
+    return http::SERVER_ERROR;
+  }
+  return http::OK;
 }
 
 // Parse
@@ -85,68 +91,72 @@ bool CgiRequest::ParseQueryString(const http::HttpRequest &request) {
   return true;
 }
 
+Result<std::string> CgiRequest::SearchCgiPath(
+    const std::string &base_path, const std::vector<std::string> &v,
+    const config::LocationConf &location) {
+  std::string exec_cgi_path = base_path;
+
+  for (std::vector<std::string>::const_iterator it = v.begin(); it != v.end();
+       it++) {
+    if (*it == "") {
+      continue;
+    }
+    exec_cgi_path = utils::JoinPath(exec_cgi_path, *it);
+    if (utils::IsFileExist(exec_cgi_path)) {
+      return exec_cgi_path;
+    }
+  }
+
+  std::string index_base = exec_cgi_path;
+  const std::vector<std::string> &index_pages = location.GetIndexPages();
+  for (std::vector<std::string>::const_iterator it = index_pages.begin();
+       it != index_pages.end(); it++) {
+    exec_cgi_path = utils::JoinPath(index_base, *it);
+    if (utils::IsFileExist(exec_cgi_path)) {
+      return exec_cgi_path;
+    }
+  }
+  return Error();
+}
+
 bool CgiRequest::DetermineExecutionCgiPath(
     const http::HttpRequest &request, const config::LocationConf &location) {
-  typedef std::vector<std::pair<std::string, std::string> > StringPairVec;
-
-  StringPairVec possible_scipts;
-
-  std::string request_path = request.GetPath();
-  std::vector<std::string> file_vec =
-      utils::SplitString(location.RemovePathPatternFromPath(request_path), "/");
-
-  {
-    std::string script_name = "";
-    std::string exec_cgi_path = location.GetRootDir();
-    for (std::vector<std::string>::const_iterator it = file_vec.begin();
-         it != file_vec.end(); it++) {
-      if (*it == "") {
-        continue;
-      }
-      script_name = utils::JoinPath(script_name, *it);
-      exec_cgi_path = utils::JoinPath(exec_cgi_path, script_name);
-      possible_scipts.push_back(std::make_pair(script_name, exec_cgi_path));
-    }
+  Result<std::string> exec_cgi_path_res = SearchCgiPath(
+      location.GetRootDir(),
+      utils::SplitString(location.RemovePathPatternFromPath(request.GetPath()),
+                         "/"),
+      location);
+  if (exec_cgi_path_res.IsErr()) {
+    return false;
   }
 
-  {
-    // index が設定されている場合は実行できるか確認する
-    std::string script_name = "";
-    std::string exec_cgi_path = location.GetRootDir();
-    const std::vector<std::string> &index_pages = location.GetIndexPages();
-    for (std::vector<std::string>::const_iterator it = index_pages.begin();
-         it != index_pages.end(); ++it) {
-      script_name = utils::JoinPath(location.GetPathPattern(), *it);
-      exec_cgi_path = utils::JoinPath(location.GetRootDir(), *it);
-      possible_scipts.push_back(std::make_pair(script_name, exec_cgi_path));
-    }
-  }
+  std::string exec_cgi_path = exec_cgi_path_res.Ok();
+  std::string script_name =
+      "/" + location.RemovePathPatternFromPath(exec_cgi_path);
 
-  for (StringPairVec::const_iterator it = possible_scipts.begin();
-       it != possible_scipts.end(); ++it) {
-    std::string script_name = it->first;
-    std::string exec_cgi_path = it->second;
-    if (utils::IsExecutableFile(exec_cgi_path)) {
-      script_name_ = utils::JoinPath(location.GetPathPattern(), script_name);
-      exec_cgi_script_path_ = exec_cgi_path;
-      path_info_ = request_path;
-      path_info_ = path_info_.replace(0, script_name_.length(), "");
-      return true;
-    }
-  }
-  return false;
+  exec_cgi_script_path_ = exec_cgi_path;
+  script_name_ = script_name;
+  path_info_ = request.GetPath();
+  path_info_ = path_info_.replace(0, script_name_.length(), "");
+  return true;
 }
 
 // Exec Cgi
 // ========================================================================
 bool CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
-  if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sockfds) == -1) {
+  if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockfds) == -1) {
     return false;
   }
 
   int parentsock = sockfds[0];
   int childsock = sockfds[1];
+
+  if (AddNonBlockingOptToFd(parentsock) == false) {
+    close(parentsock);
+    close(childsock);
+    return false;
+  }
 
   cgi_pid_ = fork();
   if (cgi_pid_ < -1) {
@@ -172,6 +182,16 @@ bool CgiRequest::ForkAndExecuteCgi() {
     close(childsock);
     return true;
   }
+}
+
+bool CgiRequest::AddNonBlockingOptToFd(int fd) const {
+  int fd_flags;
+
+  if ((fd_flags = fcntl(fd, F_GETFL, 0)) < 0 ||
+      fcntl(fd, F_SETFL, fd_flags | O_NONBLOCK) < 0) {
+    return false;
+  }
+  return true;
 }
 
 void CgiRequest::ExecuteCgi() {
