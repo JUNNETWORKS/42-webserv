@@ -202,6 +202,7 @@ HttpRequest HttpCgiResponse::CreateLocalRedirectRequest(
 
   HttpRequest new_request(request);
   new_request.SetPath(location.Ok());
+  new_request.ReBindPathAndLocation();
   new_request.SetLocalRedirectCount(request.GetLocalRedirectCount() + 1);
   return new_request;
 }

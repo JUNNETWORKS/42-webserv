@@ -347,6 +347,26 @@ HttpStatus HttpRequest::InterpretTransferEncoding(
   }
 }
 
+void HttpRequest::ReBindPathAndLocation() {
+  parse_status_ = InterpretPath(path_);
+  if (parse_status_ != OK) {
+    phase_ = kError;
+    return;
+  }
+
+  if (LoadLocation() == false) {
+    parse_status_ = NOT_FOUND;
+    phase_ = kError;
+    return;
+  }
+
+  if (location_->IsMethodAllowed(method_) == false) {
+    parse_status_ = NOT_ALLOWED;
+    phase_ = kError;
+    return;
+  }
+}
+
 //========================================================================
 // Is系関数　外部から状態取得
 bool HttpRequest::IsResponsible() const {

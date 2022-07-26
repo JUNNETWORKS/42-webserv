@@ -89,6 +89,8 @@ class HttpRequest {
   bool IsErrorRequest() const;
   bool IsResponsible() const;
 
+  void ReBindPathAndLocation();
+
   // ========================================================================
   // Getter and Setter
   std::string GetHttpVersion() const;
