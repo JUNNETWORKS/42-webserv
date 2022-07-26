@@ -52,8 +52,8 @@ class CgiRequest {
                                     const std::vector<std::string> &v,
                                     const config::LocationConf &location);
 
-  // 返り値は無名ドメインソケットのfd
   bool ForkAndExecuteCgi();
+  bool CreateAndRunChildProcesses(int parentsock, int childsock);
 
   bool AddNonBlockingOptToFd(int fd) const;
 
