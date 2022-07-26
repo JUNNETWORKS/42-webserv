@@ -164,7 +164,6 @@ bool CgiProcess::HandleCgiWriteEvent(CgiProcess *cgi_process, FdEvent *fde,
       write(cgi_request->GetCgiUnisock(), cgi_process->cgi_input_buffer_.data(),
             cgi_process->cgi_input_buffer_.size());
   if (write_res < 0) {
-    DeleteCgiProcess(epoll, fde);
     return true;
   }
   cgi_process->cgi_input_buffer_.EraseHead(write_res);
