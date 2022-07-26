@@ -50,10 +50,10 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   // イベントを監視するようにした。
   // 通常ファイルの時問題ないか確認する。
   const http::HttpResponse *response = conn_sock->GetResponse();
-  bool cgi_stop =
+  bool is_cgi_buffer_empty =
       response && response->IsCgiResponse() && response->IsWriteBufferEmpty();
 
-  if (conn_sock->HasParsedRequest() && !cgi_stop) {
+  if (conn_sock->HasParsedRequest() && !is_cgi_buffer_empty) {
     epoll->Add(fde, kFdeWrite);
   } else {
     epoll->Del(fde, kFdeWrite);
