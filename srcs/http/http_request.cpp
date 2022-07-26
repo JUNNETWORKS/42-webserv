@@ -373,11 +373,21 @@ Result<const std::vector<std::string> &> HttpRequest::GetHeader(
   return Error();
 }
 
+std::string HttpRequest::GetHttpVersion() const {
+  std::stringstream ss;
+  ss << kHttpVersionPrefix << kExpectMajorVersion << minor_version_;
+  return ss.str();
+}
+
+const HeaderMap &HttpRequest::GetHeaders() const {
+  return headers_;
+}
+
 HttpStatus HttpRequest::GetParseStatus() const {
   return parse_status_;
 }
 
-const utils::ByteVector &HttpRequest::GetBody() {
+const utils::ByteVector &HttpRequest::GetBody() const {
   return body_;
 }
 

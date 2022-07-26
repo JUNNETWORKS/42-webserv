@@ -38,18 +38,21 @@ CgiProcess::~CgiProcess() {
   delete cgi_response_;
 }
 
-Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
+http::HttpStatus CgiProcess::RunCgi(server::ConnSocket *conn_sock,
+                                    http::HttpRequest &request) {
   SetIsExecuted(true);
 
-  cgi_request_ = AllocateCgiRequest(request);
+  cgi_request_ = new cgi::CgiRequest();
   cgi_response_ = new CgiResponse();
   // TODO: fork した後 execve に失敗した時のエラー検知と処理
-  if (!cgi_request_->RunCgi() || cgi_request_->GetCgiUnisock() < 0) {
+  const http::HttpStatus cgi_res_code =
+      cgi_request_->RunCgi(conn_sock, request, *location_);
+  if (cgi_res_code != http::OK || cgi_request_->GetCgiUnisock() < 0) {
     delete cgi_request_;
     delete cgi_response_;
     cgi_request_ = NULL;
     cgi_response_ = NULL;
-    return Error();
+    return cgi_res_code;
   }
   cgi_input_buffer_.insert(cgi_input_buffer_.begin(), request.GetBody().begin(),
                            request.GetBody().end());
@@ -59,20 +62,17 @@ Result<void> CgiProcess::RunCgi(http::HttpRequest &request) {
   epoll_->Register(fde);
   if (!cgi_input_buffer_.empty()) {
     epoll_->Add(fde, kFdeWrite);
+  } else {
+    shutdown(cgi_request_->GetCgiUnisock(), SHUT_WR);
   }
   epoll_->Add(fde, kFdeRead);
   epoll_->SetTimeout(fde, kUnisockTimeout);
   fde_ = fde;
-  return Result<void>();
+  return http::OK;
 }
 
 void CgiProcess::KillCgi() {
   kill(cgi_request_->GetPid(), SIGKILL);
-}
-
-cgi::CgiRequest *CgiProcess::AllocateCgiRequest(http::HttpRequest &request) {
-  std::string cgi_path = location_->GetAbsolutePath(request.GetPath());
-  return new cgi::CgiRequest(cgi_path, request, *location_);
 }
 
 bool CgiProcess::IsCgiExecuted() const {
@@ -155,6 +155,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
     }
     cgi_process->cgi_input_buffer_.EraseHead(write_res);
     if (cgi_process->cgi_input_buffer_.empty()) {
+      shutdown(cgi_request->GetCgiUnisock(), SHUT_WR);
       epoll->Del(fde, kFdeWrite);
     }
   }

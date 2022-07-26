@@ -13,25 +13,30 @@
 
 namespace utils {
 
-bool IsDir(const std::string& file_path) {
+Result<bool> IsDir(const std::string& file_path) {
   struct stat sb;
 
-  stat(file_path.c_str(), &sb);
+  if (stat(file_path.c_str(), &sb) < 0) {
+    return Error();
+  }
   return S_ISDIR(sb.st_mode);
 }
 
-bool IsRegularFile(const std::string& file_path) {
+Result<bool> IsRegularFile(const std::string& file_path) {
   struct stat sb;
 
-  stat(file_path.c_str(), &sb);
+  if (stat(file_path.c_str(), &sb) < 0) {
+    return Error();
+  }
   return S_ISREG(sb.st_mode);
 }
 
-// TODO: Resultで返したほうがいいかも?
-unsigned long GetFileSize(const std::string& file_path) {
+Result<unsigned long> GetFileSize(const std::string& file_path) {
   struct stat sb;
 
-  stat(file_path.c_str(), &sb);
+  if (stat(file_path.c_str(), &sb) < 0) {
+    return Error();
+  }
   return sb.st_size;
 }
 
@@ -41,6 +46,10 @@ bool IsFileExist(const std::string& file_path) {
 
 bool IsReadableFile(const std::string& file_path) {
   return access(file_path.c_str(), R_OK) == 0;
+}
+
+bool IsExecutableFile(const std::string& file_path) {
+  return access(file_path.c_str(), X_OK) == 0;
 }
 
 Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
@@ -61,28 +70,6 @@ Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
   }
   closedir(dir);
   return vec;
-}
-
-bool PutStrFdBase(const char* str, size_t len, int fd) {
-  ssize_t write_byte;
-
-  while (len > 0) {
-    if (len > INT_MAX) {
-      write_byte = write(fd, str, INT_MAX);
-    } else {
-      write_byte = write(fd, str, len);
-    }
-    if (write_byte < 0) {  // TODO : errno EINTR
-      return false;
-    }
-    len -= write_byte;
-    str += write_byte;
-  }
-  return true;
-}
-
-bool PutStrFd(const std::string str, int fd) {
-  return PutStrFdBase(str.c_str(), str.length(), fd);
 }
 
 }  // namespace utils

@@ -51,12 +51,15 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
     epoll->Del(fde, kFdeWrite);
   }
 
-  if (should_close_conn || (events & kFdeTimeout)) {
+  if ((should_close_conn && conn_sock->IsShutdown()) ||
+      (events & kFdeTimeout)) {
     printf("Connection close\n");
     epoll->Unregister(fde);
     // conn_sock->fd の close は Socket のデストラクタで行うので不要｡
     delete conn_sock;
     delete fde;
+  } else if (should_close_conn && !conn_sock->IsShutdown()) {
+    conn_sock->ShutDown();
   }
 }
 
@@ -82,7 +85,7 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data,
   if (events & kFdeError) {
     // Listenしているソケットが正常に動いていない場合はプログラムを終了させる
     utils::ErrExit("ListenSocket(port %s) occur error\n",
-                   listen_sock->GetPort().c_str());
+                   listen_sock->GetServerPort().c_str());
   }
 }
 
@@ -93,10 +96,9 @@ bool ProcessRequest(ConnSocket *socket) {
   unsigned char buf[BUF_SIZE];
   int conn_fd = socket->GetFd();
   int n = read(conn_fd, buf, sizeof(buf) - 1);
-  if (n <= 0) {  // EOF(Connection end) or Error
-                 // TODO ここいらないかも？
+  if (n <= 0) {  // EOF(TCP flag FIN) or Error
     printf("Connection end\n");
-    // 呼び出し元でepollから対象conn_fdを削除する｡
+    socket->SetIsShutdown(true);
     return true;
   } else {
     utils::ByteVector &buffer = socket->GetBuffer();
@@ -108,7 +110,7 @@ bool ProcessRequest(ConnSocket *socket) {
         requests.push_back(http::HttpRequest());
       }
       requests.back().ParseRequest(buffer, socket->GetConfig(),
-                                   socket->GetPort());
+                                   socket->GetServerPort());
       if (requests.back().IsErrorRequest()) {
         buffer.clear();
         break;

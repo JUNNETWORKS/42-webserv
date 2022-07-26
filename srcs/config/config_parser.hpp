@@ -1,6 +1,7 @@
 #ifndef CONFIG_ONFIG_PARSER_HPP_
 #define CONFIG_ONFIG_PARSER_HPP_
 
+#include <climits>
 #include <list>
 #include <string>
 
@@ -113,8 +114,8 @@ class Parser {
   // ドメイン名の条件に合っているか
   // https://www.nic.ad.jp/ja/dom/system.html
   //
-  // DOMAIN_NAME: DOMAIN_LABEL ('.' DOMAIN_LABEL)*;
-  bool IsDomainName(const std::string &domain_name);
+  // DOMAIN_NAME: DOMAIN_LABEL ('.' DOMAIN_LABEL)* [:PORT];
+  bool IsDomainName(std::string domain_name);
 
   // ドメインのラベル(ドメイン内の'.'で区切られた文字列のこと)
   // DOMAIN_LABEL: (ALPHABET | NUMBER)+

@@ -8,6 +8,7 @@
 
 #include "config/config.hpp"
 #include "server/epoll.hpp"
+#include "server/setup.hpp"
 #include "server/socket.hpp"
 #include "server/socket_event_handler.hpp"
 #include "utils/error.hpp"
@@ -15,10 +16,14 @@
 
 namespace server {
 
-Result<ListenFdPortMap> OpenLilstenFds(const config::Config &config) {
-  ListenFdPortMap listen_fd_port_map;
-  std::set<config::PortType> used_ports;
+namespace {
+// fdsのすべての要素に対してcloseシステムコールを実行する｡
+void CloseAllFds(const std::vector<int> &listen_fds);
+}  // namespace
 
+Result<void> RegisterListenSockets(Epoll &epoll, const config::Config &config) {
+  std::set<config::PortType> used_ports;
+  std::vector<int> fds;
   const config::Config::VirtualServerConfVector &virtual_servers =
       config.GetVirtualServerConfs();
   for (config::Config::VirtualServerConfVector::const_iterator it =
@@ -28,36 +33,33 @@ Result<ListenFdPortMap> OpenLilstenFds(const config::Config &config) {
       // The port has already binded
       continue;
     }
-    int fd = utils::InetListen(it->GetListenPort().c_str(), SOMAXCONN, NULL);
-    if (fd == -1) {
-      CloseAllFds(listen_fd_port_map);
-      return Error("OpenLilstenFds");
+    SocketAddress socket_address;
+    Result<int> listen_res = utils::InetListen(it->GetListenPort().c_str(),
+                                               SOMAXCONN, &socket_address);
+    if (listen_res.IsErr()) {
+      CloseAllFds(fds);
+      return Error("RegisterListenSockets");
     }
-    listen_fd_port_map[fd] = it->GetListenPort();
-    used_ports.insert(it->GetListenPort());
-  }
-  return listen_fd_port_map;
-}
+    int fd = listen_res.Ok();
 
-void CloseAllFds(const ListenFdPortMap &listen_fd_port_map) {
-  for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
-       it != listen_fd_port_map.end(); ++it) {
-    close(it->first);
-  }
-}
-
-void AddListenFds2Epoll(Epoll &epoll, config::Config &config,
-                        const ListenFdPortMap &listen_fd_port_map) {
-  for (ListenFdPortMap::const_iterator it = listen_fd_port_map.begin();
-       it != listen_fd_port_map.end(); ++it) {
-    int listen_fd = it->first;
-    std::string port = it->second;
-    ListenSocket *listen_sock = new ListenSocket(listen_fd, port, config);
-    FdEvent *fde =
-        CreateFdEvent(listen_fd, HandleListenSocketEvent, listen_sock);
+    ListenSocket *listen_sock = new ListenSocket(fd, socket_address, config);
+    FdEvent *fde = CreateFdEvent(fd, HandleListenSocketEvent, listen_sock);
     epoll.Register(fde);
     epoll.Add(fde, kFdeRead);
+
+    used_ports.insert(it->GetListenPort());
+    fds.push_back(fd);
+  }
+  return Result<void>();
+}
+
+namespace {
+void CloseAllFds(const std::vector<int> &listen_fds) {
+  for (std::vector<int>::const_iterator it = listen_fds.begin();
+       it != listen_fds.end(); ++it) {
+    close(*it);
   }
 }
+}  // namespace
 
 }  // namespace server

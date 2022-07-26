@@ -16,17 +16,17 @@ using namespace result;
 
 bool IsFileExist(const std::string& path);
 
-bool IsDir(const std::string& path);
+Result<bool> IsDir(const std::string& path);
 
-bool IsRegularFile(const std::string& file_path);
+Result<bool> IsRegularFile(const std::string& file_path);
 
-unsigned long GetFileSize(const std::string& file_path);
+Result<unsigned long> GetFileSize(const std::string& file_path);
 
 bool IsReadableFile(const std::string& file_path);
 
-Result<std::vector<utils::File> > GetFileList(const std::string& target_dir);
+bool IsExecutableFile(const std::string& file_path);
 
-bool PutStrFd(const std::string str, int fd);
+Result<std::vector<utils::File> > GetFileList(const std::string& target_dir);
 
 }  // namespace utils
 

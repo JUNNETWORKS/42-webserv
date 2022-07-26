@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <climits>
+
 #include "config/config_parser.hpp"
 
 namespace config {
@@ -574,7 +576,103 @@ TEST(ParserTest, ValidIpv4AddrInServername) {
   EXPECT_TRUE(config.GetVirtualServerConf("8080", "198.0.255.1") != NULL);
 }
 
-// TODO: root や error_page の引数が絶対パスじゃなければエラーのテスト
+TEST(ParserTest, ClientMaxBodySizeIsIntmax) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost;                     "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    client_max_body_size 2147483647;         "
+      "  }                                          "
+      "}                                            ");
+  Config config = parser.ParseConfig();
+  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const LocationConf *location = vserver->GetLocation("/");
+  EXPECT_TRUE(config.IsValid());
+  EXPECT_EQ(location->GetClientMaxBodySize(), INT_MAX);
+}
+
+TEST(ParserTest, ClientMaxBodySizeIsOverIntmax) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost;                     "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "    index index.html;                        "
+      "    client_max_body_size 2147483648;         "
+      "  }                                          "
+      "}                                            ");
+  Config config = parser.ParseConfig();
+  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const LocationConf *location = vserver->GetLocation("/");
+  EXPECT_FALSE(config.IsValid());
+}
+
+TEST(ParserTest, ServerNameAcceptDomainWithPort) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost localhost:49200;     "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "  }                                          "
+      "}                                            ");
+  Config config = parser.ParseConfig();
+  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  EXPECT_TRUE(config.IsValid());
+  EXPECT_TRUE(vserver->IsServerNameIncluded("localhost:49200"));
+}
+
+TEST(ParserTest, ServerNamePortOverMaxNumber) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost:65536;               "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+TEST(ParserTest, ServerNamePortEmpty) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost:;                    "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/html;                      "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+TEST(ParserTest, RootIsNotAbsolutePath) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost;                     "
+      "                                             "
+      "  location / {                               "
+      "    root var/www/html;                       "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
 
 //========================
 // 重複やディレクティブ関係のエラーパターン

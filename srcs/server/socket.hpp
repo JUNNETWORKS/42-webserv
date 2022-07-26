@@ -9,6 +9,7 @@
 #include "http/http_request.hpp"
 #include "http/http_response.hpp"
 #include "result/result.hpp"
+#include "server/socket_address.hpp"
 #include "utils/ByteVector.hpp"
 
 namespace http {
@@ -22,23 +23,18 @@ using namespace result;
 // CGI でリクエスト元IPなど色々情報が必要になってくるので,
 // それらの情報をもたせるようにしたい｡
 class Socket {
- public:
-  enum ESockType { ListenSock, ConnSock };
-
  protected:
   int fd_;
 
-  ESockType socktype_;
-
   // port_ は socktype_ によって意味が変わる｡
-  // ListenSock の場合は Listen しているポート番号
-  // ConnSock の場合はAcceptされたListenSockのポート番号
-  const std::string port_;
+  // ListenSock の場合は Listen しているソケット情報
+  // ConnSock の場合はAcceptされたListenSockのソケット情報
+  const SocketAddress server_addr_;
 
   const config::Config &config_;
 
  public:
-  Socket(int fd, ESockType socktype, const std::string &port,
+  Socket(int fd, const SocketAddress &server_addr,
          const config::Config &config);
   Socket(const Socket &rhs);
   // close(fd_) はデストラクタで行われる
@@ -46,11 +42,10 @@ class Socket {
 
   int GetFd() const;
 
-  const std::string &GetPort() const;
+  std::string GetServerIp() const;
+  std::string GetServerPort() const;
 
   const config::Config &GetConfig() const;
-
-  ESockType GetSockType() const;
 
  private:
   Socket();
@@ -59,9 +54,16 @@ class Socket {
 
 class ConnSocket : public Socket {
  private:
+  const SocketAddress client_addr_;
+
   std::deque<http::HttpRequest> requests_;
   http::HttpResponse *response_;
   utils::ByteVector buffer_;
+
+  // shutdown したかどうか
+  // サーバーから切る場合は shutdown() して FIN を送ったか
+  // クライアントから切る場合は FIN がサーバーに届いたか
+  bool is_shutdown_;
 
  public:
   // タイムアウトのデフォルト時間は5秒
@@ -70,15 +72,22 @@ class ConnSocket : public Socket {
   //   切断するのでそれに合わせる｡
   static const long kDefaultTimeoutMs = 5 * 1000;
 
-  ConnSocket(int fd, const std::string &port, const config::Config &config);
+  ConnSocket(int fd, const SocketAddress &server_addr,
+             const SocketAddress &client_addr, const config::Config &config);
   virtual ~ConnSocket();
+
+  std::string GetRemoteIp() const;
+  std::string GetRemoteName() const;
 
   std::deque<http::HttpRequest> &GetRequests();
 
   bool HasParsedRequest();
+  void ShutDown();
 
   http::HttpResponse *GetResponse();
   void SetResponse(http::HttpResponse *response);
+  bool IsShutdown();
+  void SetIsShutdown(bool is_shutdown);
 
   utils::ByteVector &GetBuffer();
 
@@ -89,7 +98,8 @@ class ConnSocket : public Socket {
 
 class ListenSocket : public Socket {
  public:
-  ListenSocket(int fd, const std::string &port, const config::Config &config);
+  ListenSocket(int fd, const SocketAddress &server_addr,
+               const config::Config &config);
 
   // 現在の Socket に来た接続要求を accept する｡
   // 返り値の Socket* はヒープ領域に存在しており､

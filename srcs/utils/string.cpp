@@ -184,6 +184,7 @@ std::string GetExetension(const std::string &file_path) {
   return ext;
 }
 
+
 std::string ReplaceAll(std::string s, const std::string &target,
                        const std::string &replacement) {
   if (s.empty() || target.empty() || replacement.empty()) {
@@ -195,6 +196,31 @@ std::string ReplaceAll(std::string s, const std::string &target,
     pos += replacement.length();
   }
   return s;
+}
+
+char *AllocStringToCharPtr(const std::string &str) {
+  char *new_str = new char[str.size() + 1];
+
+  std::char_traits<char>::copy(new_str, str.c_str(), str.size() + 1);
+  return new_str;
+}
+
+char **AllocVectorStringToCharDptr(const std::vector<std::string> &v) {
+  char **dptr = new char *[v.size() + 1];
+
+  size_t i = 0;
+  for (; i < v.size(); i++) {
+    dptr[i] = AllocStringToCharPtr(v[i]);
+  }
+  dptr[i] = NULL;
+  return dptr;
+}
+
+void DeleteCharDprt(char **dstr) {
+  for (size_t i = 0; dstr[i]; i++) {
+    delete[] dstr[i];
+  }
+  delete[] dstr;
 }
 
 }  // namespace utils
