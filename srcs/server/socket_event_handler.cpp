@@ -49,9 +49,11 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
   // cgi は cgi から read イベントで読み込んだ時、write
   // イベントを監視するようにした。
   // 通常ファイルの時問題ないか確認する。
-  http::HttpResponse *response = conn_sock->GetResponse();
-  if (conn_sock->HasParsedRequest() &&
-      (response == NULL || (response && !response->IsWriteBufferEmpty()))) {
+  const http::HttpResponse *response = conn_sock->GetResponse();
+  bool cgi_stop =
+      response && response->IsCgiResponse() && response->IsWriteBufferEmpty();
+
+  if (conn_sock->HasParsedRequest() && !cgi_stop) {
     epoll->Add(fde, kFdeWrite);
   } else {
     epoll->Del(fde, kFdeWrite);

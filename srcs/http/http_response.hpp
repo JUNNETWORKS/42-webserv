@@ -79,6 +79,8 @@ class HttpResponse {
 
   bool IsWriteBufferEmpty() const;
 
+  bool IsCgiResponse() const;
+
   const std::vector<std::string> &GetHeader(const std::string &header);
   Result<void> WriteToSocket(const int fd);
 
@@ -95,8 +97,6 @@ class HttpResponse {
   void SetStatusMessage(const std::string &status_message);
   void SetHeader(const std::string &header, const std::string &value);
   void AppendHeader(const std::string &header, const std::string &value);
-
-  bool IsCgiResponse() const;
 
   static bool IsRequestHasConnectionClose(const HttpRequest &request);
 
