@@ -143,10 +143,10 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
 
   bool should_delete_cgi = false;
   if (events & kFdeWrite) {
-    should_delete_cgi |= HandleCgiWriteEvent(cgi_process, fde, epoll).IsErr();
+    should_delete_cgi |= HandleCgiWriteEvent(cgi_process, fde, epoll);
   }
   if (events & kFdeRead) {
-    should_delete_cgi |= HandleCgiReadEvent(cgi_process).IsErr();
+    should_delete_cgi |= HandleCgiReadEvent(cgi_process);
   }
 
   if (should_delete_cgi) {
@@ -156,25 +156,25 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
   }
 }
 
-Result<void> CgiProcess::HandleCgiWriteEvent(CgiProcess *cgi_process,
-                                             FdEvent *fde, Epoll *epoll) {
+bool CgiProcess::HandleCgiWriteEvent(CgiProcess *cgi_process, FdEvent *fde,
+                                     Epoll *epoll) {
   CgiRequest *cgi_request = cgi_process->cgi_request_;
   // Write request's body to unisock
   ssize_t write_res =
       write(cgi_request->GetCgiUnisock(), cgi_process->cgi_input_buffer_.data(),
             cgi_process->cgi_input_buffer_.size());
   if (write_res < 0) {
-    return Error();
+    return true;
   }
   cgi_process->cgi_input_buffer_.EraseHead(write_res);
   if (cgi_process->cgi_input_buffer_.empty()) {
     shutdown(cgi_request->GetCgiUnisock(), SHUT_WR);
     epoll->Del(fde, kFdeWrite);
   }
-  return Result<void>();
+  return false;
 }
 
-Result<void> CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
+bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
   CgiRequest *cgi_request = cgi_process->cgi_request_;
   CgiResponse *cgi_response = cgi_process->cgi_response_;
   // Read data from unisock and store data in buffer
@@ -182,13 +182,11 @@ Result<void> CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
   ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
   printf("HandleCgiEvent() read_res == %ld\n", read_res);
   if (read_res <= 0) {
-    // read_res == 0
-    // はエラーというわけではないけど､呼び出し元の都合でError()を返す
-    return Error();
+    return true;
   }
   cgi_process->cgi_output_buffer_.AppendDataToBuffer(buf, read_res);
   cgi_response->Parse(cgi_process->cgi_output_buffer_);
-  return Result<void>();
+  return false;
 }
 
 }  // namespace cgi
