@@ -165,7 +165,7 @@ bool CgiRequest::ForkAndExecuteCgi() {
 
 bool CgiRequest::CreateAndRunChildProcesses(int parentsock, int childsock) {
   cgi_pid_ = fork();
-  if (cgi_pid_ < -1) {
+  if (cgi_pid_ < 0) {
     return false;
   }
   if (cgi_pid_ == 0) {  // Child
