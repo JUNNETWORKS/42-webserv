@@ -69,7 +69,7 @@ class CgiProcess {
                              Epoll *epoll);
   static bool HandleCgiWriteEvent(CgiProcess *cgi_process, FdEvent *fde,
                                   Epoll *epoll);
-  static bool HandleCgiReadEvent(CgiProcess *cgi_process);
+  static bool HandleCgiReadEvent(CgiProcess *cgi_process, Epoll *epoll);
 };
 
 }  // namespace cgi
