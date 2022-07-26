@@ -48,12 +48,14 @@ void Config::Print() const {
 }
 
 const VirtualServerConf *Config::GetVirtualServerConf(
-    const PortType listen_port, const std::string &server_name) const {
+    const std::string &listen_ip, const PortType listen_port,
+    const std::string &server_name) const {
   const VirtualServerConf *virtual_server_conf = NULL;
 
   for (VirtualServerConfVector::const_iterator it = servers_.begin();
        it != servers_.end(); ++it) {
-    if (it->GetListenPort() == listen_port) {
+    if ((listen_ip == kAnyIpAddress || it->GetListenIp() == listen_ip) &&
+        it->GetListenPort() == listen_port) {
       if (virtual_server_conf == NULL) {
         virtual_server_conf = &(*it);
       } else if (!virtual_server_conf->IsServerNameIncluded(server_name) &&

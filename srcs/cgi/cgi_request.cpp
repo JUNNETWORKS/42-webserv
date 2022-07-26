@@ -1,5 +1,6 @@
 #include "cgi/cgi_request.hpp"
 
+#include <fcntl.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -97,11 +98,10 @@ Result<std::string> CgiRequest::SearchCgiPath(
 
   for (std::vector<std::string>::const_iterator it = v.begin(); it != v.end();
        it++) {
-    if (*it == "") {
-      continue;
-    }
     exec_cgi_path = utils::JoinPath(exec_cgi_path, *it);
-    if (utils::IsFileExist(exec_cgi_path)) {
+    Result<bool> is_executable_file_res =
+        utils::IsExecutableFile(exec_cgi_path);
+    if (is_executable_file_res.IsOk() && is_executable_file_res.Ok()) {
       return exec_cgi_path;
     }
   }
@@ -111,7 +111,9 @@ Result<std::string> CgiRequest::SearchCgiPath(
   for (std::vector<std::string>::const_iterator it = index_pages.begin();
        it != index_pages.end(); it++) {
     exec_cgi_path = utils::JoinPath(index_base, *it);
-    if (utils::IsFileExist(exec_cgi_path)) {
+    Result<bool> is_executable_file_res =
+        utils::IsExecutableFile(exec_cgi_path);
+    if (is_executable_file_res.IsOk() && is_executable_file_res.Ok()) {
       return exec_cgi_path;
     }
   }
@@ -126,7 +128,7 @@ bool CgiRequest::DetermineExecutionCgiPath(
                          "/"),
       location);
   if (exec_cgi_path_res.IsErr()) {
-    return false;  // TODO : NOT FOUND を 返したい。
+    return false;
   }
 
   std::string exec_cgi_path = exec_cgi_path_res.Ok();
@@ -144,37 +146,51 @@ bool CgiRequest::DetermineExecutionCgiPath(
 // ========================================================================
 bool CgiRequest::ForkAndExecuteCgi() {
   int sockfds[2];
-  if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sockfds) == -1) {
+  if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockfds) == -1) {
     return false;
   }
 
   int parentsock = sockfds[0];
   int childsock = sockfds[1];
 
-  cgi_pid_ = fork();
-  if (cgi_pid_ < -1) {
+  if (AddNonBlockingOptToFd(parentsock) == false ||
+      CreateAndRunChildProcesses(parentsock, childsock) == false) {
     close(parentsock);
     close(childsock);
     return false;
   }
-  if (cgi_pid_ == 0) {
-    // Child
+  cgi_unisock_ = parentsock;
+  close(childsock);
+  return true;
+}
+
+bool CgiRequest::CreateAndRunChildProcesses(int parentsock, int childsock) {
+  cgi_pid_ = fork();
+  if (cgi_pid_ < 0) {
+    return false;
+  }
+  if (cgi_pid_ == 0) {  // Child
     close(parentsock);
     if (dup2(childsock, STDIN_FILENO) < 0 ||
         dup2(childsock, STDOUT_FILENO) < 0) {
-      close(parentsock);
       close(childsock);
       exit(EXIT_FAILURE);
     }
     close(childsock);
     ExecuteCgi();
     exit(EXIT_FAILURE);
-  } else {
-    // Parent
-    cgi_unisock_ = parentsock;
-    close(childsock);
-    return true;
   }
+  return true;
+}
+
+bool CgiRequest::AddNonBlockingOptToFd(int fd) const {
+  int fd_flags;
+
+  if ((fd_flags = fcntl(fd, F_GETFL, 0)) < 0 ||
+      fcntl(fd, F_SETFL, fd_flags | O_NONBLOCK) < 0) {
+    return false;
+  }
+  return true;
 }
 
 void CgiRequest::ExecuteCgi() {

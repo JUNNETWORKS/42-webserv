@@ -25,6 +25,10 @@ def simple_test():
     expect_res = res.response(200, file_path=file_path)
     run_test(req_path, expect_res)
 
+    req_path = "/fifo-file"
+    expect_res = res.response(500)
+    run_test(req_path, expect_res, ck_body=False)
+
 
 def not_found_test():
     expect_res = res.response(404, file_path="public/error_pages/404.html")
@@ -151,11 +155,20 @@ def content_type_test():
 def cmp_test():
     run_cmp_test("/sample.html", expect_port=cmd_args.NGINX_PORT, save_diff=True)
 
+    expect_res = res.response(404)
+    run_test("/cgi-bin/dir", expect_res, ck_body=False)
+
+    expect_res = res.response(200)
+    run_test("/cgi-bin/dir/dir-cgi", expect_res, ck_body=False)
+
 
 def cgi_simple_test():
     run_cmp_test(
         "/cgi-bin/simple-cgi", expect_port=cmd_args.APACHE_PORT, save_diff=True
     )
+
+    run_cmp_test("/cgi-bin/cat-cgi", expect_port=cmd_args.APACHE_PORT)
+    run_cmp_test("/cgi-bin/hogehogehoge-cgi", expect_port=cmd_args.APACHE_PORT)
 
     expect_res = res.response(404)
     run_test("/cgi-bin/notexist-cgi", expect_res, ck_body=False)

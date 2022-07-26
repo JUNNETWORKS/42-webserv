@@ -103,7 +103,10 @@ void ConnSocket::SetIsShutdown(bool is_shutdown) {
 
 ListenSocket::ListenSocket(int fd, const SocketAddress &server_addr,
                            const config::Config &config)
-    : Socket(fd, server_addr, config) {}
+    : Socket(fd, server_addr, config) {
+  std::cout << "Listen at " << GetServerIp() << ":" << GetServerPort()
+            << std::endl;
+}
 
 Result<ConnSocket *> ListenSocket::AcceptNewConnection() {
   struct sockaddr_storage client_addr;

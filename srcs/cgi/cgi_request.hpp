@@ -52,8 +52,10 @@ class CgiRequest {
                                     const std::vector<std::string> &v,
                                     const config::LocationConf &location);
 
-  // 返り値は無名ドメインソケットのfd
   bool ForkAndExecuteCgi();
+  bool CreateAndRunChildProcesses(int parentsock, int childsock);
+
+  bool AddNonBlockingOptToFd(int fd) const;
 
   // リクエストからCGIスクリプトに渡す変数を作成する
   void CreateCgiMetaVariablesFromHttpRequest(
@@ -69,11 +71,6 @@ class CgiRequest {
 
   void ExecuteCgi();
   bool MoveToCgiExecutionDir(const std::string &exec_cgi_script_path_) const;
-
-  // TODO : どこかに移動させる。
-  // exec なども移動させたい。
-  char **AllocCharPtrsFromVectorString(const std::vector<std::string> &v) const;
-  void FreePtrArray(char **dptr) const;
 };
 
 }  // namespace cgi

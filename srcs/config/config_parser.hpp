@@ -132,6 +132,16 @@ class Parser {
   // 正しいHTTPステータスコードか
   bool IsValidHttpStatusCode(const std::string &code);
 
+  // "<IP>:<Port>" もしくは "<Port>"
+  bool IsValidListenArgument(const std::string &word);
+
+  // <num>.<num>.<num>.<num> の形式か｡
+  // num は 0~255 の数字
+  bool IsValidIp(const std::string &ip);
+
+  std::pair<std::string, std::string> SplitToIpAndPort(
+      const std::string &ip_port);
+
   // portが符号なし整数であり､ポート番号の範囲に収まっているかチェックする
   bool IsValidPort(const std::string &port);
 

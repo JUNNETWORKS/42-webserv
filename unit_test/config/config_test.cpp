@@ -12,7 +12,8 @@ namespace config {
 TEST(ConfigTest, GetVirtualServerByPort) {
   Config config = CreateTestConfig();
 
-  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "");
   EXPECT_TRUE(vserver != NULL);
   EXPECT_TRUE(vserver->IsServerNameIncluded("localhost"));
 }
@@ -23,7 +24,8 @@ TEST(
     GetTheFirstVirtualServerListedIfThereAreMultipleVirtualServerOnTheSamePort) {
   Config config = CreateTestConfig();
 
-  const VirtualServerConf *vserver = config.GetVirtualServerConf("8080", "");
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "");
   EXPECT_TRUE(vserver != NULL);
   EXPECT_TRUE(vserver->IsServerNameIncluded("localhost"));
 }
@@ -35,7 +37,7 @@ TEST(
   Config config = CreateTestConfig();
 
   const VirtualServerConf *vserver =
-      config.GetVirtualServerConf("8080", "nothing.com");
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "nothing.com");
   EXPECT_TRUE(vserver != NULL);
   EXPECT_TRUE(vserver->IsServerNameIncluded("localhost"));
 }
@@ -45,7 +47,7 @@ TEST(ConfigTest, GetVirtualServerByPortAndServerName) {
   Config config = CreateTestConfig();
 
   const VirtualServerConf *vserver =
-      config.GetVirtualServerConf("8080", "webserv.com");
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "webserv.com");
   EXPECT_TRUE(vserver != NULL);
   EXPECT_TRUE(vserver->IsServerNameIncluded("www.webserv.com"));
 }
@@ -54,7 +56,25 @@ TEST(ConfigTest, GetVirtualServerByPortAndServerName) {
 TEST(ConfigTest, ReturnNullIfThereIsNoCorrespondingPortNumber) {
   Config config = CreateTestConfig();
 
-  EXPECT_TRUE(config.GetVirtualServerConf("10", "") == NULL);
+  EXPECT_TRUE(config.GetVirtualServerConf(kAnyIpAddress, "10", "") == NULL);
+}
+
+// Host:Ip のように指定されているときに正しく取得できる
+TEST(ConfigTest, GetVirtualServerByHostIp) {
+  Config config = CreateTestConfig();
+
+  const VirtualServerConf *vserver = NULL;
+
+  vserver = config.GetVirtualServerConf("127.0.0.1", "4545", "");
+  EXPECT_TRUE(vserver != NULL);
+  EXPECT_EQ(vserver->GetLocation("/")->GetRootDir(), "/var/www/127_0_0_1_4545");
+
+  vserver = config.GetVirtualServerConf("127.0.0.2", "4545", "");
+  EXPECT_TRUE(vserver != NULL);
+  EXPECT_EQ(vserver->GetLocation("/")->GetRootDir(), "/var/www/127_0_0_2_4545");
+
+  vserver = config.GetVirtualServerConf("127.0.0.3", "4545", "");
+  EXPECT_TRUE(vserver == NULL);
 }
 
 }  // namespace config

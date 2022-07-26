@@ -67,6 +67,9 @@ class CgiProcess {
 
   static void HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                              Epoll *epoll);
+  static bool HandleCgiWriteEvent(CgiProcess *cgi_process, FdEvent *fde,
+                                  Epoll *epoll);
+  static bool HandleCgiReadEvent(CgiProcess *cgi_process);
 };
 
 }  // namespace cgi

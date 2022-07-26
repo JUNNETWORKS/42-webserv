@@ -11,6 +11,8 @@
 
 namespace config {
 
+const std::string kAnyIpAddress = "0.0.0.0";
+
 // getaddrinfo()などの標準ライブラリのインターフェースに合わせている｡
 // サービス名("http")などは受け付けず､数値での指定のみ
 typedef std::string PortType;
@@ -22,6 +24,7 @@ class VirtualServerConf {
   typedef std::set<std::string> ServerNamesSet;
 
  private:
+  std::string listen_ip_;
   PortType listen_port_;
   ServerNamesSet server_names_;
   LocationConfsVector locations_;
@@ -43,8 +46,10 @@ class VirtualServerConf {
   // Getter and Setter
   // ========================================================================
 
+  std::string GetListenIp() const;
   PortType GetListenPort() const;
 
+  void SetListenIp(std::string listen_ip);
   void SetListenPort(PortType listen_port);
 
   bool IsServerNameIncluded(std::string server_name) const;

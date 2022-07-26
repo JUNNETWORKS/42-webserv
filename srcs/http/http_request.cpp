@@ -94,6 +94,7 @@ const config::LocationConf *HttpRequest::GetLocation() const {
 
 void HttpRequest::ParseRequest(utils::ByteVector &buffer,
                                const config::Config &conf,
+                               const std::string &ip,
                                const config::PortType &port) {
   if (buffer.size() > kMaxBufferLength) {
     parse_status_ = BAD_REQUEST;
@@ -104,7 +105,7 @@ void HttpRequest::ParseRequest(utils::ByteVector &buffer,
   if (phase_ == kHeaderField)
     phase_ = ParseHeaderField(buffer);
   if (phase_ == kLoadHeader)
-    phase_ = LoadHeader(conf, port);
+    phase_ = LoadHeader(conf, ip, port);
   if (phase_ == kBody)
     phase_ = ParseBody(buffer);
   PrintRequestInfo();
@@ -162,8 +163,9 @@ HttpRequest::ParsingPhase HttpRequest::ParseHeaderField(
 }
 
 HttpRequest::ParsingPhase HttpRequest::LoadHeader(
-    const config::Config &conf, const config::PortType &port) {
-  if (LoadVirtualServer(conf, port) == false) {
+    const config::Config &conf, const std::string &ip,
+    const config::PortType &port) {
+  if (LoadVirtualServer(conf, ip, port) == false) {
     parse_status_ = BAD_REQUEST;
     return kError;
   }
@@ -416,12 +418,13 @@ HttpStatus HttpRequest::DecideBodySize() {
 }
 
 bool HttpRequest::LoadVirtualServer(const config::Config &conf,
+                                    const std::string &ip,
                                     const config::PortType &port) {
   Result<const std::vector<std::string> &> host_res = GetHeader("Host");
   if (host_res.IsErr() || host_res.Ok().size() != 1)
     return false;
 
-  vserver_ = conf.GetVirtualServerConf(port, host_res.Ok()[0]);
+  vserver_ = conf.GetVirtualServerConf(ip, port, host_res.Ok()[0]);
   if (vserver_ == NULL)
     return false;
 

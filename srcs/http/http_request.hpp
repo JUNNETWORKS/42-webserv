@@ -85,7 +85,7 @@ class HttpRequest {
   int GetLocalRedirectCount() const;
 
   void ParseRequest(utils::ByteVector &buffer, const config::Config &conf,
-                    const config::PortType &port);
+                    const std::string &ip, const config::PortType &port);
   bool IsErrorRequest() const;
   bool IsResponsible() const;
 
@@ -99,8 +99,8 @@ class HttpRequest {
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);
-  ParsingPhase LoadHeader(const config::Config &conf,
-                          const config::PortType &conn_sock);
+  ParsingPhase LoadHeader(const config::Config &conf, const std::string &ip,
+                          const config::PortType &port);
   ParsingPhase ParseBody(utils::ByteVector &buffer);
   HttpStatus InterpretMethod(const std::string &method);
   void DivideParamAsPath(const std::string &token);
@@ -115,7 +115,7 @@ class HttpRequest {
   ParsingPhase ParseChunkedBody(utils::ByteVector &buffer);
 
   HttpStatus DecideBodySize();
-  bool LoadVirtualServer(const config::Config &conf,
+  bool LoadVirtualServer(const config::Config &conf, const std::string &ip,
                          const config::PortType &port);
   bool LoadLocation();
   void PrintRequestInfo();
