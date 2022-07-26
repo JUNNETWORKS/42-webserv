@@ -153,36 +153,34 @@ bool CgiRequest::ForkAndExecuteCgi() {
   int parentsock = sockfds[0];
   int childsock = sockfds[1];
 
-  if (AddNonBlockingOptToFd(parentsock) == false) {
+  if (AddNonBlockingOptToFd(parentsock) == false ||
+      CreateAndRunChildProcesses(parentsock, childsock) == false) {
     close(parentsock);
     close(childsock);
     return false;
   }
+  cgi_unisock_ = parentsock;
+  close(childsock);
+  return true;
+}
 
+bool CgiRequest::CreateAndRunChildProcesses(int parentsock, int childsock) {
   cgi_pid_ = fork();
-  if (cgi_pid_ < -1) {
-    close(parentsock);
-    close(childsock);
+  if (cgi_pid_ < 0) {
     return false;
   }
-  if (cgi_pid_ == 0) {
-    // Child
+  if (cgi_pid_ == 0) {  // Child
     close(parentsock);
     if (dup2(childsock, STDIN_FILENO) < 0 ||
         dup2(childsock, STDOUT_FILENO) < 0) {
-      close(parentsock);
       close(childsock);
       exit(EXIT_FAILURE);
     }
     close(childsock);
     ExecuteCgi();
     exit(EXIT_FAILURE);
-  } else {
-    // Parent
-    cgi_unisock_ = parentsock;
-    close(childsock);
-    return true;
   }
+  return true;
 }
 
 bool CgiRequest::AddNonBlockingOptToFd(int fd) const {
