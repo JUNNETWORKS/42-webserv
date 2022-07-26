@@ -18,6 +18,6 @@ cp -r server1 /var/webserv/server1
 cp -r server2 /var/webserv/server2
 cp -r server3 /var/webserv/server3
 
-if grep -q "127.0.0.1 webserv.com" /etc/hosts; then
+if ! grep -q "127.0.0.1 webserv.com" /etc/hosts; then
   echo "127.0.0.1 webserv.com" >> /etc/hosts
 fi
