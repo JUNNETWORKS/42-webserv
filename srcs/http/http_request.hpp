@@ -89,7 +89,7 @@ class HttpRequest {
   bool IsErrorRequest() const;
   bool IsResponsible() const;
 
-  void ReBindPathAndLocation();
+  void ReBindPathAndLocation(const std::string &new_path);
 
   // ========================================================================
   // Getter and Setter
