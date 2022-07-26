@@ -48,8 +48,20 @@ bool IsReadableFile(const std::string& file_path) {
   return access(file_path.c_str(), R_OK) == 0;
 }
 
-bool IsExecutableFile(const std::string& file_path) {
-  return access(file_path.c_str(), X_OK) == 0;
+Result<bool> IsExecutableFile(const std::string& file_path) {
+  bool is_executable = access(file_path.c_str(), X_OK) == 0;
+
+  if (is_executable == false) {
+    return false;
+  }
+  Result<bool> is_regular_file_res = utils::IsRegularFile(file_path);
+  if (is_regular_file_res.IsErr()) {
+    return Error();
+  }
+  if (is_regular_file_res.Ok() == false) {
+    return false;
+  }
+  return true;
 }
 
 Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
