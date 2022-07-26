@@ -130,9 +130,6 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
 
   CgiProcess *cgi_process = reinterpret_cast<CgiProcess *>(data);
 
-  CgiRequest *cgi_request = cgi_process->cgi_request_;
-  CgiResponse *cgi_response = cgi_process->cgi_response_;
-
   if (cgi_process->IsRemovable()) {
     DeleteCgiProcess(epoll, fde);
     return;
@@ -144,43 +141,52 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
     return;
   }
 
+  bool should_delete_cgi = false;
   if (events & kFdeWrite) {
-    // Write request's body to unisock
-    ssize_t write_res = write(cgi_request->GetCgiUnisock(),
-                              cgi_process->cgi_input_buffer_.data(),
-                              cgi_process->cgi_input_buffer_.size());
-    if (write_res < 0) {
-      DeleteCgiProcess(epoll, fde);
-      return;
-    }
-    cgi_process->cgi_input_buffer_.EraseHead(write_res);
-    if (cgi_process->cgi_input_buffer_.empty()) {
-      shutdown(cgi_request->GetCgiUnisock(), SHUT_WR);
-      epoll->Del(fde, kFdeWrite);
-    }
+    should_delete_cgi |= HandleCgiWriteEvent(cgi_process, fde, epoll);
   }
   if (events & kFdeRead) {
-    // Read data from unisock and store data in buffer
-    utils::Byte buf[kDataPerRead];
-    ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
-    printf("HandleCgiEvent() read_res == %ld\n", read_res);
-    if (read_res < 0) {
-      DeleteCgiProcess(epoll, fde);
-      return;
-    }
-    if (read_res == 0) {
-      DeleteCgiProcess(epoll, fde);
-      return;
-    }
-    cgi_process->cgi_output_buffer_.AppendDataToBuffer(buf, read_res);
-    cgi_response->Parse(cgi_process->cgi_output_buffer_);
+    should_delete_cgi |= HandleCgiReadEvent(cgi_process);
   }
 
-  if (events & kFdeError) {
+  if (should_delete_cgi) {
     // Error
     DeleteCgiProcess(epoll, fde);
     return;
   }
+}
+
+bool CgiProcess::HandleCgiWriteEvent(CgiProcess *cgi_process, FdEvent *fde,
+                                     Epoll *epoll) {
+  CgiRequest *cgi_request = cgi_process->cgi_request_;
+  // Write request's body to unisock
+  ssize_t write_res =
+      write(cgi_request->GetCgiUnisock(), cgi_process->cgi_input_buffer_.data(),
+            cgi_process->cgi_input_buffer_.size());
+  if (write_res < 0) {
+    return true;
+  }
+  cgi_process->cgi_input_buffer_.EraseHead(write_res);
+  if (cgi_process->cgi_input_buffer_.empty()) {
+    shutdown(cgi_request->GetCgiUnisock(), SHUT_WR);
+    epoll->Del(fde, kFdeWrite);
+  }
+  return false;
+}
+
+bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
+  CgiRequest *cgi_request = cgi_process->cgi_request_;
+  CgiResponse *cgi_response = cgi_process->cgi_response_;
+  // Read data from unisock and store data in buffer
+  utils::Byte buf[kDataPerRead];
+  ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
+  printf("HandleCgiEvent() read_res == %ld\n", read_res);
+  if (read_res <= 0) {
+    return true;
+  }
+  cgi_process->cgi_output_buffer_.AppendDataToBuffer(buf, read_res);
+  cgi_response->Parse(cgi_process->cgi_output_buffer_);
+  return false;
 }
 
 }  // namespace cgi
