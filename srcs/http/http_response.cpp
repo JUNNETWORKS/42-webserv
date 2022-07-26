@@ -28,7 +28,7 @@ bool AppendBytesToFile(const std::string &path, const utils::ByteVector &bytes);
 const std::string HttpResponse::kDefaultHttpVersion = "HTTP/1.1";
 
 HttpResponse::HttpResponse(const config::LocationConf *location,
-                           server::Epoll *epoll)
+                           server::Epoll *epoll, bool is_cgi_response)
     : location_(location),
       epoll_(epoll),
       phase_(kExecuteRequest),
@@ -37,12 +37,14 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       status_message_(StatusCodes::GetMessage(OK)),
       headers_(),
       write_buffer_(),
-      file_fd_(-1) {
+      file_fd_(-1),
+      is_cgi_response_(is_cgi_response) {
   assert(epoll_ != NULL);
 }
 
 HttpResponse::HttpResponse(const config::LocationConf *location,
-                           server::Epoll *epoll, const HttpStatus status)
+                           server::Epoll *epoll, const HttpStatus status,
+                           bool is_cgi_response)
     : location_(location),
       epoll_(epoll),
       phase_(kExecuteRequest),
@@ -51,7 +53,8 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       status_message_(StatusCodes::GetMessage(OK)),
       headers_(),
       write_buffer_(),
-      file_fd_(-1) {
+      file_fd_(-1),
+      is_cgi_response_(is_cgi_response) {
   assert(status >= 400);
   phase_ = MakeErrorResponse(status);
   assert(phase_ == kComplete);
@@ -464,6 +467,10 @@ void HttpResponse::SetHeader(const std::string &header,
 void HttpResponse::AppendHeader(const std::string &header,
                                 const std::string &value) {
   headers_[header].push_back(value);
+}
+
+bool HttpResponse::IsCgiResponse() const {
+  return is_cgi_response_;
 }
 
 const std::vector<std::string> &HttpResponse::GetHeader(

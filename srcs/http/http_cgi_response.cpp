@@ -8,7 +8,7 @@ const std::string HttpCgiResponse::kLastChunk = "0" + kCrlf + kCrlf;
 
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
                                  server::Epoll *epoll, int conn_fd)
-    : HttpResponse(location, epoll),
+    : HttpResponse(location, epoll, true),
       cgi_process_(new cgi::CgiProcess(location, epoll, conn_fd)) {}
 
 HttpCgiResponse::~HttpCgiResponse() {

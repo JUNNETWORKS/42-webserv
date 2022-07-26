@@ -59,11 +59,13 @@ class HttpResponse {
   // 全てのレスポンスクラスはファイルを返せる必要がある｡
   // なぜならエラー時にファイルを扱う可能性があるからである｡
   int file_fd_;
+  bool is_cgi_response_;
 
  public:
-  HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll,
-               const HttpStatus status);
+               bool is_cgi_response = false);
+  HttpResponse(const config::LocationConf *location, server::Epoll *epoll,
+               const HttpStatus status, bool is_cgi_response = false);
   virtual ~HttpResponse();
 
   //レスポンスの内容を作る関数。
@@ -93,6 +95,8 @@ class HttpResponse {
   void SetStatusMessage(const std::string &status_message);
   void SetHeader(const std::string &header, const std::string &value);
   void AppendHeader(const std::string &header, const std::string &value);
+
+  bool IsCgiResponse() const;
 
   static bool IsRequestHasConnectionClose(const HttpRequest &request);
 
