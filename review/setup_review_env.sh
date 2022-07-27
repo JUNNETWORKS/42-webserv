@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -eux
 
 if [[ $UID != 0 ]]; then
