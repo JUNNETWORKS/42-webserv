@@ -352,6 +352,7 @@ Result<std::string> HttpResponse::GetResponsableIndexPagePath() {
 
 HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
     const HttpStatus status) {
+  SetResponseType(kHttpErrorResponse);
   SetStatus(status, StatusCodes::GetMessage(status));
 
   headers_.clear();
@@ -467,6 +468,10 @@ void HttpResponse::SetHeader(const std::string &header,
 void HttpResponse::AppendHeader(const std::string &header,
                                 const std::string &value) {
   headers_[header].push_back(value);
+}
+
+void HttpResponse::SetResponseType(EResponseType response_type) {
+  response_type_ = response_type;
 }
 
 bool HttpResponse::IsCgiResponse() const {

@@ -24,7 +24,7 @@ using namespace result;
 class HttpResponse {
  protected:
   // レスポンスの種類
-  enum EResponseType { kHttpResponse, kHttpCgiResponse };
+  enum EResponseType { kHttpResponse, kHttpErrorResponse, kHttpCgiResponse };
 
   // レスポンスの作成状況
   enum CreateResponsePhase {
@@ -101,6 +101,7 @@ class HttpResponse {
   void SetStatusMessage(const std::string &status_message);
   void SetHeader(const std::string &header, const std::string &value);
   void AppendHeader(const std::string &header, const std::string &value);
+  void SetResponseType(EResponseType response_type);
 
   static bool IsRequestHasConnectionClose(const HttpRequest &request);
 
