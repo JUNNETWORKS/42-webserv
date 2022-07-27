@@ -189,7 +189,7 @@ bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
   // cgi から、read した時、write イベント監視するようにする。
   // read で エラーが起こった際なども、on にしないとダメかも。
   FdEvent *client_fde =
-      cgi_process->epoll_->registered_fd_events_[cgi_process->socket_->GetFd()];
+      cgi_process->epoll_->GetFdeFromFd(cgi_process->socket_->GetFd());
   cgi_process->epoll_->Add(client_fde, kFdeWrite);
 
   if (read_res <= 0) {

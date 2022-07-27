@@ -184,4 +184,9 @@ std::vector<FdEventEvent> Epoll::RetrieveTimeouts() {
   return fdee_vec;
 }
 
+// try catch 必要？
+FdEvent *Epoll::GetFdeFromFd(int fd) const {
+  return registered_fd_events_.at(fd);
+}
+
 }  // namespace server

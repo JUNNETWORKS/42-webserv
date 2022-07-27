@@ -61,7 +61,6 @@ class Epoll {
  private:
   const int epfd_;
 
- public:  // TODO : 消す
   // map[<fd>] = <FdEvent>
   std::map<int, FdEvent *> registered_fd_events_;
 
@@ -92,6 +91,8 @@ class Epoll {
 
   // Timeoutなfd取得し､FdEventEventを返す｡
   std::vector<FdEventEvent> RetrieveTimeouts();
+
+  FdEvent *GetFdeFromFd(int fd) const;
 
  private:
   // epoll instance が片方のみでcloseされるのを防ぐためコピー操作は禁止
