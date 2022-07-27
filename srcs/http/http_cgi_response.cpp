@@ -72,7 +72,8 @@ HttpCgiResponse::MakeResponseBody() {
   } else {
     utils::ByteVector &cgi_response_body =
         cgi_process_->GetCgiResponse()->GetBody();
-    write_buffer_.AppendDataToBuffer(ConvertToChunkResponse(cgi_response_body));
+    // write_buffer_.AppendDataToBuffer(ConvertToChunkResponse(cgi_response_body));
+    write_buffer_.AppendDataToBuffer(cgi_response_body);
     cgi_response_body.clear();
 
     if (cgi_process_->IsRemovable()) {
