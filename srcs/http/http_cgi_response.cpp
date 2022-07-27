@@ -201,7 +201,7 @@ HttpRequest HttpCgiResponse::CreateLocalRedirectRequest(
   Result<std::string> location = cgi_response->GetHeader("LOCATION");
 
   HttpRequest new_request(request);
-  new_request.SetPath(location.Ok());
+  new_request.ReBindPathAndLocation(location.Ok());
   new_request.SetLocalRedirectCount(request.GetLocalRedirectCount() + 1);
   return new_request;
 }
