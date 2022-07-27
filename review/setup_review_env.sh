@@ -6,8 +6,13 @@ if [[ $UID != 0 ]]; then
     exit 1
 fi
 
+# ストレステストツール
+apt update && apt install -y siege
+
 # Nginx が80番ポートを使っている可能性があるので止めておく
-systemctl stop nginx
+if systemctl is-active nginx; then
+  systemctl stop nginx
+fi
 
 rm -rf /var/webserv
 
