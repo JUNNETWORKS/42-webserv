@@ -176,12 +176,18 @@ bool LocationConf::IsMatchPattern(std::string path) const {
 }
 
 std::string LocationConf::GetAbsolutePath(std::string path) const {
+  if (is_backward_search_) {
+    return utils::JoinPath(GetRootDir(), path);
+  }
   std::string abs_path = utils::JoinPath(
       GetRootDir(), path.replace(0, GetPathPattern().length(), ""));
   return abs_path;
 }
 
 std::string LocationConf::RemovePathPatternFromPath(std::string path) const {
+  if (is_backward_search_) {
+    return path;
+  }
   return path.replace(0, GetPathPattern().length(), "");
 }
 
