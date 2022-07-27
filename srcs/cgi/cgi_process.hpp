@@ -35,10 +35,11 @@ class CgiProcess {
   FdEvent *fde_;
 
   int status_;
-  int conn_fd_;
+  ConnSocket *socket_;
 
  public:
-  CgiProcess(const config::LocationConf *location, Epoll *epoll, int conn_fd);
+  CgiProcess(const config::LocationConf *location, Epoll *epoll,
+             ConnSocket *socket);
   ~CgiProcess();
 
   // Cgiプロセスを作成し､UnixDomainSocketをEpollに登録する｡
@@ -69,7 +70,7 @@ class CgiProcess {
                              Epoll *epoll);
   static bool HandleCgiWriteEvent(CgiProcess *cgi_process, FdEvent *fde,
                                   Epoll *epoll);
-  static bool HandleCgiReadEvent(CgiProcess *cgi_process, Epoll *epoll);
+  static bool HandleCgiReadEvent(CgiProcess *cgi_process);
 };
 
 }  // namespace cgi

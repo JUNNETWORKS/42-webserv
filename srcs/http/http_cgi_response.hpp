@@ -16,7 +16,7 @@ class HttpCgiResponse : public HttpResponse {
 
  public:
   HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll,
-                  int conn_fd);
+                  server::ConnSocket *socket);
   ~HttpCgiResponse();
 
  private:

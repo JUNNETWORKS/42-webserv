@@ -8,7 +8,7 @@
 namespace cgi {
 
 CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll,
-                       int conn_fd)
+                       ConnSocket *socket)
     : cgi_request_(NULL),
       cgi_response_(NULL),
       cgi_input_buffer_(),
@@ -17,7 +17,7 @@ CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll,
       epoll_(epoll),
       fde_(NULL),
       status_(0),
-      conn_fd_(conn_fd) {}
+      socket_(socket) {}
 
 CgiProcess::~CgiProcess() {
   if (cgi_request_) {
@@ -148,7 +148,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
     should_delete_cgi |= HandleCgiWriteEvent(cgi_process, fde, epoll);
   }
   if (events & kFdeRead) {
-    should_delete_cgi |= HandleCgiReadEvent(cgi_process, epoll);
+    should_delete_cgi |= HandleCgiReadEvent(cgi_process);
   }
 
   if (should_delete_cgi) {
@@ -176,7 +176,7 @@ bool CgiProcess::HandleCgiWriteEvent(CgiProcess *cgi_process, FdEvent *fde,
   return false;
 }
 
-bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process, Epoll *epoll) {
+bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
   CgiRequest *cgi_request = cgi_process->cgi_request_;
   CgiResponse *cgi_response = cgi_process->cgi_response_;
   // Read data from unisock and store data in buffer
@@ -188,8 +188,9 @@ bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process, Epoll *epoll) {
   // クライアントへの write イベント監視しないようにしたので、
   // cgi から、read した時、write イベント監視するようにする。
   // read で エラーが起こった際なども、on にしないとダメかも。
-  FdEvent *client_fde = epoll->registered_fd_events_[cgi_process->conn_fd_];
-  epoll->Add(client_fde, kFdeWrite);
+  FdEvent *client_fde =
+      cgi_process->epoll_->registered_fd_events_[cgi_process->socket_->GetFd()];
+  cgi_process->epoll_->Add(client_fde, kFdeWrite);
 
   if (read_res <= 0) {
     return true;
