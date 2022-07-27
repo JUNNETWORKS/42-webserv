@@ -23,6 +23,9 @@ using namespace result;
 
 class HttpResponse {
  protected:
+  // レスポンスの種類
+  enum EResponseType { kHttpResponse, kHttpCgiResponse };
+
   // レスポンスの作成状況
   enum CreateResponsePhase {
     kExecuteRequest,
@@ -59,13 +62,14 @@ class HttpResponse {
   // 全てのレスポンスクラスはファイルを返せる必要がある｡
   // なぜならエラー時にファイルを扱う可能性があるからである｡
   int file_fd_;
-  bool is_cgi_response_;
+  EResponseType response_type_;
 
  public:
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll,
-               bool is_cgi_response = false);
+               EResponseType response_type = kHttpResponse);
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll,
-               const HttpStatus status, bool is_cgi_response = false);
+               const HttpStatus status,
+               EResponseType response_type = kHttpResponse);
   virtual ~HttpResponse();
 
   //レスポンスの内容を作る関数。

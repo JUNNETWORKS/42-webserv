@@ -9,7 +9,7 @@ const std::string HttpCgiResponse::kLastChunk = "0" + kCrlf + kCrlf;
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
                                  server::Epoll *epoll,
                                  server::ConnSocket *socket)
-    : HttpResponse(location, epoll, true),
+    : HttpResponse(location, epoll, kHttpCgiResponse),
       cgi_process_(new cgi::CgiProcess(location, epoll, socket)) {}
 
 HttpCgiResponse::~HttpCgiResponse() {
