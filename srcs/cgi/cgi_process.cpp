@@ -190,7 +190,9 @@ bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
   // read で エラーが起こった際なども、on にしないとダメかも。
   FdEvent *client_fde =
       cgi_process->epoll_->GetFdeFromFd(cgi_process->socket_->GetFd());
-  cgi_process->epoll_->Add(client_fde, kFdeWrite);
+  if (client_fde) {
+    cgi_process->epoll_->Add(client_fde, kFdeWrite);
+  }
 
   if (read_res <= 0) {
     return true;

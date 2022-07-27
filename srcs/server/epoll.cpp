@@ -186,6 +186,9 @@ std::vector<FdEventEvent> Epoll::RetrieveTimeouts() {
 
 // try catch 必要？
 FdEvent *Epoll::GetFdeFromFd(int fd) const {
+  if (registered_fd_events_.find(fd) == registered_fd_events_.end()) {
+    return NULL;
+  }
   return registered_fd_events_.at(fd);
 }
 
