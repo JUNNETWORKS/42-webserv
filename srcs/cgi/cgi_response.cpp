@@ -182,14 +182,14 @@ void CgiResponse::AdjustHeadersBasedOnResponseType() {
   }
 
   // webserv が出力する想定のヘッダーをCGIスクリプトが出力している場合は削除する
-  std::vector<std::string> webserv_headers;
-  webserv_headers.push_back("CONTENT-LENGTH");
-  webserv_headers.push_back("TRANSFER-ENCODING");
+  std::vector<std::string> unacceptable_headers;
+  unacceptable_headers.push_back("CONTENT-LENGTH");
+  unacceptable_headers.push_back("TRANSFER-ENCODING");
 
   for (HeaderVecType::iterator it = headers_.begin(); it != headers_.end();) {
-    std::vector<std::string>::iterator webserv_it =
-        std::find(webserv_headers.begin(), webserv_headers.end(), it->first);
-    if (webserv_it != webserv_headers.end()) {
+    std::vector<std::string>::iterator find_res = std::find(
+        unacceptable_headers.begin(), unacceptable_headers.end(), it->first);
+    if (find_res != unacceptable_headers.end()) {
       it = headers_.erase(it);
     } else {
       it++;
