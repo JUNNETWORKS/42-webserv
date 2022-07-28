@@ -2,6 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include <iostream>
+#include <string>
+#include <tuple>
+
 #include "expectations/expect_result.hpp"
 
 namespace utils {
@@ -125,5 +129,51 @@ const std::vector<
 
 INSTANTIATE_TEST_SUITE_P(SplitTest, SplitTest,
                          ::testing::ValuesIn(SplitTestCase));
+
+// ReplaceAll Test
+// ------------------------------------------------------------------------------------------
+// class SplitTest
+//     : public ::testing::TestWithParam<std::pair<
+//           std::pair<std::string, std::string>, std::vector<std::string>>> {};
+
+// TEST_P(SplitTest, Ok) {
+//   std::pair<std::pair<std::string, std::string>, std::vector<std::string>>
+//       param = GetParam();
+//   std::pair<std::string, std::string> input = param.first;
+//   std::vector<std::string> expected = param.second;
+
+//   EXPECT_EQ(SplitString(input.first, input.second), expected);
+// }
+
+class ReplaceAllTest
+    : public ::testing::TestWithParam<
+          std::tuple<std::string, std::string, std::string, std::string>> {};
+
+TEST_P(ReplaceAllTest, Ok) {
+  std::tuple<std::string, std::string, std::string, std::string> param =
+      GetParam();
+  std::string input = std::get<0>(param);
+  std::string target = std::get<1>(param);
+  std::string replacement = std::get<2>(param);
+  std::string expect = std::get<3>(param);
+  EXPECT_EQ(ReplaceAll(input, target, replacement), expect);
+}
+
+// input, target, replacement, expect
+const std::vector<
+    std::tuple<std::string, std::string, std::string, std::string>>
+    ReplaceAllTestCase = {{"aaa", "a", "b", "bbb"},
+                          {"aaa", "a", "aa", "aaaaaa"},
+                          {"aaa", "aa", "bb", "bba"},
+                          {"hoge", "hoge", "fuga", "fuga"},
+                          {"hogehogehoge", "hoge", "fuga", "fugafugafuga"},
+                          {"121212", "2", "1", "111111"},
+                          {"121212", "12", "1", "111"},
+                          {"", "aaa", "aaa", ""},
+                          {"aaa", "a", "", ""},
+                          {"aaa", "", "xxx", "aaa"}};
+
+INSTANTIATE_TEST_SUITE_P(ReplaceAllTest, ReplaceAllTest,
+                         ::testing::ValuesIn(ReplaceAllTestCase));
 
 }  // namespace utils

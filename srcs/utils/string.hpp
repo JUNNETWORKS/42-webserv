@@ -67,6 +67,10 @@ bool ReadFile(const std::string &path, std::string &dest);
 
 std::string GetExetension(const std::string &file_path);
 
+
+std::string ReplaceAll(const std::string s, const std::string &target,
+                       const std::string &replacement);
+
 char **AllocVectorStringToCharDptr(const std::vector<std::string> &v);
 void DeleteCharDprt(char **dstr);
 
