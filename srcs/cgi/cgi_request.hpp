@@ -22,7 +22,7 @@ using namespace result;
 
 class CgiRequest {
  private:
-  static const std::string kPythonPath;
+  static const std::string kPython;
 
   pid_t cgi_pid_;
   int cgi_unisock_;
