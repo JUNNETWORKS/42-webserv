@@ -85,7 +85,6 @@ class CgiResponse {
   // ヘッダーとボディの区切りまでを buffer から削除する
   Result<void> SetHeadersFromBuffer(utils::ByteVector &buffer);
 
-  // buffer の中身は body_ に移された後削除される
   void AppendBodyFromBuffer(const utils::ByteVector &buffer);
 
   // response-type
