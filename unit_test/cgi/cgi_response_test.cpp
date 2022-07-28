@@ -60,7 +60,7 @@ TEST(CgiResponseParse, DocumentResponseWithStatus) {
                                               {"STATUS", "404 Not Found"},
                                               {"OPTIONAL", "hoge"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
+  cgi_res.AppendLastChunk();
   EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\n"
                               "<body><p>404 Not Found</p></body>\n"
