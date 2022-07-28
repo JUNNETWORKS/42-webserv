@@ -184,10 +184,9 @@ std::string GetExetension(const std::string &file_path) {
   return ext;
 }
 
-
 std::string ReplaceAll(std::string s, const std::string &target,
                        const std::string &replacement) {
-  if (s.empty() || target.empty() || replacement.empty()) {
+  if (s.empty() || target.empty()) {
     return s;
   }
   std::string::size_type pos = 0;
