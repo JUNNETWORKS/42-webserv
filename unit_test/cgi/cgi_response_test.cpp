@@ -15,8 +15,8 @@ utils::ByteVector DecodeChunkResponse(utils::ByteVector data) {
     Result<size_t> pos = data.FindString(http::kCrlf);
     std::string line = data.SubstrBeforePos(pos.Ok());
     Result<unsigned long> stoul_res = utils::Stoul(line, utils::kHexadecimal);
-    if (stoul_res.Ok() == 0) {
-      EXPECT_EQ(stoul_res.Ok(), 0);
+    n = stoul_res.Ok();
+    if (n == 0) {
       break;
     }
     data.EraseHead(line.length());
@@ -25,6 +25,7 @@ utils::ByteVector DecodeChunkResponse(utils::ByteVector data) {
     data.EraseHead(stoul_res.Ok());
     data.EraseHead(http::kCrlf.length());  // crlf
   }
+  EXPECT_EQ(n, 0);
   return decoded;
 }
 
