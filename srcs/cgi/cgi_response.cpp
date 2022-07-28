@@ -80,7 +80,7 @@ CgiResponse::ResponseType CgiResponse::Parse(utils::ByteVector &buffer) {
       return response_type_ = kParseError;
     }
     buffer = ConvertToChunkResponse(buffer);
-    AppendBodyFromBuffer(ConvertToChunkResponse(buffer););
+    AppendBodyFromBuffer(buffer);
   }
 
   return response_type_;
