@@ -79,7 +79,8 @@ CgiResponse::ResponseType CgiResponse::Parse(utils::ByteVector &buffer) {
       // response-body を保持することが許可されていないレスポンスタイプ
       return response_type_ = kParseError;
     }
-    SetBodyFromBuffer(buffer);
+    buffer = ConvertToChunkResponse(buffer);
+    AppendBodyFromBuffer(ConvertToChunkResponse(buffer););
   }
 
   return response_type_;
@@ -169,7 +170,7 @@ Result<void> CgiResponse::SetHeadersFromBuffer(utils::ByteVector &buffer) {
   return Result<void>();
 }
 
-std::string ConvertToChunkResponse(utils::ByteVector data) {
+utils::ByteVector CgiResponse::ConvertToChunkResponse(utils::ByteVector data) {
   std::stringstream ss;
   while (data.empty() == false) {
     size_t chunk_size =
@@ -183,8 +184,12 @@ std::string ConvertToChunkResponse(utils::ByteVector data) {
   return ss.str();
 }
 
-void CgiResponse::SetBodyFromBuffer(utils::ByteVector &buffer) {
-  buffer = ConvertToChunkResponse(buffer);
+void CgiResponse::AppendLastChunk() {
+  const std::string last_chunk = "0" + http::kCrlf + http::kCrlf;
+  body_.AppendDataToBuffer(last_chunk);
+}
+
+void CgiResponse::AppendBodyFromBuffer(utils::ByteVector &buffer) {
   body_.insert(body_.end(), buffer.begin(), buffer.end());
   buffer.clear();
 }

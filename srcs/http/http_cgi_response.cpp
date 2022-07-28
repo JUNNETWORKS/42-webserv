@@ -4,8 +4,6 @@
 
 namespace http {
 
-const std::string HttpCgiResponse::kLastChunk = "0" + kCrlf + kCrlf;
-
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
                                  server::Epoll *epoll)
     : HttpResponse(location, epoll),
@@ -76,7 +74,8 @@ HttpCgiResponse::MakeResponseBody() {
     cgi_response_body.clear();
 
     if (cgi_process_->IsRemovable()) {
-      write_buffer_.AppendDataToBuffer(kLastChunk);
+      cgi_process_->GetCgiResponse()->AppendLastChunk();
+      write_buffer_.AppendDataToBuffer(cgi_response_body);
       return kComplete;
     } else {
       return kBody;

@@ -47,6 +47,9 @@ class CgiResponse {
   CgiResponse &operator=(const CgiResponse &rhs);
   ~CgiResponse();
 
+  utils::ByteVector ConvertToChunkResponse(utils::ByteVector data);
+  void AppendLastChunk();
+
   ResponseType Parse(utils::ByteVector &buffer);
 
   // ========================================================================
@@ -83,7 +86,7 @@ class CgiResponse {
   Result<void> SetHeadersFromBuffer(utils::ByteVector &buffer);
 
   // buffer の中身は body_ に移された後削除される
-  void SetBodyFromBuffer(utils::ByteVector &buffer);
+  void AppendBodyFromBuffer(utils::ByteVector &buffer);
 
   // response-type
   // によってはヘッダーにデフォルト値が設定されていたりするので､設定する
