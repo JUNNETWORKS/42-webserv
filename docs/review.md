@@ -170,6 +170,48 @@ cd review && ./setup_review_env.sh
 `curl -v -X GET http://localhost:9090/`
 `curl -v -X GET http://localhost:9090/google`
 
+## ベンチマーク
+
+`sudo ./webserv review/default.conf` でwebservを実行する｡
+
+`siege -b http://localhost/index.html --time=30S` でベンチマークを実行する｡
+
+オプションの意味
+- `-b`: ベンチマークモード
+- `--time=30S` 30秒間ベンチマークを実行する｡
+
+ちなみにデフォルトではsiegeは25クライアント並行で動かす
+
+### 結果の読み方
+
+```
+Transactions:                  87319 hits
+Availability:                 100.00 %
+Elapsed time:                  29.00 secs
+Data transferred:               9.58 MB
+Response time:                  0.01 secs
+Transaction rate:            3011.00 trans/sec
+Throughput:                     0.33 MB/sec
+Concurrency:                   24.93
+Successful transactions:       87319
+Failed transactions:               0
+Longest transaction:            0.02
+Shortest transaction:           0.00
+```
+
+- Transactions: ベンチマークで送信されたリクエスト数
+- Availability: レスポンスが返ってきて､なおかつレスポンスコード400や500ではないレスポンスの送信したリクエスト数に対する割合
+- Elapsed time: ベンチマークを実行した時間
+- Data transferred: ヘッダーを含むsiegeの各クライアントに送信されたデータ量の総和
+- Response time: レスポンスが返ってくるまでの平均時間
+- Transaction rate: サーバーが1秒間に処理出来る平均リクエスト数
+- Throughput: サーバーがsiegeの各クライアントに1秒間に送信する平均データ量
+- Concurrency: 同時に接続されたコネクション数の平均｡ サーバーの性能が悪いほどこの数値はあがる｡
+- Successful transactions: ステータスコードが400より下(つまり正常)のレスポンス数
+- Failed transactions: 400以上のステータスまたはソケットに関してエラーが発生した数
+- Longest transaction: レスポンスを返すのに要した時間の最大
+- Shortest transaction: レスポンスを返すのに要した時間の最小
+
 ## コンフィグファイルの説明
 
 レビューで使う `review/default.conf` の説明
