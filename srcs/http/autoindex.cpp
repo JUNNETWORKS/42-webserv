@@ -16,7 +16,7 @@ namespace http {
 std::string AutoIndexHead(const std::string &relative_path) {
   std::string head =
       "<html>\n"
-      "<head><title>Index of " +
+      "<head><meta charset=\"UTF-8\"><title>Index of " +
       relative_path +
       "</title></head>\n"
       "<body>\n"
