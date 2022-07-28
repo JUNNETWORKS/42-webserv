@@ -86,7 +86,7 @@ class CgiResponse {
   Result<void> SetHeadersFromBuffer(utils::ByteVector &buffer);
 
   // buffer の中身は body_ に移された後削除される
-  void AppendBodyFromBuffer(utils::ByteVector &buffer);
+  void AppendBodyFromBuffer(const utils::ByteVector &buffer);
 
   // response-type
   // によってはヘッダーにデフォルト値が設定されていたりするので､設定する

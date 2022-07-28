@@ -79,8 +79,8 @@ CgiResponse::ResponseType CgiResponse::Parse(utils::ByteVector &buffer) {
       // response-body を保持することが許可されていないレスポンスタイプ
       return response_type_ = kParseError;
     }
-    buffer = ConvertToChunkResponse(buffer);
-    AppendBodyFromBuffer(buffer);
+    AppendBodyFromBuffer(ConvertToChunkResponse(buffer));
+    buffer.clear();
   }
 
   return response_type_;
@@ -189,9 +189,8 @@ void CgiResponse::AppendLastChunk() {
   body_.AppendDataToBuffer(last_chunk);
 }
 
-void CgiResponse::AppendBodyFromBuffer(utils::ByteVector &buffer) {
+void CgiResponse::AppendBodyFromBuffer(const utils::ByteVector &buffer) {
   body_.insert(body_.end(), buffer.begin(), buffer.end());
-  buffer.clear();
 }
 
 void CgiResponse::AdjustHeadersBasedOnResponseType() {
