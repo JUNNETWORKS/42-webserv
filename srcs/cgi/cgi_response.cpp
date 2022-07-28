@@ -170,16 +170,14 @@ Result<void> CgiResponse::SetHeadersFromBuffer(utils::ByteVector &buffer) {
 }
 
 std::string ConvertToChunkResponse(utils::ByteVector data) {
-  const std::string kCrlf = "\r\n";
-  const unsigned long kMaxChunkSize = 1024;  // 1KB
   std::stringstream ss;
   while (data.empty() == false) {
     size_t chunk_size =
-        data.size() < kMaxChunkSize ? data.size() : kMaxChunkSize;
+        data.size() < http::kMaxUriLength ? data.size() : http::kMaxUriLength;
     ss << std::hex << chunk_size;
-    ss << kCrlf;
+    ss << http::kCrlf;
     ss << data.SubstrBeforePos(chunk_size);
-    ss << kCrlf;
+    ss << http::kCrlf;
     data.erase(data.begin(), data.begin() + chunk_size);
   }
   return ss.str();
