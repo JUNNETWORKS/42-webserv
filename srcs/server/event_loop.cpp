@@ -18,13 +18,6 @@ int StartEventLoop(Epoll &epoll) {
       InvokeFdEvent(fde, events, &epoll);
     }
 
-    // TODO : 消す
-    static int i;
-    i++;
-    if (i % 10 == 0) {
-      std::cerr << "WaitEvents " << i << std::endl;
-    }
-
     Result<std::vector<FdEventEvent> > result = epoll.WaitEvents(100);
     if (result.IsErr()) {
       utils::ErrExit("WaitEvents");
