@@ -186,11 +186,11 @@ utils::ByteVector CgiResponse::ConvertToChunkResponse(utils::ByteVector data) {
 
 void CgiResponse::AppendLastChunk() {
   const std::string last_chunk = "0" + http::kCrlf + http::kCrlf;
-  body_.AppendDataToBuffer(last_chunk);
+  AppendBodyFromBuffer(last_chunk);
 }
 
 void CgiResponse::AppendBodyFromBuffer(const utils::ByteVector &buffer) {
-  body_.insert(body_.end(), buffer.begin(), buffer.end());
+  body_.AppendDataToBuffer(buffer);
 }
 
 void CgiResponse::AdjustHeadersBasedOnResponseType() {
