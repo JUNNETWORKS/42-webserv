@@ -30,6 +30,8 @@
   - [autoindex の on / off](#autoindex-%E3%81%AE-on--off)
   - [index ファイル](#index-%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB)
   - [`return` リダイレクト](#return-%E3%83%AA%E3%83%80%E3%82%A4%E3%83%AC%E3%82%AF%E3%83%88)
+- [ベンチマーク](#%E3%83%99%E3%83%B3%E3%83%81%E3%83%9E%E3%83%BC%E3%82%AF)
+  - [結果の読み方](#%E7%B5%90%E6%9E%9C%E3%81%AE%E8%AA%AD%E3%81%BF%E6%96%B9)
 - [コンフィグファイルの説明](#%E3%82%B3%E3%83%B3%E3%83%95%E3%82%A3%E3%82%B0%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%81%AE%E8%AA%AC%E6%98%8E)
   - [server1](#server1)
   - [server2](#server2)
