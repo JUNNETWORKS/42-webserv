@@ -22,6 +22,8 @@ using namespace result;
 
 class CgiRequest {
  private:
+  static const std::string kPythonPath;
+
   pid_t cgi_pid_;
   int cgi_unisock_;
   std::string script_name_;

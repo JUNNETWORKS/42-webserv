@@ -16,6 +16,8 @@
 
 namespace cgi {
 
+const std::string CgiRequest::kPythonPath = "python3";
+
 CgiRequest::CgiRequest() : cgi_pid_(-1), cgi_unisock_(-1) {}
 
 CgiRequest::CgiRequest(const CgiRequest &rhs) {
@@ -199,9 +201,10 @@ void CgiRequest::ExecuteCgi() {
   if (!MoveToCgiExecutionDir(exec_cgi_script_path_)) {
     return;
   }
-  cgi_args_.insert(cgi_args_.begin(), script_name_);
+  cgi_args_.insert(cgi_args_.begin(), kPythonPath);
+  cgi_args_.insert(cgi_args_.begin() + 1, exec_cgi_script_path_);
   char **argv = utils::AllocVectorStringToCharDptr(cgi_args_);
-  execve(exec_cgi_script_path_.c_str(), argv, environ);
+  execvpe(kPythonPath.c_str(), argv, environ);
   utils::DeleteCharDprt(argv);
 }
 
