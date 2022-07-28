@@ -72,7 +72,6 @@ HttpCgiResponse::MakeResponseBody() {
   } else {
     utils::ByteVector &cgi_response_body =
         cgi_process_->GetCgiResponse()->GetBody();
-    // write_buffer_.AppendDataToBuffer(ConvertToChunkResponse(cgi_response_body));
     write_buffer_.AppendDataToBuffer(cgi_response_body);
     cgi_response_body.clear();
 
@@ -83,20 +82,6 @@ HttpCgiResponse::MakeResponseBody() {
       return kBody;
     }
   }
-}
-
-std::string HttpCgiResponse::ConvertToChunkResponse(utils::ByteVector data) {
-  std::stringstream ss;
-  while (data.empty() == false) {
-    size_t chunk_size =
-        data.size() < kMaxChunkSize ? data.size() : kMaxChunkSize;
-    ss << std::hex << chunk_size;
-    ss << kCrlf;
-    ss << data.SubstrBeforePos(chunk_size);
-    ss << kCrlf;
-    data.erase(data.begin(), data.begin() + chunk_size);
-  }
-  return ss.str();
 }
 
 HttpCgiResponse::CreateResponsePhase HttpCgiResponse::MakeDocumentResponse(
