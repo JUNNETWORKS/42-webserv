@@ -15,6 +15,7 @@ LocationConf::LocationConf()
       root_dir_(),
       index_pages_(),
       is_cgi_(false),
+      cgi_executor_(),
       error_pages_(),
       auto_index_(false),
       redirect_url_() {}
@@ -32,6 +33,7 @@ LocationConf &LocationConf::operator=(const LocationConf &rhs) {
     root_dir_ = rhs.root_dir_;
     index_pages_ = rhs.index_pages_;
     is_cgi_ = rhs.is_cgi_;
+    cgi_executor_ = rhs.cgi_executor_;
     error_pages_ = rhs.error_pages_;
     auto_index_ = rhs.auto_index_;
     redirect_url_ = rhs.redirect_url_;
@@ -137,6 +139,14 @@ bool LocationConf::GetIsCgi() const {
 
 void LocationConf::SetIsCgi(bool is_cgi) {
   is_cgi_ = is_cgi;
+}
+
+std::string LocationConf::GetCgiExecutor() const {
+  return cgi_executor_;
+}
+
+void LocationConf::SetCgiExecutor(const std::string &cgi_executor) {
+  cgi_executor_ = cgi_executor;
 }
 
 const std::map<http::HttpStatus, std::string> &LocationConf::GetErrorPages()
