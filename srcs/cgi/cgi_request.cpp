@@ -220,8 +220,8 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
   cgi_variables_["GATEWAY_INTERFACE"] = "CGI/1.1";
   cgi_variables_["SERVER_PROTOCOL"] = request.GetHttpVersion();
   cgi_variables_["REQUEST_METHOD"] = request.GetMethod();
-  cgi_variables_["PATH_INFO"] = path_info_;
   if (!path_info_.empty()) {
+    cgi_variables_["PATH_INFO"] = path_info_;
     // ここはApacheと結果が異なる｡
     cgi_variables_["PATH_TRANSLATED"] =
         location.GetAbsolutePath(location.GetPathPattern() + path_info_);
