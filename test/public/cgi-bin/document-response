@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/python3 -u
 
-printf "Content-Type: text/html\n"
-printf "Optional: hoge\n"
-printf "\n"
-printf "<HTML>\n"
-printf "<body><p>200 OK</p></body>\n"
-printf "</HTML>"
+print("Content-Type: text/html\n", end="")
+print("Optional: hoge\n", end="")
+print("\n", end="")
+print("<HTML>\n", end="")
+print("<body><p>200 OK</p></body>\n", end="")
+print("</HTML>", end="")
