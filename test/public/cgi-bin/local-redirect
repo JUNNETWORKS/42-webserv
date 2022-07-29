@@ -1,5 +1,5 @@
-#!/bin/bash
+#!/usr/bin/python3 -u
 
 # printf "Location:/users?q=jun\n"
-printf "Location:/hoge/hoge.html\n"
-printf "\n"
+print("Location:/hoge/hoge.html\n", end="")
+print("\n", end="")
