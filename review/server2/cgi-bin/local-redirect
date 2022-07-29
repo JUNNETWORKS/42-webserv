@@ -1,5 +1,5 @@
-#!/bin/bash
+#!/usr/bin/python
 
-# printf "Location:/users?q=jun\n"
-printf "Location:/hoge/hoge.html\n"
-printf "\n"
+# print("Location:/users?q=jun")
+print("Location:/hoge/hoge.html")
+print()
