@@ -68,13 +68,14 @@ def all_test_stat() -> bool:
 def run_test(
     req_path,
     expect_res: res.response,
+    body=None,
     port=cmd_args.WEBSERV_PORT,
     ck_code=True,
     ck_body=True,
     save_diff=False,
     test_name="",
 ) -> bool:
-    ft_res_response = send_req_utils.send_req(req_path, port)
+    ft_res_response = send_req_utils.send_req(req_path, port, body=body)
 
     is_success = None
     if len(req_path) >= 50:
@@ -101,10 +102,18 @@ def run_test(
 
 def run_cmp_test(
     req_path,
+    body=None,
     port=cmd_args.WEBSERV_PORT,
     expect_port=cmd_args.NGINX_PORT,
     save_diff=False,
 ):
     test_name = inspect_utils.get_caller_func_name()
-    expect_res = send_req_utils.send_req(req_path, port=expect_port)
-    run_test(req_path, expect_res, port, save_diff=save_diff, test_name=test_name)
+    expect_res = send_req_utils.send_req(req_path, port=expect_port, body=body)
+    run_test(
+        req_path,
+        expect_res,
+        body=body,
+        port=port,
+        save_diff=save_diff,
+        test_name=test_name,
+    )
