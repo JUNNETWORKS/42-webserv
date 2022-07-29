@@ -161,6 +161,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
 
   if (should_delete_cgi) {
     // Error
+    cgi_process->EnableWriteEventToClient();
     DeleteCgiProcess(epoll, fde);
     return;
   }
