@@ -52,6 +52,11 @@ bool LocationConf::IsValid() const {
   if (client_max_body_size_ > kMaxClientMaxBodySize) {
     return false;
   }
+  // CgiじゃないのにCgiExecutorが設定されている ||
+  // CgiなのにCgiExecutorが設定されていない
+  if (is_cgi_ ^ (cgi_executor_.size() > 0)) {
+    return false;
+  }
   return true;
 }
 

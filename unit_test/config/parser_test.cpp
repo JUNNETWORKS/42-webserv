@@ -235,6 +235,7 @@ TEST(ParserTest, MultipleValidServers) {
       EXPECT_TRUE(location->GetRedirectUrl() == "");
       EXPECT_TRUE(location->GetAutoIndex() == false);
       EXPECT_TRUE(location->GetIsCgi() == true);
+      EXPECT_TRUE(location->GetCgiExecutor() == "php-cgi");
       EXPECT_TRUE(config.IsValid());
     }
 
@@ -701,6 +702,80 @@ TEST(ParserTest, RootIsNotAbsolutePath) {
       "  }                                          "
       "}                                            ");
   EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+// cgi_executor がちゃんと設定されている
+TEST(ParserTest, CgiExecutorIsCorrect) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost;                     "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/cgi-bin;                   "
+      "    is_cgi on;                               "
+      "    cgi_executor python;                     "
+      "  }                                          "
+      "}                                            ");
+  Config config = parser.ParseConfig();
+  const VirtualServerConf *vserver =
+      config.GetVirtualServerConf(kAnyIpAddress, "8080", "localhost");
+  const LocationConf *location = vserver->GetLocation("/blog.py");
+  EXPECT_TRUE(location->GetIsCgi());
+  EXPECT_EQ(location->GetCgiExecutor(), "python");
+}
+
+// cgi_executor の引数がない
+TEST(ParserTest, CgiExecutorIsEmpty) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost;                     "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/cgi-bin;                   "
+      "    is_cgi on;                               "
+      "    cgi_executor ;                           "
+      "  }                                          "
+      "}                                            ");
+  EXPECT_THROW(parser.ParseConfig();, Parser::ParserException);
+}
+
+// cgi_executor はセットされているけど､is_cgi on;じゃない
+TEST(ParserTest, CgiExecutorIsCorrectButLocationIsNotCgi) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost;                     "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/cgi-bin;                   "
+      "    is_cgi off;                              "
+      "    cgi_executor python;                     "
+      "  }                                          "
+      "}                                            ");
+  Config config = parser.ParseConfig();
+  EXPECT_FALSE(config.IsValid());
+}
+
+// is_cgi on;だけど cgi_executor はセットされていない
+TEST(ParserTest, LocationIsCgiButCgiExecutorIsNotSet) {
+  Parser parser;
+  parser.LoadData(
+      "server {                                     "
+      "  listen 8080;                               "
+      "  server_name localhost;                     "
+      "                                             "
+      "  location / {                               "
+      "    root /var/www/cgi-bin;                   "
+      "    is_cgi on;                               "
+      "  }                                          "
+      "}                                            ");
+  Config config = parser.ParseConfig();
+  EXPECT_FALSE(config.IsValid());
 }
 
 //========================
