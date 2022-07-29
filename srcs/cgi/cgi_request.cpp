@@ -101,9 +101,8 @@ Result<std::string> CgiRequest::SearchCgiPath(
   for (std::vector<std::string>::const_iterator it = v.begin(); it != v.end();
        it++) {
     exec_cgi_path = utils::JoinPath(exec_cgi_path, *it);
-    Result<bool> is_executable_file_res =
-        utils::IsExecutableFile(exec_cgi_path);
-    if (is_executable_file_res.IsOk() && is_executable_file_res.Ok()) {
+    Result<bool> is_readable_file_res = utils::IsReadableFile(exec_cgi_path);
+    if (is_readable_file_res.IsOk() && is_readable_file_res.Ok()) {
       return exec_cgi_path;
     }
   }
@@ -113,9 +112,8 @@ Result<std::string> CgiRequest::SearchCgiPath(
   for (std::vector<std::string>::const_iterator it = index_pages.begin();
        it != index_pages.end(); it++) {
     exec_cgi_path = utils::JoinPath(index_base, *it);
-    Result<bool> is_executable_file_res =
-        utils::IsExecutableFile(exec_cgi_path);
-    if (is_executable_file_res.IsOk() && is_executable_file_res.Ok()) {
+    Result<bool> is_readable_file_res = utils::IsReadableFile(exec_cgi_path);
+    if (is_readable_file_res.IsOk() && is_readable_file_res.Ok()) {
       return exec_cgi_path;
     }
   }
