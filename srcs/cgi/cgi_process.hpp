@@ -66,6 +66,8 @@ class CgiProcess {
 
   CgiRequest *AllocateCgiRequest(http::HttpRequest &request);
 
+  void EnableWriteEventToClient() const;
+
   static void HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                              Epoll *epoll);
   static bool HandleCgiWriteEvent(CgiProcess *cgi_process, FdEvent *fde,

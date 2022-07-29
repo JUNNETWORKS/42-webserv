@@ -126,6 +126,14 @@ void DeleteCgiProcess(Epoll *epoll, FdEvent *fde) {
 
 }  // namespace
 
+void CgiProcess::EnableWriteEventToClient() const {
+  FdEvent *client_fde = epoll_->GetFdeByFd(socket_->GetFd());
+  if (client_fde == NULL) {
+    return;
+  }
+  epoll_->Add(client_fde, kFdeWrite);
+}
+
 void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                                 Epoll *epoll) {
   printf("HandleCgiEvent()\n");
@@ -184,15 +192,7 @@ bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
   ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
   printf("HandleCgiEvent() read_res == %ld\n", read_res);
 
-  // cgi からの書き込みがないと、
-  // クライアントへの write イベント監視しないようにしたので、
-  // cgi から、read した時、write イベント監視するようにする。
-  // read で エラーが起こった際なども、on にしないとダメかも。
-  FdEvent *client_fde =
-      cgi_process->epoll_->GetFdeByFd(cgi_process->socket_->GetFd());
-  if (client_fde) {
-    cgi_process->epoll_->Add(client_fde, kFdeWrite);
-  }
+  cgi_process->EnableWriteEventToClient();
 
   if (read_res <= 0) {
     return true;
