@@ -25,6 +25,8 @@ def append_test_result(test_name, is_success, data=None):
 
 def get_success_count(test_name):
     success_count = 0
+    if not test_name in test_dict:
+        return 0
     lst = test_dict[test_name]
     for l in lst:
         success_count += l[0] == True
@@ -33,6 +35,8 @@ def get_success_count(test_name):
 
 def get_fail_count(test_name):
     fail_count = 0
+    if not test_name in test_dict:
+        return 0
     lst = test_dict[test_name]
     for l in lst:
         fail_count += l[0] == False
