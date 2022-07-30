@@ -15,8 +15,9 @@ re: fclean all
 
 .PHONY: req-test
 req-test: WEBSERV_PORT := 49200
+req-test: RUN_CMP_TEST := 1
 req-test:
-	python3 -u -m py-test --WEBSERV_PORT=$(WEBSERV_PORT)
+	python3 -u -m py-test --WEBSERV_PORT=$(WEBSERV_PORT) --RUN_CMP_TEST=$(RUN_CMP_TEST)
 
 .PHONY: g-test
 g-test:

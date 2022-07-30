@@ -9,13 +9,17 @@ TIMEOUT = 10
 TIMEOUT_MSG = "\nTIMEOUT\n"
 
 
-def send_req(req_path, port):
+def send_req(req_path, port, method="GET", body=None):
     if req_path[0] != "/":
         print("send_req invalid req_path", req_path)
         return res.response(-1, "invalid req_path")
 
     url = "http://127.0.0.1:" + str(port) + req_path
-    req = urllib.request.Request(url)
+
+    if body != None:
+        body = body.encode()
+
+    req = urllib.request.Request(url, method=method, data=body)
 
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
@@ -37,6 +41,9 @@ def send_req(req_path, port):
         # print("send_req err :", err, url, port)
         code = -1
         body = str(err)
+    except http.client.IncompleteRead as err:
+        code = -1
+        body = err.partial.decode()
     return res.response(code, body)
 
 

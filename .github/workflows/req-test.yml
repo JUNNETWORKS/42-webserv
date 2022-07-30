@@ -14,4 +14,4 @@ jobs:
         uses: actions/checkout@v2
 
       - name: req-test
-        run: bash -c "timeout 300 make req-test WEBSERV_PORT=8080"
+        run: bash -c "timeout 300 make req-test WEBSERV_PORT=8080 RUN_CMP_TEST=0"

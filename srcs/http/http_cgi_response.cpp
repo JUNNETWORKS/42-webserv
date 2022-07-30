@@ -5,9 +5,10 @@
 namespace http {
 
 HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
-                                 server::Epoll *epoll)
-    : HttpResponse(location, epoll),
-      cgi_process_(new cgi::CgiProcess(location, epoll)) {}
+                                 server::Epoll *epoll,
+                                 server::ConnSocket *socket)
+    : HttpResponse(location, epoll, kHttpCgiResponse),
+      cgi_process_(new cgi::CgiProcess(location, epoll, socket)) {}
 
 HttpCgiResponse::~HttpCgiResponse() {
   printf("HttpCgiResponse::~HttpCgiResponse\n");

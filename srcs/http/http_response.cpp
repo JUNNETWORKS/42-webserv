@@ -28,7 +28,7 @@ bool AppendBytesToFile(const std::string &path, const utils::ByteVector &bytes);
 const std::string HttpResponse::kDefaultHttpVersion = "HTTP/1.1";
 
 HttpResponse::HttpResponse(const config::LocationConf *location,
-                           server::Epoll *epoll)
+                           server::Epoll *epoll, EResponseType response_type)
     : location_(location),
       epoll_(epoll),
       phase_(kExecuteRequest),
@@ -37,12 +37,14 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       status_message_(StatusCodes::GetMessage(OK)),
       headers_(),
       write_buffer_(),
-      file_fd_(-1) {
+      file_fd_(-1),
+      response_type_(response_type) {
   assert(epoll_ != NULL);
 }
 
 HttpResponse::HttpResponse(const config::LocationConf *location,
-                           server::Epoll *epoll, const HttpStatus status)
+                           server::Epoll *epoll, const HttpStatus status,
+                           EResponseType response_type)
     : location_(location),
       epoll_(epoll),
       phase_(kExecuteRequest),
@@ -51,7 +53,8 @@ HttpResponse::HttpResponse(const config::LocationConf *location,
       status_message_(StatusCodes::GetMessage(OK)),
       headers_(),
       write_buffer_(),
-      file_fd_(-1) {
+      file_fd_(-1),
+      response_type_(response_type) {
   assert(status >= 400);
   phase_ = MakeErrorResponse(status);
   assert(phase_ == kComplete);
@@ -349,6 +352,7 @@ Result<std::string> HttpResponse::GetResponsableIndexPagePath() {
 
 HttpResponse::CreateResponsePhase HttpResponse::MakeErrorResponse(
     const HttpStatus status) {
+  SetResponseType(kHttpErrorResponse);
   SetStatus(status, StatusCodes::GetMessage(status));
 
   headers_.clear();
@@ -391,6 +395,10 @@ std::string HttpResponse::SerializeErrorResponseBody(HttpStatus status) {
 
 bool HttpResponse::IsAllDataWritingCompleted() {
   return phase_ == kComplete && write_buffer_.empty();
+}
+
+bool HttpResponse::IsWriteBufferEmpty() const {
+  return write_buffer_.empty();
 }
 
 //========================================================================
@@ -460,6 +468,14 @@ void HttpResponse::SetHeader(const std::string &header,
 void HttpResponse::AppendHeader(const std::string &header,
                                 const std::string &value) {
   headers_[header].push_back(value);
+}
+
+void HttpResponse::SetResponseType(EResponseType response_type) {
+  response_type_ = response_type;
+}
+
+bool HttpResponse::IsCgiResponse() const {
+  return response_type_ == kHttpCgiResponse;
 }
 
 const std::vector<std::string> &HttpResponse::GetHeader(

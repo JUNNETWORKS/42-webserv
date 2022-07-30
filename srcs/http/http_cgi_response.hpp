@@ -15,7 +15,8 @@ class HttpCgiResponse : public HttpResponse {
   static const std::string kLastChunk;
 
  public:
-  HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll);
+  HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll,
+                  server::ConnSocket *socket);
   ~HttpCgiResponse();
 
  private:

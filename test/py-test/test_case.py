@@ -5,6 +5,8 @@ from .run_test import run_test
 from .run_test import run_cmp_test
 from .run_test import is_test_success
 
+import string
+
 # TEST CASE
 # ========================================================================
 
@@ -169,9 +171,25 @@ def cgi_simple_test():
 
     run_cmp_test("/cgi-bin/cat-cgi", expect_port=cmd_args.APACHE_PORT)
     run_cmp_test("/cgi-bin/hogehogehoge-cgi", expect_port=cmd_args.APACHE_PORT)
+    run_cmp_test("/cgi-bin/sleep3-cgi", expect_port=cmd_args.APACHE_PORT)
 
     expect_res = res.response(404)
     run_test("/cgi-bin/notexist-cgi", expect_res, ck_body=False)
+
+
+def cgi_has_body_test():
+    req_path = "/cgi-bin/cat-cgi"
+
+    body = "123456789"
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT, body=body, save_diff=True)
+    body = "".join([str(i) + "\n" for i in range(10000)])
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT, body=body, save_diff=True)
+
+    req_path = "/cgi-bin/toupper-cgi"
+    body = string.ascii_letters
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT, body=body, save_diff=True)
+    body = "".join([str(i) + " " + string.ascii_letters + "\n" for i in range(1000)])
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT, body=body, save_diff=True)
 
 
 def cgi_query_string_test():
@@ -253,6 +271,7 @@ def run_all_test() -> bool:
     is_all_test_ok &= exec_test(content_type_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cmp_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cgi_simple_test, must_all_test_ok=False)
+    is_all_test_ok &= exec_test(cgi_has_body_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cgi_query_string_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cgi_path_info_test, must_all_test_ok=False)
     return is_all_test_ok

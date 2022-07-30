@@ -23,6 +23,9 @@ using namespace result;
 
 class HttpResponse {
  protected:
+  // レスポンスの種類
+  enum EResponseType { kHttpResponse, kHttpErrorResponse, kHttpCgiResponse };
+
   // レスポンスの作成状況
   enum CreateResponsePhase {
     kExecuteRequest,
@@ -59,11 +62,14 @@ class HttpResponse {
   // 全てのレスポンスクラスはファイルを返せる必要がある｡
   // なぜならエラー時にファイルを扱う可能性があるからである｡
   int file_fd_;
+  EResponseType response_type_;
 
  public:
-  HttpResponse(const config::LocationConf *location, server::Epoll *epoll);
   HttpResponse(const config::LocationConf *location, server::Epoll *epoll,
-               const HttpStatus status);
+               EResponseType response_type = kHttpResponse);
+  HttpResponse(const config::LocationConf *location, server::Epoll *epoll,
+               const HttpStatus status,
+               EResponseType response_type = kHttpResponse);
   virtual ~HttpResponse();
 
   //レスポンスの内容を作る関数。
@@ -74,6 +80,10 @@ class HttpResponse {
 
   // すべてのデータの write が完了したか
   bool IsAllDataWritingCompleted();
+
+  bool IsWriteBufferEmpty() const;
+
+  bool IsCgiResponse() const;
 
   const std::vector<std::string> &GetHeader(const std::string &header);
   Result<void> WriteToSocket(const int fd);
@@ -91,6 +101,7 @@ class HttpResponse {
   void SetStatusMessage(const std::string &status_message);
   void SetHeader(const std::string &header, const std::string &value);
   void AppendHeader(const std::string &header, const std::string &value);
+  void SetResponseType(EResponseType response_type);
 
   static bool IsRequestHasConnectionClose(const HttpRequest &request);
 

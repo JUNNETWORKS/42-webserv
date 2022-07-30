@@ -17,7 +17,7 @@ namespace {
 
 // リクエストに応じたレスポンスを返す
 http::HttpResponse *AllocateResponseObj(const http::HttpRequest &request,
-                                        Epoll *epoll);
+                                        Epoll *epoll, ConnSocket *socket);
 
 // 呼び出し元でソケットを閉じる必要がある場合は true を返す
 bool ProcessRequest(ConnSocket *socket);
@@ -45,7 +45,15 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
     should_close_conn |= ProcessResponse(conn_sock, epoll);
   }
 
-  if (conn_sock->HasParsedRequest()) {
+  // buffer が なければ、write イベント を 無視
+  // cgi は cgi から read イベントで読み込んだ時、write
+  // イベントを監視するようにした。
+  // 通常ファイルの時問題ないか確認する。
+  const http::HttpResponse *response = conn_sock->GetResponse();
+  bool is_cgi_buffer_empty =
+      response && response->IsCgiResponse() && response->IsWriteBufferEmpty();
+
+  if (conn_sock->HasParsedRequest() && !is_cgi_buffer_empty) {
     epoll->Add(fde, kFdeWrite);
   } else {
     epoll->Del(fde, kFdeWrite);
@@ -146,7 +154,8 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 
     if (socket->GetResponse() == NULL) {
       // レスポンスオブジェクトがまだない
-      http::HttpResponse *response = AllocateResponseObj(request, epoll);
+      http::HttpResponse *response =
+          AllocateResponseObj(request, epoll, socket);
       socket->SetResponse(response);
     }
 
@@ -170,12 +179,12 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 }
 
 http::HttpResponse *AllocateResponseObj(const http::HttpRequest &request,
-                                        Epoll *epoll) {
+                                        Epoll *epoll, ConnSocket *socket) {
   const config::LocationConf *location = request.GetLocation();
   if (request.IsErrorRequest())
     return new http::HttpResponse(location, epoll, request.GetParseStatus());
   if (location->GetIsCgi()) {
-    return new http::HttpCgiResponse(location, epoll);
+    return new http::HttpCgiResponse(location, epoll, socket);
   } else {
     return new http::HttpResponse(location, epoll);
   }

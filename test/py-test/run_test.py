@@ -25,6 +25,8 @@ def append_test_result(test_name, is_success, data=None):
 
 def get_success_count(test_name):
     success_count = 0
+    if not test_name in test_dict:
+        return 0
     lst = test_dict[test_name]
     for l in lst:
         success_count += l[0] == True
@@ -33,6 +35,8 @@ def get_success_count(test_name):
 
 def get_fail_count(test_name):
     fail_count = 0
+    if not test_name in test_dict:
+        return 0
     lst = test_dict[test_name]
     for l in lst:
         fail_count += l[0] == False
@@ -68,13 +72,14 @@ def all_test_stat() -> bool:
 def run_test(
     req_path,
     expect_res: res.response,
+    body=None,
     port=cmd_args.WEBSERV_PORT,
     ck_code=True,
     ck_body=True,
     save_diff=False,
     test_name="",
 ) -> bool:
-    ft_res_response = send_req_utils.send_req(req_path, port)
+    ft_res_response = send_req_utils.send_req(req_path, port, body=body)
 
     is_success = None
     if len(req_path) >= 50:
@@ -101,10 +106,21 @@ def run_test(
 
 def run_cmp_test(
     req_path,
+    body=None,
     port=cmd_args.WEBSERV_PORT,
     expect_port=cmd_args.NGINX_PORT,
     save_diff=False,
 ):
+    if cmd_args.RUN_CMP_TEST == 0:
+        return
+
     test_name = inspect_utils.get_caller_func_name()
-    expect_res = send_req_utils.send_req(req_path, port=expect_port)
-    run_test(req_path, expect_res, port, save_diff=save_diff, test_name=test_name)
+    expect_res = send_req_utils.send_req(req_path, port=expect_port, body=body)
+    run_test(
+        req_path,
+        expect_res,
+        body=body,
+        port=port,
+        save_diff=save_diff,
+        test_name=test_name,
+    )
