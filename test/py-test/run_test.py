@@ -107,6 +107,9 @@ def run_cmp_test(
     expect_port=cmd_args.NGINX_PORT,
     save_diff=False,
 ):
+    if cmd_args.RUN_CMP_TEST == 0:
+        return
+
     test_name = inspect_utils.get_caller_func_name()
     expect_res = send_req_utils.send_req(req_path, port=expect_port, body=body)
     run_test(
