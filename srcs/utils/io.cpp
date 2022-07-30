@@ -73,7 +73,7 @@ Result<std::vector<utils::File> > GetFileList(const std::string& target_dir) {
     return Error();
   }
 
-  while ((dent = readdir(dir))) {  // TODO : readdir err ck
+  while ((dent = readdir(dir))) {
     File f(target_dir + "/" + dent->d_name);
     if (f.GetFileType() == File::kNotExist) {
       continue;
