@@ -344,6 +344,9 @@ void Parser::ParseIscgiDirective(LocationConf &location) {
 }
 
 void Parser::ParseCgiExecutorDirective(LocationConf &location) {
+  if (IsDirectiveSetInLocation("cgi_executor")) {
+    throw ParserException("cgi_executor has already set.");
+  }
   SkipSpaces();
   std::string executor = GetWord();
   if (executor.empty()) {

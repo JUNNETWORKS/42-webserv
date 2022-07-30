@@ -832,6 +832,11 @@ const std::vector<std::string> ParserLocationKoVec = {
                 "  is_cgi on;                               "
                 "  is_cgi on;                               "
                 "}                                          "),
+    // cgi_executor が重複
+    std::string("location / {                               "
+                "  cgi_executor python2;                    "
+                "  cgi_executor python3;                    "
+                "}                                          "),
     // error_page で既に登録済みのエラーコード
     std::string("location / {                               "
                 "  error_page 404 405 error.html;           "
