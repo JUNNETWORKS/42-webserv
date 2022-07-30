@@ -5,6 +5,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "utils/log.hpp"
+
 namespace cgi {
 
 CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll)
@@ -126,7 +128,7 @@ void DeleteCgiProcess(Epoll *epoll, FdEvent *fde) {
 
 void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                                 Epoll *epoll) {
-  printf("HandleCgiEvent()\n");
+  utils::PrintDebugLog("HandleCgiEvent");
 
   CgiProcess *cgi_process = reinterpret_cast<CgiProcess *>(data);
 
@@ -136,7 +138,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
   }
 
   if (events & kFdeTimeout) {
-    printf("Timeout CGI\n");
+    utils::PrintErrorLog("Timeout CGI");
     DeleteCgiProcess(epoll, fde);
     return;
   }
@@ -180,7 +182,6 @@ bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
   // Read data from unisock and store data in buffer
   utils::Byte buf[kDataPerRead];
   ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
-  printf("HandleCgiEvent() read_res == %ld\n", read_res);
   if (read_res <= 0) {
     return true;
   }

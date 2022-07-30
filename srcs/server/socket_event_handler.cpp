@@ -10,6 +10,7 @@
 #include "server/epoll.hpp"
 #include "server/socket.hpp"
 #include "utils/error.hpp"
+#include "utils/log.hpp"
 
 namespace server {
 
@@ -53,7 +54,7 @@ void HandleConnSocketEvent(FdEvent *fde, unsigned int events, void *data,
 
   if ((should_close_conn && conn_sock->IsShutdown()) ||
       (events & kFdeTimeout)) {
-    printf("Connection close\n");
+    utils::PrintDebugLog("Connection close");
     epoll->Unregister(fde);
     // conn_sock->fd の close は Socket のデストラクタで行うので不要｡
     delete conn_sock;
@@ -97,7 +98,7 @@ bool ProcessRequest(ConnSocket *socket) {
   int conn_fd = socket->GetFd();
   int n = read(conn_fd, buf, sizeof(buf) - 1);
   if (n <= 0) {  // EOF(TCP flag FIN) or Error
-    printf("Connection end\n");
+    utils::PrintDebugLog("Connection end");
     socket->SetIsShutdown(true);
     return true;
   } else {
@@ -146,6 +147,7 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 
     if (socket->GetResponse() == NULL) {
       // レスポンスオブジェクトがまだない
+      request.PrintRequestInfoOneLine();
       http::HttpResponse *response = AllocateResponseObj(request, epoll);
       socket->SetResponse(response);
     }
