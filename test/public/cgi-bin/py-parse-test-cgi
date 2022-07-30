@@ -1,0 +1,19 @@
+#!/usr/bin/python3 -u
+
+import os
+import sys
+
+print("Content-type: text/plain; charset=iso-8859-1")
+print()
+
+print("PARSE TEST")
+print()
+
+print("argc", len(sys.argv))
+print("argv", sys.argv)
+
+print()
+
+print("PATH_INFO", os.environ.get('PATH_INFO'))
+print("SCRIPT_NAME", os.environ.get('SCRIPT_NAME'))
+print("QUERY_STRING", os.environ.get('QUERY_STRING'))

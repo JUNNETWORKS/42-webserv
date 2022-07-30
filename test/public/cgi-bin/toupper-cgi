@@ -1,29 +1,17 @@
-#!/bin/bash
+#!/usr/bin/python3 -u
 
-# To permit this cgi, replace # on the first line above with the
-# appropriate #!/path/to/sh shebang, and set this script executable
-# with chmod 755.
-#
-# ***** !!! WARNING !!! *****
-# This script echoes the server environment variables and therefore
-# leaks information - so NEVER use it in a live server environment!
-# It is provided only for testing purpose.
-# Also note that it is subject to cross site scripting attacks on
-# MS IE and any other browser which fails to honor RFC2616.
+import sys
 
-# disable filename globbing
-set -f
+print("Content-type: text/plain; charset=iso-8859-1")
+print()
 
-echo "Content-type: text/plain; charset=iso-8859-1"
-echo
+print("TOUPPER")
 
-INPUT=`cat`
+s = sys.stdin.read()
 
-echo TOUPPER
-echo
-echo input len ${#INPUT}
-echo
-echo ${INPUT^^}
-echo
-
-echo TOUPPER END
+print()
+print("input len ", len(s))
+print("--- --- ----")
+print(s.upper())
+print("--- --- ----")
+print("TOUPPER END")

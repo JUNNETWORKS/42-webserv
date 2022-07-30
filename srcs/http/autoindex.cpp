@@ -16,7 +16,7 @@ namespace http {
 std::string AutoIndexHead(const std::string &relative_path) {
   std::string head =
       "<html>\n"
-      "<head><title>Index of " +
+      "<head><meta charset=\"UTF-8\"><title>Index of " +
       relative_path +
       "</title></head>\n"
       "<body>\n"
@@ -32,11 +32,19 @@ std::string AutoIndexTail() {
   return tail;
 }
 
+std::string ReplaceHtmlSpecialCharacter(std::string file_name) {
+  file_name = utils::ReplaceAll(file_name, "&", "&amp;");
+  file_name = utils::ReplaceAll(file_name, "\"", "&quot;");
+  file_name = utils::ReplaceAll(file_name, "<", "&lt;");
+  file_name = utils::ReplaceAll(file_name, ">", "&gt;");
+  return file_name;
+}
+
 std::string AutoIndexFileName(const std::string &file_name) {
   std::stringstream ss;
 
-  std::string hyperlink_file_name = file_name;
-  std::string display_file_name = file_name;
+  std::string hyperlink_file_name = utils::PercentEncode(file_name);
+  std::string display_file_name = ReplaceHtmlSpecialCharacter(file_name);
 
   if (display_file_name.length() > 50) {
     display_file_name = display_file_name.substr(0, 47) + ".." + "&gt;";
@@ -44,8 +52,8 @@ std::string AutoIndexFileName(const std::string &file_name) {
 
   ss << "<a href=\"" << hyperlink_file_name << "\">";
   ss << display_file_name << "</a>";
-  if (display_file_name.length() < 50) {
-    ss << std::setw(50 - display_file_name.length()) << "";
+  if (file_name.length() < 50) {
+    ss << std::setw(50 - file_name.length()) << "";
   }
   return ss.str();
 }

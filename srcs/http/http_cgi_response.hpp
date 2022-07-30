@@ -32,8 +32,6 @@ class HttpCgiResponse : public HttpResponse {
 
   // LocalRedirect の結果に基づき新しいリクエストを作成
   HttpRequest CreateLocalRedirectRequest(const HttpRequest &request);
-
-  static std::string ConvertToChunkResponse(utils::ByteVector data);
 };
 
 }  // namespace http

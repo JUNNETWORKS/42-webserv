@@ -89,7 +89,7 @@ std::string PercentEncode(const utils::ByteVector &to_encode) {
   for (utils::ByteVector::const_iterator it = to_encode.begin();
        it != to_encode.end(); it++) {
     if (!std::isalnum(*it) && *it != '-' && *it != '_' && *it != '.' &&
-        *it != '~') {
+        *it != '~' && *it != '/') {
       int n = *it;
       ss << "%" << std::uppercase << std::setw(2) << std::setfill('0')
          << std::hex << n;
@@ -182,6 +182,19 @@ std::string GetExetension(const std::string &file_path) {
   }
   std::string ext = file_path.substr(dot_pos + 1);
   return ext;
+}
+
+std::string ReplaceAll(std::string s, const std::string &target,
+                       const std::string &replacement) {
+  if (s.empty() || target.empty()) {
+    return s;
+  }
+  std::string::size_type pos = 0;
+  while ((pos = s.find(target, pos)) != std::string::npos) {
+    s.replace(pos, target.length(), replacement);
+    pos += replacement.length();
+  }
+  return s;
 }
 
 char *AllocStringToCharPtr(const std::string &str) {

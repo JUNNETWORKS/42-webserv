@@ -1,0 +1,10 @@
+#!/usr/bin/python3 -u
+
+res = "abcde あいうえお\n"
+res_bytes = bytes(res, 'utf-8')
+
+print("Content-Type: text/html")
+print(f"Content-Length: {len(res_bytes)}")
+print()
+
+print(res, end="")
