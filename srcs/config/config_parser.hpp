@@ -87,6 +87,8 @@ class Parser {
 
   void ParseIscgiDirective(LocationConf &location);
 
+  void ParseCgiExecutorDirective(LocationConf &location);
+
   void ParseReturnDirective(LocationConf &location);
 
   // Parser utils

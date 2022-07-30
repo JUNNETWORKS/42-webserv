@@ -28,6 +28,7 @@ CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
   if (this != &rhs) {
     cgi_pid_ = rhs.cgi_pid_;
     cgi_unisock_ = rhs.cgi_unisock_;
+    cgi_executor_ = rhs.cgi_executor_;
     script_name_ = rhs.script_name_;
     exec_cgi_script_path_ = rhs.exec_cgi_script_path_;
     path_info_ = rhs.path_info_;
@@ -139,6 +140,7 @@ bool CgiRequest::DetermineExecutionCgiPath(
   std::string script_name =
       "/" + location.RemovePathPatternFromPath(exec_cgi_path);
 
+  cgi_executor_ = location.GetCgiExecutor();
   exec_cgi_script_path_ = exec_cgi_path;
   script_name_ = script_name;
   path_info_ = request.GetPath();
@@ -203,10 +205,10 @@ void CgiRequest::ExecuteCgi() {
   if (!MoveToCgiExecutionDir(exec_cgi_script_path_)) {
     return;
   }
-  cgi_args_.insert(cgi_args_.begin(), kPython);
+  cgi_args_.insert(cgi_args_.begin(), cgi_executor_);
   cgi_args_.insert(cgi_args_.begin() + 1, exec_cgi_script_path_);
   char **argv = utils::AllocVectorStringToCharDptr(cgi_args_);
-  execvpe(kPython.c_str(), argv, environ);
+  execvpe(cgi_executor_.c_str(), argv, environ);
   utils::DeleteCharDprt(argv);
 }
 
