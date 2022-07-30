@@ -79,7 +79,8 @@ CgiResponse::ResponseType CgiResponse::Parse(utils::ByteVector &buffer) {
       // response-body を保持することが許可されていないレスポンスタイプ
       return response_type_ = kParseError;
     }
-    SetBodyFromBuffer(buffer);
+    AppendBodyFromBuffer(ConvertToChunkResponse(buffer));
+    buffer.clear();
   }
 
   return response_type_;
@@ -169,15 +170,48 @@ Result<void> CgiResponse::SetHeadersFromBuffer(utils::ByteVector &buffer) {
   return Result<void>();
 }
 
-void CgiResponse::SetBodyFromBuffer(utils::ByteVector &buffer) {
-  body_.insert(body_.end(), buffer.begin(), buffer.end());
-  buffer.clear();
+utils::ByteVector CgiResponse::ConvertToChunkResponse(utils::ByteVector data) {
+  std::stringstream ss;
+  while (data.empty() == false) {
+    size_t chunk_size =
+        data.size() < http::kMaxUriLength ? data.size() : http::kMaxUriLength;
+    ss << std::hex << chunk_size;
+    ss << http::kCrlf;
+    ss << data.SubstrBeforePos(chunk_size);
+    ss << http::kCrlf;
+    data.erase(data.begin(), data.begin() + chunk_size);
+  }
+  return ss.str();
+}
+
+void CgiResponse::AppendLastChunk() {
+  const std::string last_chunk = "0" + http::kCrlf + http::kCrlf;
+  AppendBodyFromBuffer(last_chunk);
+}
+
+void CgiResponse::AppendBodyFromBuffer(const utils::ByteVector &buffer) {
+  body_.AppendDataToBuffer(buffer);
 }
 
 void CgiResponse::AdjustHeadersBasedOnResponseType() {
   if (response_type_ == kDocumentResponse) {
     if (GetHeader("STATUS").IsErr()) {
       headers_.push_back(HeaderPairType("STATUS", "200 OK"));
+    }
+  }
+
+  // webserv が出力する想定のヘッダーをCGIスクリプトが出力している場合は削除する
+  std::vector<std::string> unacceptable_headers;
+  unacceptable_headers.push_back("CONTENT-LENGTH");
+  unacceptable_headers.push_back("TRANSFER-ENCODING");
+
+  for (HeaderVecType::iterator it = headers_.begin(); it != headers_.end();) {
+    std::vector<std::string>::iterator find_res = std::find(
+        unacceptable_headers.begin(), unacceptable_headers.end(), it->first);
+    if (find_res != unacceptable_headers.end()) {
+      it = headers_.erase(it);
+    } else {
+      it++;
     }
   }
 }

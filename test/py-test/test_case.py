@@ -193,56 +193,56 @@ def cgi_has_body_test():
 
 
 def cgi_query_string_test():
-    req_path = "/cgi-bin/parse-test-cgi"
+    req_path = "/cgi-bin/py-parse-test-cgi"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
     # ? より後ろが QUERY_STRING になる。
-    req_path = "/cgi-bin/parse-test-cgi?hoge"
+    req_path = "/cgi-bin/py-parse-test-cgi?hoge"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
     # + でコマンドライン引数が区切られる。
-    req_path = "/cgi-bin/parse-test-cgi?arg1+arg2+arg3"
+    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2+arg3"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
     # = が ある時はコマンドライン引数なしになる。
     # QUERY_STRINGにはセットされる。
-    req_path = "/cgi-bin/parse-test-cgi?arg1+arg2%00a+arg3+hogefuga"
+    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2%00a+arg3+hogefuga"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
     # コマンドライン引数にはデコードされた、文字列が入り、
     # QUERY_STRING には、デコード前の文字列が入る。
-    req_path = "/cgi-bin/parse-test-cgi?A%20C"
+    req_path = "/cgi-bin/py-parse-test-cgi?A%20C"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
     # QUERY_STRING にはパーセントデコードで、エラーが起きようがセットされる。
     # TODO : 現状はargvでのデコードで、エラーを返している。
-    req_path = "/cgi-bin/parse-test-cgi?%"
+    req_path = "/cgi-bin/py-parse-test-cgi?%"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
-    req_path = "/cgi-bin/parse-test-cgi?%0"
+    req_path = "/cgi-bin/py-parse-test-cgi?%0"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
-    req_path = "/cgi-bin/parse-test-cgi?A%00C+argv2"
+    req_path = "/cgi-bin/py-parse-test-cgi?A%00C+argv2"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
 
 def cgi_path_info_test():
-    req_path = "/cgi-bin/parse-test-cgi/hoge"
+    req_path = "/cgi-bin/py-parse-test-cgi/hoge"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
-    req_path = "/cgi-bin/parse-test-cgi/"
+    req_path = "/cgi-bin/py-parse-test-cgi/"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
-    req_path = "/cgi-bin/parse-test-cgi/%41%42%43"
+    req_path = "/cgi-bin/py-parse-test-cgi/%41%42%43"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
 
 #   path_info デコードで無効な文字が含まれていた場合、エラー
-#     req_path = "/cgi-bin/parse-test-cgi/%"
+#     req_path = "/cgi-bin/py-parse-test-cgi/%"
 #     expect_response = send_req(req_path, port=cmd_args.APACHE_PORT)
 #     run_test(req_path, expect_response)
 
-#     req_path = "/cgi-bin/parse-test-cgi/%00"
+#     req_path = "/cgi-bin/py-parse-test-cgi/%00"
 #     expect_response = send_req(req_path, port=cmd_args.APACHE_PORT)
 #     run_test(req_path, expect_response)
 
