@@ -106,7 +106,6 @@ def read_all_data_from_stdin():
 
 def print_post_response():
     data = read_all_data_from_stdin()
-    print(f"data: {data}")
     post = json.loads(data)
     with BlogDB() as db:
         id = db.create(post["title"], post["body"])
