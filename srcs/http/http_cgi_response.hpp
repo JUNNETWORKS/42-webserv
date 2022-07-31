@@ -15,7 +15,8 @@ class HttpCgiResponse : public HttpResponse {
   static const std::string kLastChunk;
 
  public:
-  HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll);
+  HttpCgiResponse(const config::LocationConf *location, server::Epoll *epoll,
+                  server::ConnSocket *socket);
   ~HttpCgiResponse();
 
  private:
@@ -31,8 +32,6 @@ class HttpCgiResponse : public HttpResponse {
 
   // LocalRedirect の結果に基づき新しいリクエストを作成
   HttpRequest CreateLocalRedirectRequest(const HttpRequest &request);
-
-  static std::string ConvertToChunkResponse(utils::ByteVector data);
 };
 
 }  // namespace http

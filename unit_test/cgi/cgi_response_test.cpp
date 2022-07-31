@@ -7,6 +7,28 @@
 
 namespace cgi {
 
+utils::ByteVector DecodeChunkResponse(utils::ByteVector data) {
+  std::string decoded;
+
+  int n;
+  while (data.empty() == false) {
+    Result<size_t> pos = data.FindString(http::kCrlf);
+    std::string line = data.SubstrBeforePos(pos.Ok());
+    Result<unsigned long> stoul_res = utils::Stoul(line, utils::kHexadecimal);
+    n = stoul_res.Ok();
+    if (n == 0) {
+      break;
+    }
+    data.EraseHead(line.length());
+    data.EraseHead(http::kCrlf.length());  // crlf
+    decoded += data.SubstrBeforePos(stoul_res.Ok());
+    data.EraseHead(stoul_res.Ok());
+    data.EraseHead(http::kCrlf.length());  // crlf
+  }
+  EXPECT_EQ(n, 0);
+  return decoded;
+}
+
 // HeaderVecType
 // はベクターなので一度Mapに変換することによって順番によるFAILが発生しないようにする
 void EXPECT_EQ_HEADERS(const CgiResponse::HeaderVecType &actual,
@@ -38,8 +60,8 @@ TEST(CgiResponseParse, DocumentResponseWithStatus) {
                                               {"STATUS", "404 Not Found"},
                                               {"OPTIONAL", "hoge"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
-  EXPECT_EQ(cgi_res.GetBody(),
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\n"
                               "<body><p>404 Not Found</p></body>\n"
                               "</HTML>"));
@@ -66,9 +88,11 @@ TEST(CgiResponseParse, ValidDocumentResponseWithoutStatus) {
                                               {"OPTIONAL", "hoge"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
 
-  EXPECT_EQ(cgi_res.GetBody(), utils::ByteVector("<HTML>\n"
-                                                 "<body><p>200 OK</p></body>\n"
-                                                 "</HTML>"));
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
+            utils::ByteVector("<HTML>\n"
+                              "<body><p>200 OK</p></body>\n"
+                              "</HTML>"));
 }
 
 // ローカルリダイレクト
@@ -135,8 +159,8 @@ TEST(CgiResponseParse, ValidClientRedirectResponseWithDocument) {
       {"EXTENSIONFIELD", "hoge"},
       {"PROTOCOLFIELD", "fuga"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
-  EXPECT_EQ(cgi_res.GetBody(),
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\n"
                               "<body><p>Let's redirect!!</p></body>\n"
                               "</HTML>"));
@@ -168,8 +192,8 @@ TEST(CgiResponseParse,
       {"EXTENSIONFIELD", "hoge"},
       {"PROTOCOLFIELD", "fuga"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
-  EXPECT_EQ(cgi_res.GetBody(),
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\n"
                               "<body><p>Let's redirect!!</p></body>\n"
                               "</HTML>"));
@@ -195,8 +219,8 @@ TEST(CgiResponseParse, NewLineIsCrlf) {
                                               {"STATUS", "404 Not Found"},
                                               {"OPTIONAL", "hoge"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
-  EXPECT_EQ(cgi_res.GetBody(),
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\r\n"
                               "<body><p>404 Not Found</p></body>\r\n"
                               "</HTML>"));
@@ -222,8 +246,8 @@ TEST(CgiResponseParse, DocumentResponsesBodyIncludeLfAndCrlf) {
                                               {"STATUS", "404 Not Found"},
                                               {"OPTIONAL", "hoge"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
-  EXPECT_EQ(cgi_res.GetBody(),
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\r\n"
                               "<body><p>404 Not Found</p></body>\n"
                               "</HTML>"));
@@ -267,8 +291,8 @@ TEST(CgiResponseParse, ChoppedBuffer) {
                                               {"STATUS", "404 Not Found"},
                                               {"OPTIONAL", "hoge"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
-  EXPECT_EQ(cgi_res.GetBody(),
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\n"
                               "<body><p>404 Not Found</p></body>\n"
                               "</HTML>"));
@@ -311,8 +335,8 @@ TEST(CgiResponseParse, ChoppedBufferThatIsSplitedBeforeHeaderBoundary) {
                                               {"STATUS", "404 Not Found"},
                                               {"OPTIONAL", "hoge"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
-  EXPECT_EQ(cgi_res.GetBody(),
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\n"
                               "<body><p>404 Not Found</p></body>\n"
                               "</HTML>"));
@@ -356,8 +380,8 @@ TEST(CgiResponseParse, ChoppedBufferThatIsSplitedInMiddleHeaderBoundary) {
                                               {"STATUS", "404 Not Found"},
                                               {"OPTIONAL", "hoge"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
-  EXPECT_EQ(cgi_res.GetBody(),
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\n"
                               "<body><p>404 Not Found</p></body>\n"
                               "</HTML>"));
@@ -402,8 +426,8 @@ TEST(CgiResponseParse, ChoppedBufferThatIsSplitedAftertHeaderBoundary) {
                                               {"STATUS", "404 Not Found"},
                                               {"OPTIONAL", "hoge"}};
   EXPECT_EQ_HEADERS(cgi_res.GetHeaders(), expected_headers);
-
-  EXPECT_EQ(cgi_res.GetBody(),
+  cgi_res.AppendLastChunk();
+  EXPECT_EQ(DecodeChunkResponse(cgi_res.GetBody()),
             utils::ByteVector("<HTML>\n"
                               "<body><p>404 Not Found</p></body>\n"
                               "</HTML>"));

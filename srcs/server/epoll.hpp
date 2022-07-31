@@ -92,6 +92,8 @@ class Epoll {
   // Timeoutなfd取得し､FdEventEventを返す｡
   std::vector<FdEventEvent> RetrieveTimeouts();
 
+  FdEvent *GetFdeByFd(int fd) const;
+
  private:
   // epoll instance が片方のみでcloseされるのを防ぐためコピー操作は禁止
   Epoll(const Epoll &rhs);

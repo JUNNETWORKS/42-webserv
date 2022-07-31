@@ -184,4 +184,11 @@ std::vector<FdEventEvent> Epoll::RetrieveTimeouts() {
   return fdee_vec;
 }
 
+FdEvent *Epoll::GetFdeByFd(int fd) const {
+  if (registered_fd_events_.find(fd) == registered_fd_events_.end()) {
+    return NULL;
+  }
+  return registered_fd_events_.at(fd);
+}
+
 }  // namespace server

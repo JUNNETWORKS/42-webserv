@@ -29,6 +29,7 @@ class LocationConf {
   std::string root_dir_;
   IndexPagesVector index_pages_;
   bool is_cgi_;
+  std::string cgi_executor_;
   ErrorPagesMap error_pages_;
   // ディレクトリ内ファイル一覧ページを有効にするかどうか
   bool auto_index_;
@@ -86,6 +87,10 @@ class LocationConf {
   bool GetIsCgi() const;
 
   void SetIsCgi(bool is_cgi);
+
+  std::string GetCgiExecutor() const;
+
+  void SetCgiExecutor(const std::string &cgi_executor);
 
   const std::map<http::HttpStatus, std::string> &GetErrorPages() const;
 
