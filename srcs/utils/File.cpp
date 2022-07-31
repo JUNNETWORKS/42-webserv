@@ -74,12 +74,13 @@ std::string File::GetFileName() const {
   std::vector<std::string> splited = utils::SplitString(absolute_path_, "/");
 
   std::string file_name;
-  for (std::vector<std::string>::const_iterator it = splited.begin();
-       it != splited.end(); it++) {
+  for (std::vector<std::string>::const_reverse_iterator it = splited.rbegin();
+       it != splited.rend(); it++) {
     if (*it == "") {
       continue;
     }
     file_name = *it;
+    break;
   }
   if (IsDir()) {
     return file_name + "/";
