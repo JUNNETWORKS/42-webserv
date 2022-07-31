@@ -92,6 +92,7 @@ cd review && ./setup_review_env.sh
 - [ ] autoindex の on / off
 - [ ] index ファイル
 - [ ] `return` リダイレクト
+- [ ] 複数言語でCGIスクリプトを動かす (ボーナス)
 
 ### 複数ポート対応
 
@@ -171,6 +172,10 @@ cd review && ./setup_review_env.sh
 
 `curl -v -X GET http://localhost:9090/`
 `curl -v -X GET http://localhost:9090/google`
+
+### 複数言語でCGIスクリプトを動かす (ボーナス)
+
+`curl http://webserv.com/cgi-bash/hello`
 
 ## ベンチマーク
 
