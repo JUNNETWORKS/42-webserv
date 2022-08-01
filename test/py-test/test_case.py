@@ -140,6 +140,18 @@ def decode_test():
     # TODO : 途中で %00 で ヌル文字等があった場合デコードエラーにする処理を追加する。
     # run_test("/" + to_hex_str("sample.html") + "%00/fuga", expect_res=expect_res)
 
+    req_path = "/%00"
+    run_test(req_path, res.response(400), ck_body=False)
+
+    req_path = "/sample.html%00"
+    run_test(req_path, res.response(400), ck_body=False)
+
+    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2%00a+arg3+hogefuga"
+    run_test(req_path, res.response(400), ck_body=False)
+
+    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2+arg3+hogefuga%00"
+    run_test(req_path, res.response(400), ck_body=False)
+
 
 # TODO : content_type を 見るようにする。
 def content_type_test():
@@ -206,7 +218,7 @@ def cgi_query_string_test():
 
     # = が ある時はコマンドライン引数なしになる。
     # QUERY_STRINGにはセットされる。
-    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2%00a+arg3+hogefuga"
+    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2+arg3=hogefuga"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
     # コマンドライン引数にはデコードされた、文字列が入り、
@@ -217,13 +229,16 @@ def cgi_query_string_test():
     # QUERY_STRING にはパーセントデコードで、エラーが起きようがセットされる。
     # TODO : 現状はargvでのデコードで、エラーを返している。
     req_path = "/cgi-bin/py-parse-test-cgi?%"
-    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    # run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    run_test(req_path, res.response(400), ck_body=False)
 
     req_path = "/cgi-bin/py-parse-test-cgi?%0"
-    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    # run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    run_test(req_path, res.response(400), ck_body=False)
 
     req_path = "/cgi-bin/py-parse-test-cgi?A%00C+argv2"
-    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    # run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    run_test(req_path, res.response(400), ck_body=False)
 
 
 def cgi_path_info_test():
