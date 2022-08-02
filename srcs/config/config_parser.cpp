@@ -164,6 +164,8 @@ void Parser::ParseLocationBlock(VirtualServerConf &vserver,
       ParseAutoindexDirective(location);
     } else if (directive == "is_cgi") {
       ParseIscgiDirective(location);
+    } else if (directive == "cgi_executor") {
+      ParseCgiExecutorDirective(location);
     } else if (directive == "error_page") {
       ParseErrorPageDirective(location);
     } else if (directive == "return") {
@@ -338,6 +340,22 @@ void Parser::ParseIscgiDirective(LocationConf &location) {
 
   if (location.GetIsCgi() && location.GetAutoIndex()) {
     throw ParserException("'is_cgi on' and 'autoindex on' conflicts.");
+  }
+}
+
+void Parser::ParseCgiExecutorDirective(LocationConf &location) {
+  if (IsDirectiveSetInLocation("cgi_executor")) {
+    throw ParserException("cgi_executor has already set.");
+  }
+  SkipSpaces();
+  std::string executor = GetWord();
+  if (executor.empty()) {
+    throw ParserException("cgi_executor argument is empty");
+  }
+  location.SetCgiExecutor(executor);
+  SkipSpaces();
+  if (GetC() != ';') {
+    throw ParserException("Can't find semicolon after cgi_executor directive.");
   }
 }
 

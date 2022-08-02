@@ -35,9 +35,11 @@ class CgiProcess {
   FdEvent *fde_;
 
   int status_;
+  ConnSocket *socket_;
 
  public:
-  CgiProcess(const config::LocationConf *location, Epoll *epoll);
+  CgiProcess(const config::LocationConf *location, Epoll *epoll,
+             ConnSocket *socket);
   ~CgiProcess();
 
   // Cgiプロセスを作成し､UnixDomainSocketをEpollに登録する｡
@@ -63,6 +65,8 @@ class CgiProcess {
   const CgiProcess &operator=(const CgiProcess &rhs);
 
   CgiRequest *AllocateCgiRequest(http::HttpRequest &request);
+
+  void EnableWriteEventToClient() const;
 
   static void HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                              Epoll *epoll);

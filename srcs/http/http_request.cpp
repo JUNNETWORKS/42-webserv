@@ -349,8 +349,7 @@ HttpStatus HttpRequest::InterpretTransferEncoding(
 }
 
 void HttpRequest::ReBindPathAndLocation(const std::string &new_path) {
-  path_ = new_path;
-  parse_status_ = InterpretPath(path_);
+  parse_status_ = InterpretPath(new_path);
   if (parse_status_ != OK) {
     phase_ = kError;
     return;

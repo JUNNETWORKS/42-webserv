@@ -5,6 +5,8 @@ from .run_test import run_test
 from .run_test import run_cmp_test
 from .run_test import is_test_success
 
+import string
+
 # TEST CASE
 # ========================================================================
 
@@ -138,6 +140,18 @@ def decode_test():
     # TODO : 途中で %00 で ヌル文字等があった場合デコードエラーにする処理を追加する。
     # run_test("/" + to_hex_str("sample.html") + "%00/fuga", expect_res=expect_res)
 
+    req_path = "/%00"
+    run_test(req_path, res.response(400), ck_body=False)
+
+    req_path = "/sample.html%00"
+    run_test(req_path, res.response(400), ck_body=False)
+
+    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2%00a+arg3+hogefuga"
+    run_test(req_path, res.response(400), ck_body=False)
+
+    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2+arg3+hogefuga%00"
+    run_test(req_path, res.response(400), ck_body=False)
+
 
 # TODO : content_type を 見るようにする。
 def content_type_test():
@@ -169,9 +183,25 @@ def cgi_simple_test():
 
     run_cmp_test("/cgi-bin/cat-cgi", expect_port=cmd_args.APACHE_PORT)
     run_cmp_test("/cgi-bin/hogehogehoge-cgi", expect_port=cmd_args.APACHE_PORT)
+    run_cmp_test("/cgi-bin/sleep3-cgi", expect_port=cmd_args.APACHE_PORT)
 
     expect_res = res.response(404)
     run_test("/cgi-bin/notexist-cgi", expect_res, ck_body=False)
+
+
+def cgi_has_body_test():
+    req_path = "/cgi-bin/cat-cgi"
+
+    body = "123456789"
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT, body=body, save_diff=True)
+    body = "".join([str(i) + "\n" for i in range(10000)])
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT, body=body, save_diff=True)
+
+    req_path = "/cgi-bin/toupper-cgi"
+    body = string.ascii_letters
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT, body=body, save_diff=True)
+    body = "".join([str(i) + " " + string.ascii_letters + "\n" for i in range(1000)])
+    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT, body=body, save_diff=True)
 
 
 def cgi_query_string_test():
@@ -188,7 +218,7 @@ def cgi_query_string_test():
 
     # = が ある時はコマンドライン引数なしになる。
     # QUERY_STRINGにはセットされる。
-    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2%00a+arg3+hogefuga"
+    req_path = "/cgi-bin/py-parse-test-cgi?arg1+arg2+arg3=hogefuga"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
 
     # コマンドライン引数にはデコードされた、文字列が入り、
@@ -199,13 +229,16 @@ def cgi_query_string_test():
     # QUERY_STRING にはパーセントデコードで、エラーが起きようがセットされる。
     # TODO : 現状はargvでのデコードで、エラーを返している。
     req_path = "/cgi-bin/py-parse-test-cgi?%"
-    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    # run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    run_test(req_path, res.response(400), ck_body=False)
 
     req_path = "/cgi-bin/py-parse-test-cgi?%0"
-    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    # run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    run_test(req_path, res.response(400), ck_body=False)
 
     req_path = "/cgi-bin/py-parse-test-cgi?A%00C+argv2"
-    run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    # run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+    run_test(req_path, res.response(400), ck_body=False)
 
 
 def cgi_path_info_test():
@@ -217,6 +250,34 @@ def cgi_path_info_test():
 
     req_path = "/cgi-bin/py-parse-test-cgi/%41%42%43"
     run_cmp_test(req_path, expect_port=cmd_args.APACHE_PORT)
+
+
+def cgi_local_redirect_test():
+    req_path = "/cgi-bin/local-redirect-root"
+    run_test(req_path, res.response(200), ck_body=False)
+
+    req_path = "/cgi-bin/local-redirect"
+    run_test(req_path, res.response(200, file_path="public/hoge/hoge.html"))
+
+    req_path = "/cgi-bin/local-redirect-sample"
+    run_test(req_path, res.response(200, file_path="public/sample.html"))
+
+    req_path = "/cgi-bin/local-redirect-loop1"
+    run_test(req_path, res.response(500), ck_body=False)
+
+    req_path = "/cgi-bin/local-redirect-loop1" + "?n=13"
+    run_test(req_path, res.response(500), ck_body=False)
+
+    req_path = "/cgi-bin/local-redirect-loop1" + "?n=3"
+    run_test(req_path, res.response(200), ck_body=False)
+
+    req_path = "/cgi-bin/local-redirect-not-found"
+    run_test(req_path, res.response(404), ck_body=False)
+
+    req_path = "/cgi-bin/local-redirect-cat-cgi"
+    run_test(req_path, res.response(200))
+    run_test(req_path, res.response(200, "hoge"), body="hoge")
+    run_test(req_path, res.response(200, "hoge" * 10000), body="hoge" * 10000)
 
 
 #   path_info デコードで無効な文字が含まれていた場合、エラー
@@ -253,6 +314,8 @@ def run_all_test() -> bool:
     is_all_test_ok &= exec_test(content_type_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cmp_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cgi_simple_test, must_all_test_ok=False)
+    is_all_test_ok &= exec_test(cgi_has_body_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cgi_query_string_test, must_all_test_ok=False)
     is_all_test_ok &= exec_test(cgi_path_info_test, must_all_test_ok=False)
+    is_all_test_ok &= exec_test(cgi_local_redirect_test)
     return is_all_test_ok

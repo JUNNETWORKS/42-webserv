@@ -73,6 +73,7 @@ $(GTEST):
 ############ REQ-TEST ############
 .PHONY: req-test
 req-test: WEBSERV_PORT := 8080
+req-test: RUN_CMP_TEST := 1
 req-test: all
 	sed -e "s|/public|$(shell pwd)/test/public|g" test/webserv_configurations/sample.conf > test/webserv_configurations/sample.conf.sed
 	cd test/public && mkfifo fifo-file

@@ -1,0 +1,4 @@
+#!/usr/bin/python3 -u
+
+print("Location:/cgi-bin/cat-cgi")
+print()

@@ -9,7 +9,8 @@
 
 namespace cgi {
 
-CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll)
+CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll,
+                       ConnSocket *socket)
     : cgi_request_(NULL),
       cgi_response_(NULL),
       cgi_input_buffer_(),
@@ -17,7 +18,8 @@ CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll)
       location_(location),
       epoll_(epoll),
       fde_(NULL),
-      status_(0) {}
+      status_(0),
+      socket_(socket) {}
 
 CgiProcess::~CgiProcess() {
   if (cgi_request_) {
@@ -126,6 +128,14 @@ void DeleteCgiProcess(Epoll *epoll, FdEvent *fde) {
 
 }  // namespace
 
+void CgiProcess::EnableWriteEventToClient() const {
+  FdEvent *client_fde = epoll_->GetFdeByFd(socket_->GetFd());
+  if (client_fde == NULL) {
+    return;
+  }
+  epoll_->Add(client_fde, kFdeWrite);
+}
+
 void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                                 Epoll *epoll) {
   utils::PrintDebugLog("HandleCgiEvent");
@@ -153,6 +163,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
 
   if (should_delete_cgi) {
     // Error
+    cgi_process->EnableWriteEventToClient();
     DeleteCgiProcess(epoll, fde);
     return;
   }
@@ -182,6 +193,9 @@ bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
   // Read data from unisock and store data in buffer
   utils::Byte buf[kDataPerRead];
   ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
+
+  cgi_process->EnableWriteEventToClient();
+
   if (read_res <= 0) {
     return true;
   }

@@ -16,6 +16,7 @@ webservで用いる設定ファイルの仕様について述べる｡
     - [root](#root)
     - [index](#index)
     - [is_cgi](#is_cgi)
+    - [cgi_executor](#cgi_executor)
     - [error_page](#error_page)
     - [autoindex](#autoindex)
     - [return](#return)
@@ -144,6 +145,15 @@ Syntax: `is_cgi <on_or_off>;`
 
 指定しない場合は `is_cgi off;` と同じ扱い｡
 
+#### cgi_executor
+
+- Required: True (if `is_cgi on;`)
+- Multiple: False
+
+syntax: `cgi_executor <path_or_file_name>`
+
+`<path_or_file_name>` は `execvpe()` の第一引数に渡される文字列｡
+
 #### error_page
 
 - Required: False
@@ -213,6 +223,7 @@ server {
 
   location_back .php {
     is_cgi on;
+    cgi_executor php-cgi;
     root /home/nginx/cgi_bins;
   }
 }

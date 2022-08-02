@@ -17,6 +17,8 @@
 
 namespace cgi {
 
+const std::string CgiRequest::kPython = "python3";
+
 CgiRequest::CgiRequest() : cgi_pid_(-1), cgi_unisock_(-1) {}
 
 CgiRequest::CgiRequest(const CgiRequest &rhs) {
@@ -27,6 +29,7 @@ CgiRequest &CgiRequest::operator=(const CgiRequest &rhs) {
   if (this != &rhs) {
     cgi_pid_ = rhs.cgi_pid_;
     cgi_unisock_ = rhs.cgi_unisock_;
+    cgi_executor_ = rhs.cgi_executor_;
     script_name_ = rhs.script_name_;
     exec_cgi_script_path_ = rhs.exec_cgi_script_path_;
     path_info_ = rhs.path_info_;
@@ -100,9 +103,10 @@ Result<std::string> CgiRequest::SearchCgiPath(
   for (std::vector<std::string>::const_iterator it = v.begin(); it != v.end();
        it++) {
     exec_cgi_path = utils::JoinPath(exec_cgi_path, *it);
-    Result<bool> is_executable_file_res =
-        utils::IsExecutableFile(exec_cgi_path);
-    if (is_executable_file_res.IsOk() && is_executable_file_res.Ok()) {
+    Result<bool> is_regular_file_res = utils::IsRegularFile(exec_cgi_path);
+    Result<bool> is_readable_file_res = utils::IsReadableFile(exec_cgi_path);
+    if (is_regular_file_res.IsOk() && is_regular_file_res.Ok() &&
+        is_readable_file_res.IsOk() && is_readable_file_res.Ok()) {
       return exec_cgi_path;
     }
   }
@@ -112,9 +116,10 @@ Result<std::string> CgiRequest::SearchCgiPath(
   for (std::vector<std::string>::const_iterator it = index_pages.begin();
        it != index_pages.end(); it++) {
     exec_cgi_path = utils::JoinPath(index_base, *it);
-    Result<bool> is_executable_file_res =
-        utils::IsExecutableFile(exec_cgi_path);
-    if (is_executable_file_res.IsOk() && is_executable_file_res.Ok()) {
+    Result<bool> is_regular_file_res = utils::IsRegularFile(exec_cgi_path);
+    Result<bool> is_readable_file_res = utils::IsReadableFile(exec_cgi_path);
+    if (is_regular_file_res.IsOk() && is_regular_file_res.Ok() &&
+        is_readable_file_res.IsOk() && is_readable_file_res.Ok()) {
       return exec_cgi_path;
     }
   }
@@ -136,6 +141,7 @@ bool CgiRequest::DetermineExecutionCgiPath(
   std::string script_name =
       "/" + location.RemovePathPatternFromPath(exec_cgi_path);
 
+  cgi_executor_ = location.GetCgiExecutor();
   exec_cgi_script_path_ = exec_cgi_path;
   script_name_ = script_name;
   path_info_ = request.GetPath();
@@ -201,10 +207,12 @@ void CgiRequest::ExecuteCgi() {
     utils::PrintErrorLog("MoveToCgiExecutionDir fail", exec_cgi_script_path_);
     return;
   }
-  cgi_args_.insert(cgi_args_.begin(), script_name_);
+  cgi_args_.insert(cgi_args_.begin(), cgi_executor_);
+  cgi_args_.insert(cgi_args_.begin() + 1, exec_cgi_script_path_);
   char **argv = utils::AllocVectorStringToCharDptr(cgi_args_);
-  execve(exec_cgi_script_path_.c_str(), argv, environ);
-  utils::PrintErrorLog("execve fail", exec_cgi_script_path_);
+
+  execvpe(cgi_executor_.c_str(), argv, environ);
+  utils::PrintErrorLog("execve fail", cgi_executor_);
   utils::DeleteCharDprt(argv);
 }
 
@@ -223,8 +231,8 @@ void CgiRequest::CreateCgiMetaVariablesFromHttpRequest(
   cgi_variables_["GATEWAY_INTERFACE"] = "CGI/1.1";
   cgi_variables_["SERVER_PROTOCOL"] = request.GetHttpVersion();
   cgi_variables_["REQUEST_METHOD"] = request.GetMethod();
-  cgi_variables_["PATH_INFO"] = path_info_;
   if (!path_info_.empty()) {
+    cgi_variables_["PATH_INFO"] = path_info_;
     // ここはApacheと結果が異なる｡
     cgi_variables_["PATH_TRANSLATED"] =
         location.GetAbsolutePath(location.GetPathPattern() + path_info_);
