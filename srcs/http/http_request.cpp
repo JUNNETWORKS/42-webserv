@@ -638,7 +638,6 @@ std::string HttpRequest::GetRequestInfoOneLine() const {
   std::stringstream ss;
 
   if (phase_ != kParsed) {
-    utils::PrintErrorLog("Parse Error", parse_status_);
     ss << "Parse Error " << parse_status_;
     return ss.str();
   }

@@ -64,7 +64,7 @@ void VirtualServerConf::Print() const {
 
   ss << "}\n";
 
-  utils::PrintLog(ss.str());
+  utils::PrintLog(ss.str().c_str());
 }
 
 std::string VirtualServerConf::GetListenIp() const {

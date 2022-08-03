@@ -156,7 +156,8 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 
     if (socket->GetResponse() == NULL) {
       // レスポンスオブジェクトがまだない
-      utils::PrintLog(utils::GetDateStr(), request.GetRequestInfoOneLine());
+      utils::PrintLog("%s %s", utils::GetDateStr().c_str(),
+                      request.GetRequestInfoOneLine().c_str());
       http::HttpResponse *response =
           AllocateResponseObj(request, epoll, socket);
       socket->SetResponse(response);

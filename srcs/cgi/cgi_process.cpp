@@ -148,7 +148,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
   }
 
   if (events & kFdeTimeout) {
-    utils::PrintErrorLog("Timeout CGI");
+    utils::PrintLog("Timeout CGI");
     DeleteCgiProcess(epoll, fde);
     return;
   }

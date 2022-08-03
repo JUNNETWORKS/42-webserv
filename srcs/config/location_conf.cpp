@@ -92,7 +92,7 @@ void LocationConf::Print() const {
   ss << "\t\tredirect_url: " << redirect_url_ << "\n";
   ss << "\t}\n";
 
-  utils::PrintLog(ss.str());
+  utils::PrintLog(ss.str().c_str());
 }
 
 std::string LocationConf::GetPathPattern() const {

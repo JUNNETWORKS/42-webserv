@@ -39,13 +39,13 @@ FdEventEvent CalculateFdEventEvent(FdEvent *fde, epoll_event epev) {
   }
   if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
     if (epev.events & EPOLLERR) {
-      utils::PrintDebugLog("CalculateFdEventEvent EPOLLERR", fde->fd);
+      utils::PrintDebugLog("CalculateFdEventEvent EPOLLERR %d", fde->fd);
     }
     if (epev.events & EPOLLHUP) {
-      utils::PrintDebugLog("CalculateFdEventEvent EPOLLHUP", fde->fd);
+      utils::PrintDebugLog("CalculateFdEventEvent EPOLLHUP %d", fde->fd);
     }
     if (epev.events & EPOLLRDHUP) {
-      utils::PrintDebugLog("CalculateFdEventEvent EPOLLRDHUP", fde->fd);
+      utils::PrintDebugLog("CalculateFdEventEvent EPOLLRDHUP %d", fde->fd);
     }
     // EPOLLRDHUP は TCP FIN を受信した場合にフラグが立つが､
     // ネットワークの回線の都合で先に送ったデータよりも後に送った TCP FIN

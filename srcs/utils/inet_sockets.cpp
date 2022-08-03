@@ -154,7 +154,7 @@ std::string InetAddressStr(const struct sockaddr *addr, socklen_t addrlen) {
 void LogConnectionInfoToStdout(struct sockaddr_storage &client_addr) {
   socklen_t len = sizeof(struct sockaddr_storage);
   std::string addr_str = InetAddressStr((struct sockaddr *)&client_addr, len);
-  utils::PrintDebugLog("Connection from", addr_str);
+  utils::PrintDebugLog("Connection from %s", addr_str.c_str());
 }
 
 }  // namespace utils
