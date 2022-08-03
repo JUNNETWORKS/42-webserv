@@ -4,6 +4,7 @@
 #include <sys/time.h>
 
 #include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -23,9 +24,13 @@ std::string GetDateStr() {
 
   std::stringstream s;
   s << "[";
-  s << (now->tm_year + 1900) << '/' << (now->tm_mon + 1) << '/' << now->tm_mday;
+  s << std::setw(4) << std::setfill('0') << (now->tm_year + 1900) << '/';
+  s << std::setw(2) << std::setfill('0') << (now->tm_mon + 1) << '/';
+  s << std::setw(2) << std::setfill('0') << now->tm_mday;
   s << " ";
-  s << now->tm_hour << ":" << now->tm_min;
+  s << std::setw(2) << std::setfill('0') << now->tm_hour << ":";
+  s << std::setw(2) << std::setfill('0') << now->tm_min << ":";
+  s << std::setw(2) << std::setfill('0') << now->tm_sec;
   s << "]";
 
   return s.str();
