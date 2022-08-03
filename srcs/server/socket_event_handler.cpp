@@ -11,6 +11,7 @@
 #include "server/socket.hpp"
 #include "utils/error.hpp"
 #include "utils/log.hpp"
+#include "utils/time.hpp"
 
 namespace server {
 
@@ -155,7 +156,7 @@ bool ProcessResponse(ConnSocket *socket, Epoll *epoll) {
 
     if (socket->GetResponse() == NULL) {
       // レスポンスオブジェクトがまだない
-      request.PrintRequestInfoOneLine();
+      utils::PrintLog(utils::GetDateStr(), request.GetRequestInfoOneLine());
       http::HttpResponse *response =
           AllocateResponseObj(request, epoll, socket);
       socket->SetResponse(response);

@@ -634,19 +634,20 @@ void HttpRequest::PrintRequestInfo() {
   printf("=====================\n");
 }
 
-void HttpRequest::PrintRequestInfoOneLine() const {
+std::string HttpRequest::GetRequestInfoOneLine() const {
   std::stringstream ss;
 
   if (phase_ != kParsed) {
     utils::PrintErrorLog("Parse Error", parse_status_);
-    return;
+    ss << "Parse Error " << parse_status_;
+    return ss.str();
   }
 
   ss << method_ << " ";
   ss << path_ << " ";
   ss << query_param_ << " ";
 
-  utils::PrintLog(ss.str());
+  return ss.str();
 }
 
 }  // namespace http
