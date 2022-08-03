@@ -188,6 +188,9 @@ def cgi_simple_test():
     expect_res = res.response(404)
     run_test("/cgi-bin/notexist-cgi", expect_res, ck_body=False)
 
+    expect_res = res.response(500)
+    run_test("/cgi-bin/execve-fail-cgi", expect_res, ck_body=False)
+
 
 def cgi_has_body_test():
     req_path = "/cgi-bin/cat-cgi"

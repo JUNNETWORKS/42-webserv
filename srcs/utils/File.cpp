@@ -5,6 +5,8 @@
 #include <cassert>
 #include <sstream>
 
+#include "string.hpp"
+
 namespace utils {
 
 File::File(const std::string& absolute_path)
@@ -64,22 +66,22 @@ std::string File::GetAbsolutePath() const {
   return absolute_path_;
 }
 
-// TODO : 最後に / が入ってるとき正常に機能しない？
-// TODO : テストの作成
 std::string File::GetFileName() const {
-  std::string::size_type pos;
-
   if (absolute_path_ == "/") {
     return "/";
   }
 
-  pos = absolute_path_.rfind("/");
-  if (pos == std::string::npos) {
-    return absolute_path_;
-  }
+  std::vector<std::string> splited = utils::SplitString(absolute_path_, "/");
 
-  std::string file_name =
-      absolute_path_.substr(pos + 1, absolute_path_.length() - pos);
+  std::string file_name;
+  for (std::vector<std::string>::const_reverse_iterator it = splited.rbegin();
+       it != splited.rend(); it++) {
+    if (*it == "") {
+      continue;
+    }
+    file_name = *it;
+    break;
+  }
   if (IsDir()) {
     return file_name + "/";
   } else {
