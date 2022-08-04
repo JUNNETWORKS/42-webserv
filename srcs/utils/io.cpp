@@ -1,7 +1,7 @@
 #include "utils/io.hpp"
 
 #include <dirent.h>
-#include <limits.h>
+#include <climits>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>

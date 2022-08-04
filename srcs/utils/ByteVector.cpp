@@ -1,6 +1,6 @@
 #include "ByteVector.hpp"
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace utils {
 

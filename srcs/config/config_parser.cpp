@@ -1,7 +1,7 @@
 #include "config/config_parser.hpp"
 
 #include <fcntl.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/types.h>
 
 #include <algorithm>

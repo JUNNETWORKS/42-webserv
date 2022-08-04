@@ -1,6 +1,6 @@
 #include "http/http_request.hpp"
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "result/result.hpp"
 #include "utils/log.hpp"

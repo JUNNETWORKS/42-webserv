@@ -1,8 +1,8 @@
 #ifndef UTILS_LOG_HPP
 #define UTILS_LOG_HPP
 
-#include <stdarg.h>
-#include <stdio.h>
+#include <cstdarg>
+#include <cstdio>
 
 #include <iostream>
 
