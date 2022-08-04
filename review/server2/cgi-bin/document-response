@@ -1,0 +1,8 @@
+#!/usr/bin/python
+
+print("Content-Type: text/html")
+print("Optional: hoge")
+print()
+print("<HTML>")
+print("<body><p>200 OK</p></body>")
+print("</HTML>")

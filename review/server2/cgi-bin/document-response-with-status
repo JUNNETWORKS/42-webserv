@@ -1,0 +1,9 @@
+#!/usr/bin/python
+
+print("Content-Type: text/html")
+print("Status: 404 Not Found")
+print("Optional: hoge")
+print()
+print("<HTML>")
+print("<body><p>404 Not Found</p></body>")
+print("</HTML>")

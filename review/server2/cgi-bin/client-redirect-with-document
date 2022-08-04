@@ -1,0 +1,11 @@
+#!/usr/bin/python
+
+print("Location:https://www.google.com/search?q=pikachu")
+print("Status: 302 Found")
+print("Content-Type: text/html")
+print("ExtensionField: hoge")
+print("ProtocolField: fuga")
+print("")
+print("<HTML>")
+print("<body><p>Let's redirect!!</p></body>")
+print("</HTML>")

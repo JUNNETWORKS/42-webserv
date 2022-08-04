@@ -254,6 +254,7 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteDeleteRequest(
     return MakeErrorResponse(SERVER_ERROR);
 
   SetStatus(OK, StatusCodes::GetMessage(OK));
+  SetHeader("Content-Length", "0");
   return kStatusAndHeader;
 }
 
