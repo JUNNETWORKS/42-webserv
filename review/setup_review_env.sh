@@ -9,7 +9,8 @@ if [[ $UID != 0 ]]; then
 fi
 
 # ストレステストツール
-apt update && apt install -y siege
+apt update
+apt install -y siege
 
 # Nginx が80番ポートを使っている可能性があるので止めておく
 if systemctl is-active nginx; then
