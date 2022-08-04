@@ -229,6 +229,7 @@ std::string HttpResponse::CreateResourceUrl(const std::string &local_path,
 
   std::string path = local_path;
   path.replace(0, location_->GetRootDir().length(), "");
+  path = utils::JoinPath(location_->GetPathPattern(), path);
 
   return protocol + host + path;
 }
