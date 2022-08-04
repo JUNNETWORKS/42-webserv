@@ -1,6 +1,6 @@
 #include "time.hpp"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/time.h>
 
 #include <ctime>

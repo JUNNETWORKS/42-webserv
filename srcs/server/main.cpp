@@ -1,4 +1,4 @@
-#include <signal.h>
+#include <csignal>
 
 #include "config/config.hpp"
 #include "result/result.hpp"

@@ -3,7 +3,7 @@
 
 #include <fcntl.h>
 #include <stdint.h>
-#include <string.h>
+#include <cstring>
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
