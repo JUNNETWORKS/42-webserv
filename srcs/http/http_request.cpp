@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "result/result.hpp"
+#include "utils/log.hpp"
 #include "utils/path.hpp"
 
 namespace http {
@@ -601,6 +602,10 @@ bool IsCorrectHTTPVersion(const std::string &str) {
 // こいつらは多分そのうち消える
 
 void HttpRequest::PrintRequestInfo() {
+#ifndef DEBUG
+  return;
+#endif
+
   printf("====Request Parser====\n");
   printf("ParseStatus_: %d\n", parse_status_);
   printf("Phase: %d\n", phase_);
@@ -627,6 +632,21 @@ void HttpRequest::PrintRequestInfo() {
     body_.pop_back();
   }
   printf("=====================\n");
+}
+
+std::string HttpRequest::GetRequestInfoOneLine() const {
+  std::stringstream ss;
+
+  if (phase_ != kParsed) {
+    ss << "Parse Error " << parse_status_;
+    return ss.str();
+  }
+
+  ss << method_ << " ";
+  ss << path_ << " ";
+  ss << query_param_ << " ";
+
+  return ss.str();
 }
 
 }  // namespace http

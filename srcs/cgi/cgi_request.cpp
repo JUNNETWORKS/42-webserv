@@ -12,6 +12,7 @@
 #include "config/location_conf.hpp"
 #include "http/http_request.hpp"
 #include "utils/io.hpp"
+#include "utils/log.hpp"
 #include "utils/string.hpp"
 
 namespace cgi {
@@ -203,12 +204,16 @@ void CgiRequest::ExecuteCgi() {
   UnsetAllEnvironmentVariables();
   SetMetaVariables();
   if (!MoveToCgiExecutionDir(exec_cgi_script_path_)) {
+    utils::PrintLog("MoveToCgiExecutionDir fail %s",
+                    exec_cgi_script_path_.c_str());
     return;
   }
   cgi_args_.insert(cgi_args_.begin(), cgi_executor_);
   cgi_args_.insert(cgi_args_.begin() + 1, exec_cgi_script_path_);
   char **argv = utils::AllocVectorStringToCharDptr(cgi_args_);
+
   execvpe(cgi_executor_.c_str(), argv, environ);
+  utils::PrintLog("execve fail %s", exec_cgi_script_path_.c_str());
   utils::DeleteCharDprt(argv);
 }
 

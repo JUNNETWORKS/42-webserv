@@ -8,6 +8,7 @@
 
 #include "result/result.hpp"
 #include "utils/error.hpp"
+#include "utils/log.hpp"
 #include "utils/time.hpp"
 
 namespace server {
@@ -38,13 +39,13 @@ FdEventEvent CalculateFdEventEvent(FdEvent *fde, epoll_event epev) {
   }
   if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
     if (epev.events & EPOLLERR) {
-      printf("CalculateFdEventEvent(%d): EPOLLERR\n", fde->fd);
+      utils::PrintDebugLog("CalculateFdEventEvent EPOLLERR %d", fde->fd);
     }
     if (epev.events & EPOLLHUP) {
-      printf("CalculateFdEventEvent(%d): EPOLLHUP\n", fde->fd);
+      utils::PrintDebugLog("CalculateFdEventEvent EPOLLHUP %d", fde->fd);
     }
     if (epev.events & EPOLLRDHUP) {
-      printf("CalculateFdEventEvent(%d): EPOLLRDHUP\n", fde->fd);
+      utils::PrintDebugLog("CalculateFdEventEvent EPOLLRDHUP %d", fde->fd);
     }
     // EPOLLRDHUP は TCP FIN を受信した場合にフラグが立つが､
     // ネットワークの回線の都合で先に送ったデータよりも後に送った TCP FIN

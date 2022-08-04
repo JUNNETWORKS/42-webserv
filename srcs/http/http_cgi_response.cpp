@@ -11,7 +11,6 @@ HttpCgiResponse::HttpCgiResponse(const config::LocationConf *location,
       cgi_process_(new cgi::CgiProcess(location, epoll, socket)) {}
 
 HttpCgiResponse::~HttpCgiResponse() {
-  printf("HttpCgiResponse::~HttpCgiResponse\n");
   if (cgi_process_->IsRemovable()) {
     epoll_->Unregister(cgi_process_->GetFde());
     delete cgi_process_;

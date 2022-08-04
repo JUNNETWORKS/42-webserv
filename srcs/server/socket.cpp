@@ -7,6 +7,7 @@
 #include <deque>
 
 #include "utils/inet_sockets.hpp"
+#include "utils/log.hpp"
 
 namespace server {
 

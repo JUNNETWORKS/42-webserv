@@ -98,6 +98,8 @@ class HttpRequest {
   const HeaderMap &GetHeaders() const;
   const utils::ByteVector &GetBody() const;
 
+  std::string GetRequestInfoOneLine() const;
+
  private:
   ParsingPhase ParseRequestLine(utils::ByteVector &buffer);
   ParsingPhase ParseHeaderField(utils::ByteVector &buffer);

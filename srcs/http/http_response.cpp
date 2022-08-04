@@ -133,7 +133,6 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecuteGetRequest(
   }
 
   std::string abs_file_path = location_->GetAbsolutePath(request.GetPath());
-  printf("abs_path: %s\n", abs_file_path.c_str());
 
   if (!utils::IsFileExist(abs_file_path)) {
     return MakeErrorResponse(NOT_FOUND);
@@ -192,8 +191,6 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
   bool is_dir = is_dir_res.Ok();
   std::string target =
       is_dir ? utils::JoinPath(request_path, GetTimeStamp()) : request_path;
-
-  printf("post_path: %s\n", target.c_str());
 
   HttpStatus response_status = utils::IsFileExist(target) ? OK : CREATED;
 
@@ -341,7 +338,6 @@ Result<std::string> HttpResponse::GetResponsableIndexPagePath() {
        it != index_pages.end(); ++it) {
     std::string abs_index_file_path =
         location_->GetAbsolutePath(location_->GetPathPattern() + *it);
-    std::cout << "abs_index_file_path: " << abs_index_file_path << std::endl;
     if (utils::IsFileExist(abs_index_file_path) &&
         utils::IsReadableFile(abs_index_file_path)) {
       return abs_index_file_path;
