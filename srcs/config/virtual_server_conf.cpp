@@ -1,9 +1,6 @@
 #include "config/virtual_server_conf.hpp"
 
 #include <iostream>
-#include <sstream>
-
-#include "utils/log.hpp"
 
 namespace config {
 
@@ -43,28 +40,24 @@ bool VirtualServerConf::IsValid() const {
 }
 
 void VirtualServerConf::Print() const {
-  std::stringstream ss;
+  std::cout << "server {\n";
 
-  ss << "server {\n";
+  std::cout << "\tlisten: " << listen_ip_ << ":" << listen_port_ << ";"
+            << "\n";
 
-  ss << "\tlisten: " << listen_ip_ << ":" << listen_port_ << ";"
-     << "\n";
-
-  ss << "\tserver_name:";
+  std::cout << "\tserver_name:";
   for (std::set<std::string>::const_iterator it = server_names_.begin();
        it != server_names_.end(); ++it) {
-    ss << " " << *it;
+    std::cout << " " << *it;
   }
-  ss << ";\n";
+  std::cout << ";\n";
 
   for (LocationConfsVector::const_iterator it = locations_.begin();
        it != locations_.end(); ++it) {
     it->Print();
   }
 
-  ss << "}\n";
-
-  utils::PrintLog(ss.str().c_str());
+  std::cout << "}\n";
 }
 
 std::string VirtualServerConf::GetListenIp() const {
