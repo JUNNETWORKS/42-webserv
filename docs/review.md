@@ -149,6 +149,10 @@ cd review && ./setup_review_env.sh
 
 `curl -v -X POST --data-binary '@README.md' http://localhost/upload`
 
+### ファイル削除
+
+`curl -v -X DELETE <ファイルアップロード時のレスポンスのLocationヘッダーの値>`
+
 ### client_body_size の制限
 
 `curl -v -X POST --data-binary "$(python -c 'print("a" * 20000)')" http://localhost/upload`
