@@ -147,7 +147,7 @@ cd review && ./setup_review_env.sh
 
 ### ファイルアップロード
 
-`curl -v -X POST --data-raw '@README.md' http://localhost/upload/README.md`
+`curl -v -X POST --data-binary '@README.md' http://localhost/upload`
 
 ### client_body_size の制限
 
