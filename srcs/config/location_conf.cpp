@@ -78,6 +78,7 @@ void LocationConf::Print() const {
   }
   std::cout << ";\n";
   std::cout << "\t\tis_cgi: " << is_cgi_ << "\n";
+  std::cout << "\t\tcgi_executor: " << cgi_executor_ << "\n";
   std::cout << "\t\terror_pages:";
   for (std::map<http::HttpStatus, std::string>::const_iterator it =
            error_pages_.begin();
