@@ -112,7 +112,7 @@ Result<std::string> PercentDecode(const utils::ByteVector &to_decode) {
       }
       std::string hex = std::string(it + 1, it + 3);
       Result<unsigned long> res = Stoul(hex, kHexadecimal);
-      if (res.IsErr()) {
+      if (res.IsErr() || res.Ok() == 0) {
         return Error();
       }
       c = static_cast<char>(res.Ok());

@@ -5,6 +5,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "utils/log.hpp"
+
 namespace cgi {
 
 CgiProcess::CgiProcess(const config::LocationConf *location, Epoll *epoll,
@@ -46,7 +48,6 @@ http::HttpStatus CgiProcess::RunCgi(server::ConnSocket *conn_sock,
 
   cgi_request_ = new cgi::CgiRequest();
   cgi_response_ = new CgiResponse();
-  // TODO: fork した後 execve に失敗した時のエラー検知と処理
   const http::HttpStatus cgi_res_code =
       cgi_request_->RunCgi(conn_sock, request, *location_);
   if (cgi_res_code != http::OK || cgi_request_->GetCgiUnisock() < 0) {
@@ -136,7 +137,7 @@ void CgiProcess::EnableWriteEventToClient() const {
 
 void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
                                 Epoll *epoll) {
-  printf("HandleCgiEvent()\n");
+  utils::PrintDebugLog("HandleCgiEvent");
 
   CgiProcess *cgi_process = reinterpret_cast<CgiProcess *>(data);
 
@@ -146,7 +147,7 @@ void CgiProcess::HandleCgiEvent(FdEvent *fde, unsigned int events, void *data,
   }
 
   if (events & kFdeTimeout) {
-    printf("Timeout CGI\n");
+    utils::PrintLog("Timeout CGI");
     DeleteCgiProcess(epoll, fde);
     return;
   }
@@ -191,7 +192,6 @@ bool CgiProcess::HandleCgiReadEvent(CgiProcess *cgi_process) {
   // Read data from unisock and store data in buffer
   utils::Byte buf[kDataPerRead];
   ssize_t read_res = read(cgi_request->GetCgiUnisock(), buf, kDataPerRead);
-  printf("HandleCgiEvent() read_res == %ld\n", read_res);
 
   cgi_process->EnableWriteEventToClient();
 
