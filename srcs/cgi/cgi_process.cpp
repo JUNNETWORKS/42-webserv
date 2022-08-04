@@ -1,6 +1,6 @@
 #include "cgi/cgi_process.hpp"
 
-#include <signal.h>
+#include <csignal>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
