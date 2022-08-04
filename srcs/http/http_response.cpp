@@ -186,7 +186,7 @@ HttpResponse::CreateResponsePhase HttpResponse::ExecutePostRequest(
 
   Result<bool> is_dir_res = utils::IsDir(request_path);
   if (is_dir_res.IsErr()) {
-    return MakeErrorResponse(SERVER_ERROR);
+    return MakeErrorResponse(BAD_REQUEST);
   }
   bool is_dir = is_dir_res.Ok();
   std::string target =
