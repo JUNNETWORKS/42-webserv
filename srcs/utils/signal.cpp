@@ -1,6 +1,6 @@
 #include <signal.h>
 
-#include <string>
+#include <cstring>
 
 namespace utils {
 
