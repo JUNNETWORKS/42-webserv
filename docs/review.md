@@ -62,7 +62,7 @@ cd review && ./setup_review_env.sh
 
 #### コンフィグファイル受け取れる?
 
-`./webserv configurations/simple.conf`
+`./webserv configurations/default.conf`
 
 #### デフォルトコンフィグファイル読み取ろうとする?
 
