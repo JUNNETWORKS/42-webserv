@@ -97,7 +97,7 @@ cd review && ./setup_review_env.sh
 
 ### 複数ポート対応
 
-`curl -v -X GET http://127.0.0.1:8080`
+`curl -v -X GET http://127.0.0.1:8080/index.html`
 
 `curl -v -X GET http://127.0.0.1:9090`
 
@@ -151,11 +151,11 @@ cd review && ./setup_review_env.sh
 
 ### client_body_size の制限
 
-`curl -v -X POST --data-raw "$(python -c 'print("a" * 20000)')" http://localhost/upload`
+`curl -v -X POST --data-binary "$(python -c 'print("a" * 20000)')" http://localhost/upload`
 
 ### 許可したHTTPメソッドのみリソースへのアクセスが可能
 
-`curl -v -X POST --data-raw '@README.md' http://localhost/`
+`curl -v -X POST --data-binary '@README.md' http://localhost/`
 
 ### root で指定したディレクトリからファイルを探す
 
@@ -163,7 +163,10 @@ cd review && ./setup_review_env.sh
 
 ### autoindex の on / off
 
-`curl -v -X GET http://127.0.0.2:80/`
+
+on: `curl -v -X GET http://localhost:8080/`
+
+off: `curl -v -X GET http://127.0.0.2:80/`
 
 ### index ファイル
 
