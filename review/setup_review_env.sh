@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux
+set -ux
 
 if [[ $UID != 0 ]]; then
     echo "Please run this script with sudo:"
