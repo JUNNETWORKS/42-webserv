@@ -10,6 +10,8 @@
 #include "server/types.hpp"
 #include "utils/error.hpp"
 #include "utils/inet_sockets.hpp"
+#include "utils/log.hpp"
+#include "utils/signal.hpp"
 
 namespace {
 const std::string kDefaultConfigPath = "configurations/default.conf";
@@ -17,10 +19,6 @@ const std::string kDefaultConfigPath = "configurations/default.conf";
 
 int main(int argc, char const *argv[]) {
   using namespace result;
-
-  // 多くのアプリケーションではSIGPIPEを無視し､write() の返り値で判定する
-  // https://stackoverflow.com/questions/3469567/broken-pipe-error
-  signal(SIGPIPE, SIG_IGN);
 
   setbuf(stdout, NULL);
   std::string config_path;
@@ -46,6 +44,13 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
   config.Print();
+
+  // 多くのアプリケーションではSIGPIPEを無視し､write() の返り値で判定する
+  // https://stackoverflow.com/questions/3469567/broken-pipe-error
+  if (utils::set_signal_handler(SIGPIPE, SIG_IGN, 0) == false) {
+    utils::PrintLog("set_signal error!!");
+    exit(EXIT_FAILURE);
+  }
 
   // epoll インスタンス作成
   server::Epoll epoll;

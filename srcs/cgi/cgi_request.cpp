@@ -13,6 +13,7 @@
 #include "http/http_request.hpp"
 #include "utils/io.hpp"
 #include "utils/log.hpp"
+#include "utils/signal.hpp"
 #include "utils/string.hpp"
 
 namespace cgi {
@@ -178,7 +179,8 @@ bool CgiRequest::CreateAndRunChildProcesses(int parentsock, int childsock) {
   }
   if (cgi_pid_ == 0) {  // Child
     close(parentsock);
-    if (dup2(childsock, STDIN_FILENO) < 0 ||
+    if (utils::set_signal_handler(SIGPIPE, SIG_DFL, 0) == false ||
+        dup2(childsock, STDIN_FILENO) < 0 ||
         dup2(childsock, STDOUT_FILENO) < 0) {
       close(childsock);
       exit(EXIT_FAILURE);
