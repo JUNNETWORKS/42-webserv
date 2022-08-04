@@ -163,7 +163,6 @@ cd review && ./setup_review_env.sh
 
 ### autoindex の on / off
 
-
 on: `curl -v -X GET http://localhost:8080/`
 
 off: `curl -v -X GET http://127.0.0.2:80/`
