@@ -1,5 +1,4 @@
 #!/usr/bin/python
 
-# print("Location:/users?q=jun")
-print("Location:/hoge/hoge.html")
+print("Location:/index.html")
 print()
