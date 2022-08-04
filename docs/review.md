@@ -174,6 +174,7 @@ off: `curl -v -X GET http://127.0.0.2:80/`
 ### `return` リダイレクト
 
 `curl -v -X GET http://localhost:9090/`
+
 `curl -v -X GET http://localhost:9090/google`
 
 ### 複数言語でCGIスクリプトを動かす (ボーナス)
