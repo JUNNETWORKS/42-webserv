@@ -9,9 +9,7 @@ Webserv is one of the projects in 42 cursus.
 - [Docs](#docs)
 - [使い方](#%E4%BD%BF%E3%81%84%E6%96%B9)
 - [コーディングルール](#%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%BC%E3%83%AB)
-- [キーワード](#%E3%82%AD%E3%83%BC%E3%83%AF%E3%83%BC%E3%83%89)
-- [サーバーの流れ](#%E3%82%B5%E3%83%BC%E3%83%90%E3%83%BC%E3%81%AE%E6%B5%81%E3%82%8C)
-  - [HTTP STATE MACHINE](#http-state-machine)
+- [ディレクトリ構成](#%E3%83%87%E3%82%A3%E3%83%AC%E3%82%AF%E3%83%88%E3%83%AA%E6%A7%8B%E6%88%90)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
