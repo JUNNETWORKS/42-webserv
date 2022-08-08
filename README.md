@@ -17,43 +17,33 @@ Webserv is one of the projects in 42 cursus.
 
 ## Docs
 
-- [configuration.md](docs/configuration.md)
+- [configuration.md](docs/configuration.md): コンフィグファイルの仕様
+- [review.md](docs/review.md): レビュー用資料
 
 ## 使い方
 
-`make re && ./webserv hoge` で起動｡
+`make re && ./webserv [config path]` で起動｡
 
-`telnet 127.0.0.1 8080` でプログラムに接続｡
+何ができるかは[review.md](docs/review.md)を参照してください｡
 
 ## コーディングルール
 
 [Google C++ Style Guide](https://ttsuki.github.io/styleguide/cppguide.ja.html) に従う｡
 
-## キーワード
+## ディレクトリ構成
 
-- Nginx
-- イベント駆動 (State machine)
-- 非同期IO (O_NONBLOCK)
-- ノンブロッキングIO ()
-- IO多重化 (epoll)
-
-## サーバーの流れ
-
-[Inside NGINX: How We Designed for Performance & Scale](https://www.nginx.com/blog/inside-nginx-how-we-designed-for-performance-scale/) を元にしている｡
-
-[nginx - The Architecture of Open Source Application](https://www.aosabook.org/en/nginx.html)
-
-1. master process が動く｡ 設定ファイルを読み込む｡ シグナルハンドラを設定する｡ master が worker プロセスを作成する｡ listen_fd を作成する｡ (workerプロセス間での共通リソースの共有のために必要に応じて共有メモリの設定もする必要ありかも)
-    <br>※ master は worker プロセスの作成や､ポートのバインド､コンフィグファイルの読み込み､シグナルを受信した際にworkerプロセスに送信などの特権的な操作を行う｡ それ以外のネットワークやリクエストの処理などはすべてworkerプロセスが行う｡
-1. master からは設定ファイルを読み込んだ情報と､listen_fd の集合が渡される｡ 各 worker は master が読み込んだ設定ファイルに基づき設定する｡
-1. worker プロセスは listen_fd と connection_fd の集合をもとに epoll() などのIO多重化によってイベント(読み書き可能や新しい接続など)が発生するのを監視する｡
-  - epoll() で
-
-![](https://www.nginx.com/wp-content/uploads/2015/06/infographic-Inside-NGINX_nonblocking.png)
-
-### HTTP STATE MACHINE
-
-```mermaid
-stateDiagram
-    s1 --> s2: A transition
+```
+.
+ configurations: コンフィグファイル置き場
+ docs: ドキュメント
+ review: レビュー用のファイルや設定
+ srcs
+    cgi: CGIに関するコード｡CGI実行やCGIの出力のパースなど｡
+    config: コンフィグクラスの定義やコンフィグパーサー｡
+    http: HTTPのリクエストパーサーや各種HttpResponseクラス｡
+    result: Result<T> の宣言と実装
+    server: main関数や初期設定､イベントループ､ソケットクラスの定義など｡
+    utils: 便利関数｡
+ test: 他のサーバーソフトウェアとの出力比較などの動作確認用｡
+ unit_test: ユニットテスト｡
 ```
